@@ -10,6 +10,7 @@ import { registerLead } from '@/actions/lead.action';
 import { Mail, Phone, Loader2, ArrowRight } from 'lucide-react';
 
 const leadSchema = z.object({
+  name: z.string().min(2, { message: "Nom trop court" }),
   email: z.string().email({ message: "Email invalide" }),
   phone: z.string().min(10, { message: "Numéro de téléphone invalide (10 chiffres min)" }),
 });
@@ -38,12 +39,14 @@ export default function LeadCaptureForm({ onSuccess }: LeadCaptureFormProps) {
     setServerError(null);
     
     try {
-      const result = await registerLead(data.email, data.phone);
+      const result = await registerLead(data.name, data.email, data.phone);
       
       if (result.success && result.user) {
         dispatch(setUser({
           id: result.user.id,
+          name: result.user.name,
           email: result.user.email,
+          phone: result.user.phone,
           credits: result.user.credits
         }));
         if (onSuccess) onSuccess();
@@ -65,6 +68,20 @@ export default function LeadCaptureForm({ onSuccess }: LeadCaptureFormProps) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <label className="block text-sm font-semibold text-main mb-2 ml-1">Nom complet</label>
+          <div className="relative group">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted group-focus-within:text-primary transition-colors" />
+            <input
+              {...register('name')}
+              type="text"
+              placeholder="ex: Jean Dupont"
+              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.name ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all font-medium`}
+            />
+          </div>
+          {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name.message}</p>}
+        </div>
+
         <div>
           <label className="block text-sm font-semibold text-main mb-2 ml-1">Email Professionnel</label>
           <div className="relative group">

@@ -10,7 +10,32 @@ import {
   BarChart3
 } from "lucide-react";
 
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import { useRouter } from 'next/navigation';
+import LeadCaptureForm from '@/components/LeadCaptureForm';
+import { X } from 'lucide-react';
+
 export default function Home() {
+  const router = useRouter();
+  const { isLoggedIn } = useSelector((state: RootState) => state.user);
+  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
+
+  // Redirection automatique vers le dashboard si déjà connecté
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    }
+  }, [isLoggedIn, router]);
+
+  const handleStart = () => {
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    } else {
+      setIsRegisterOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
       {/* Navbar Minimaliste */}
@@ -29,7 +54,10 @@ export default function Home() {
               <button className="text-sm font-medium text-muted hover:text-main transition-colors mr-4 hidden md:block">
                 Comment ça marche ?
               </button>
-              <button className="bg-main text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm">
+              <button 
+                onClick={handleStart}
+                className="bg-main text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm"
+              >
                 Essayer gratuitement
               </button>
             </div>
@@ -64,11 +92,17 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-2xl text-lg font-bold hover:bg-primary-hover transition-all flex items-center justify-center gap-2 group shadow-lg shadow-primary/25">
+            <button 
+              onClick={handleStart}
+              className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-2xl text-lg font-bold hover:bg-primary-hover transition-all flex items-center justify-center gap-2 group shadow-lg shadow-primary/25"
+            >
               Analyser un CV gratuitement
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="w-full sm:w-auto bg-white text-main border border-slate-200 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-slate-50 transition-all shadow-sm">
+            <button 
+              onClick={handleStart}
+              className="w-full sm:w-auto bg-white text-main border border-slate-200 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-slate-50 transition-all shadow-sm"
+            >
               Voir une démo
             </button>
           </div>
@@ -79,6 +113,25 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Modale d'Inscription */}
+      {isRegisterOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-main/40 backdrop-blur-sm"
+            onClick={() => setIsRegisterOpen(false)}
+          />
+          <div className="relative w-full max-w-md animate-in zoom-in-95 duration-300">
+            <button 
+              onClick={() => setIsRegisterOpen(false)}
+              className="absolute -top-12 right-0 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <LeadCaptureForm onSuccess={() => router.push('/dashboard')} />
+          </div>
+        </div>
+      )}
 
       {/* Features Section */}
       <section className="py-24 bg-white border-y border-slate-100">

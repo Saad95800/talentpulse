@@ -67,11 +67,20 @@ Analyse le matching et renvoie uniquement le JSON.`,
       throw new Error("Réponse IA non textuelle inattendue.");
     }
 
-    const result = JSON.parse(content.text) as MatchResult;
-    return result;
+    return extractJSON(content.text);
 
   } catch (error) {
     console.error("Erreur lors de la génération du score matching:", error);
-    throw new Error("Échec de l'analyse IA. Vérifiez votre clé API ou les limites de quota.");
+    throw new Error("Échec de l'analyse IA. " + (error as Error).message);
+  }
+}
+
+function extractJSON(text: string): MatchResult {
+  try {
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonString = match ? match[1].trim() : text.trim();
+    return JSON.parse(jsonString) as MatchResult;
+  } catch (e) {
+    throw new Error("Format de réponse IA invalide (JSON attendu).");
   }
 }

@@ -65,7 +65,7 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
 
             <div className="flex flex-col gap-4">
               <a 
-                href="https://calendly.com" 
+                href="https://calendly.com/contact-reactivedigital/30min" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full bg-primary text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-primary-hover hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20"

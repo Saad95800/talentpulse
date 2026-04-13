@@ -1,0 +1,94 @@
+{
+  "phases": [
+    {
+      "nom": "Phase 1 : Setup & Initialisation",
+      "prompts": [
+        { "id": "1.1", "titre": "Initialisation Next.js/TS/Tailwind", "etat": "éxécutée" },
+        { "id": "1.2", "titre": "Configuration Sass & Charte graphique", "etat": "éxécutée" },
+        { "id": "1.3", "titre": "Setup Redux Toolkit", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 2 : Assurance Qualité (Setup)",
+      "prompts": [
+        { "id": "2.1", "titre": "Configuration Jest & React Testing Library", "etat": "éxécutée" },
+        { "id": "2.2", "titre": "Configuration Cypress", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 3 : Base de Données",
+      "prompts": [
+        { "id": "3.1", "titre": "Installation Prisma & Singleton", "etat": "éxécutée" },
+        { "id": "3.2", "titre": "Modèle User (Crédits)", "etat": "éxécutée" },
+        { "id": "3.3", "titre": "Modèle MatchRecord & Relations", "etat": "éxécutée" },
+        { "id": "3.4", "titre": "Migration et Synchronisation", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 4 : Backend & Server Actions",
+      "prompts": [
+        { "id": "4.1", "titre": "Action registerLead (Capture)", "etat": "éxécutée" },
+        { "id": "4.2", "titre": "Action deductCredit (Atomics)", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 5 : Traitement des Documents",
+      "prompts": [
+        { "id": "5.1", "titre": "Route API Upload PDF", "etat": "éxécutée" },
+        { "id": "5.2", "titre": "Utilitaire PDF Extraction & Nettoyage", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 6 : Intelligence Artificielle",
+      "prompts": [
+        { "id": "6.1", "titre": "Installation SDK AI (Anthropic/Gemini)", "etat": "éxécutée" },
+        { "id": "6.2", "titre": "Moteur de matching generateMatchingScore", "etat": "éxécutée" },
+        { "id": "6.3", "titre": "Orchestrateur processMatchingWorkflow", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 7 : State Management (Data)",
+      "prompts": [
+        { "id": "7.1", "titre": "Redux Slice Utilisateur (userSlice)", "etat": "éxécutée" },
+        { "id": "7.2", "titre": "Redux Slice Matching (matchingSlice)", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 8 : Landing Page & Lead Capture",
+      "prompts": [
+        { "id": "8.1", "titre": "UI Landing Page (Hero Section)", "etat": "éxécutée" },
+        { "id": "8.2", "titre": "Composant LeadCaptureForm & Redirection", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 9 : Dashboard & Upload Area",
+      "prompts": [
+        { "id": "9.1", "titre": "Composant DragAndDropZone & Page Dashboard", "etat": "éxécutée" },
+        { "id": "9.2", "titre": "Bouton Action & Loader Dynamique", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 10 : Affichage des Résultats & Monétisation",
+      "prompts": [
+        { "id": "10.1", "titre": "Composant MatchResultView (Score & Argumentaire)", "etat": "éxécutée" },
+        { "id": "10.2", "titre": "Modale de Paywall & Upsell Calendly", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 11 : Tests Unitaires & Robustesse IA",
+      "prompts": [
+        { "id": "11.1", "titre": "Tests unitaires Redux (Slices)", "etat": "non éxécutée" },
+        { "id": "11.2", "titre": "Tests de robustesse Parsing IA", "etat": "non éxécutée" },
+        { "id": "11.3", "titre": "Tests unitaires UI (ScoreRing)", "etat": "non éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 12 : Tests End-to-End (Cypress)",
+      "prompts": [
+        { "id": "12.1", "titre": "Test E2E Inscription Lead", "etat": "non éxécutée" },
+        { "id": "12.2", "titre": "Test E2E Flux de Matching IA", "etat": "non éxécutée" },
+        { "id": "12.3", "titre": "Test E2E Paywall & Blocage", "etat": "non éxécutée" }
+      ]
+    }
+  ]
+}

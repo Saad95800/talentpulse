@@ -2,9 +2,9 @@
 
 import prisma from "@/lib/prisma";
 
-export async function registerLead(email: string, phone: string) {
-  if (!email || !phone) {
-    return { success: false, error: "L'email et le téléphone sont obligatoires." };
+export async function registerLead(name: string, email: string, phone: string) {
+  if (!name || !email || !phone) {
+    return { success: false, error: "Tous les champs sont obligatoires." };
   }
 
   try {
@@ -20,6 +20,7 @@ export async function registerLead(email: string, phone: string) {
     // Créer un nouvel utilisateur avec les crédits par défaut (3)
     const newUser = await prisma.user.create({
       data: {
+        name,
         email,
         phone,
       },
@@ -27,7 +28,7 @@ export async function registerLead(email: string, phone: string) {
 
     return { success: true, user: newUser };
   } catch (error) {
-    console.error("Erreur lors de l'enregistrement du Lead:", error);
-    return { success: false, error: "Une erreur est survenue lors de l'inscription." };
+    console.error("Erreur registerLead:", error);
+    return { success: false, error: "Erreur lors de l'enregistrement du lead." };
   }
 }
