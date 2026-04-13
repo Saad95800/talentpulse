@@ -18,3 +18,60 @@ export interface MatchResult {
   competences_manquantes: string[];
   argumentaire_client: string;
 }
+
+/**
+ * Génère un score de matching et une analyse détaillée entre un CV et une Fiche de Poste.
+ * @param jobText Texte de la fiche de poste
+ * @param cvText Texte du CV
+ * @returns MatchResult
+ */
+export async function generateMatchingScore(jobText: string, cvText: string): Promise<MatchResult> {
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'votre_cle_anthropic_ici') {
+    throw new Error("Clé API Anthropic manquante. Veuillez configurer ANTHROPIC_API_KEY dans le fichier .env");
+  }
+
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-3-5-sonnet-20240620",
+      max_tokens: 1500,
+      temperature: 0,
+      system: `Tu es un expert en recrutement IT senior (Tech Recruiter). Ton rôle est d'analyser la pertinence d'un candidat pour un poste donné.
+Tu dois retourner ton analyse STRICTEMENT au format JSON. Aucun texte conversationnel ne doit précéder ou suivre le JSON.
+Le format attendu est :
+{
+  "score": number (0 à 100),
+  "competences_validees": string[],
+  "competences_manquantes": string[],
+  "argumentaire_client": string (un court paragraphe professionnel expliquant pourquoi le candidat matche ou non)
+}`,
+      messages: [
+        {
+          role: "user",
+          content: `Voici la Fiche de Poste :
+---
+${jobText}
+---
+
+Voici le CV du candidat :
+---
+${cvText}
+---
+
+Analyse le matching et renvoie uniquement le JSON.`,
+        },
+      ],
+    });
+
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error("Réponse IA non textuelle inattendue.");
+    }
+
+    const result = JSON.parse(content.text) as MatchResult;
+    return result;
+
+  } catch (error) {
+    console.error("Erreur lors de la génération du score matching:", error);
+    throw new Error("Échec de l'analyse IA. Vérifiez votre clé API ou les limites de quota.");
+  }
+}
