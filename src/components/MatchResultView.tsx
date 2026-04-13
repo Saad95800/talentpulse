@@ -18,9 +18,9 @@ interface MatchResultViewProps {
 
 export default function MatchResultView({ result, candidateName }: MatchResultViewProps) {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-500 stroke-emerald-500';
-    if (score >= 50) return 'text-amber-500 stroke-amber-500';
-    return 'text-red-500 stroke-red-500';
+    if (score >= 80) return 'text-emerald-600 stroke-emerald-600';
+    if (score >= 50) return 'text-amber-600 stroke-amber-600';
+    return 'text-red-600 stroke-red-600';
   };
 
   const scoreColor = getScoreColor(result.score);
@@ -29,7 +29,7 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
   return (
     <div className="w-full max-w-5xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
       {/* Header Result */}
-      <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200 border border-slate-100 mb-10 overflow-hidden relative">
+      <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-300 border border-slate-300 mb-10 overflow-hidden relative">
         <div className="absolute top-0 right-0 p-8 opacity-5">
           <Award className="w-48 h-48 rotate-12" />
         </div>
@@ -39,8 +39,8 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
           <div className="relative w-48 h-48 shrink-0">
             <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
               <path
-                className="stroke-slate-100"
-                strokeWidth="3"
+                className="stroke-slate-200"
+                strokeWidth="3.5"
                 fill="none"
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
@@ -60,7 +60,7 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
           </div>
 
           <div className="flex-1 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-200 text-slate-700 text-xs font-black mb-4 border border-slate-300">
               <TrendingUp className="w-3 h-3" />
               Analyse prédictive IA
             </div>
@@ -68,11 +68,11 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
               Analyse pour <span className="text-primary">{candidateName}</span>
             </h2>
             <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-6">
-              <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold">
+              <div className="flex items-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-200 px-5 py-2.5 rounded-xl text-sm font-black">
                 <CheckCircle2 className="w-4 h-4" />
                 {result.competences_validees.length} Points forts
               </div>
-              <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-xl text-sm font-bold">
+              <div className="flex items-center gap-2 bg-red-100 text-red-800 border border-red-200 px-5 py-2.5 rounded-xl text-sm font-black">
                 <AlertTriangle className="w-4 h-4" />
                 {result.competences_manquantes.length} Écarts
               </div>
@@ -84,8 +84,8 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
       {/* Details Grid */}
       <div className="grid lg:grid-cols-2 gap-8 mb-10">
         {/* Validated Skills */}
-        <section className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-100 border border-slate-50">
-          <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+        <section className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 border border-slate-300">
+          <div className="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
             <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
               <CheckCircle2 className="w-5 h-5" />
             </div>
@@ -93,17 +93,17 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
           </div>
           <ul className="space-y-3">
             {result.competences_validees.map((skill, index) => (
-              <li key={index} className="flex items-start gap-3 p-3 bg-emerald-50/30 rounded-xl group hover:bg-emerald-50 transition-colors">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                <span className="text-sm font-medium text-emerald-900 leading-tight">{skill}</span>
+              <li key={index} className="flex items-start gap-3 p-4 bg-emerald-100/40 rounded-xl group hover:bg-emerald-100/60 border border-emerald-200 transition-all">
+                <div className="mt-1.5 w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
+                <span className="text-sm font-bold text-emerald-950 leading-tight">{skill}</span>
               </li>
             ))}
           </ul>
         </section>
 
         {/* Missing Skills */}
-        <section className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-100 border border-slate-50">
-          <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+        <section className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 border border-slate-300">
+          <div className="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
             <div className="p-2 bg-red-100 rounded-lg text-red-600">
               <XCircle className="w-5 h-5" />
             </div>
@@ -111,9 +111,9 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
           </div>
           <ul className="space-y-3">
             {result.competences_manquantes.map((skill, index) => (
-              <li key={index} className="flex items-start gap-3 p-3 bg-red-50/30 rounded-xl group hover:bg-red-50 transition-colors">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                <span className="text-sm font-medium text-red-900 leading-tight">{skill}</span>
+              <li key={index} className="flex items-start gap-3 p-4 bg-red-100/40 rounded-xl group hover:bg-red-100/60 border border-red-200 transition-all">
+                <div className="mt-1.5 w-2 h-2 rounded-full bg-red-600 shrink-0" />
+                <span className="text-sm font-bold text-red-950 leading-tight">{skill}</span>
               </li>
             ))}
             {result.competences_manquantes.length === 0 && (
@@ -143,7 +143,7 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
       <div className="mt-12 flex justify-center">
         <button 
           onClick={() => window.print()}
-          className="bg-white text-main border border-slate-200 px-8 py-4 rounded-2xl font-bold hover:bg-slate-50 transition-all shadow-sm"
+          className="bg-white text-main border border-slate-300 px-10 py-5 rounded-2xl font-black text-lg hover:bg-slate-100 transition-all shadow-xl hover:-translate-y-1"
         >
           Exporter l'analyse (PDF)
         </button>

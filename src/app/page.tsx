@@ -39,7 +39,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
       {/* Navbar Minimaliste */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2">
@@ -51,9 +51,9 @@ export default function Home() {
               </span>
             </div>
             <div className="flex items-center gap-4">
-              <button className="text-sm font-medium text-muted hover:text-main transition-colors mr-4 hidden md:block">
+              {/* <button className="text-sm font-medium text-muted hover:text-main transition-colors mr-4 hidden md:block">
                 Comment ça marche ?
-              </button>
+              </button> */}
               <button 
                 onClick={handleStart}
                 className="bg-main text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm"
@@ -74,10 +74,10 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6 animate-bounce">
+          {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6 animate-bounce">
             <Zap className="w-3 h-3 fill-current" />
             Nouveau : Propulsé par Claude 3.5 Sonnet
-          </div>
+          </div> */}
           
           <h1 className="text-5xl md:text-7xl font-extrabold text-main mb-8 tracking-tight leading-[1.1]">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
@@ -99,18 +99,18 @@ export default function Home() {
               Analyser un CV gratuitement
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button 
+            {/* <button 
               onClick={handleStart}
-              className="w-full sm:w-auto bg-white text-main border border-slate-200 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-slate-50 transition-all shadow-sm"
+              className="w-full sm:w-auto bg-white text-main border border-slate-300 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-slate-100 transition-all shadow-sm"
             >
               Voir une démo
-            </button>
+            </button> */}
           </div>
 
           {/* Social Proof Placeholder */}
-          <div className="mt-16 pt-8 border-t border-slate-100 italic text-muted/60 text-sm">
+          {/* <div className="mt-16 pt-8 border-t border-slate-300 italic text-muted font-medium text-sm">
             Déjà +1,000 recrutements facilités par l'IA
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -134,7 +134,7 @@ export default function Home() {
       )}
 
       {/* Features Section */}
-      <section className="py-24 bg-white border-y border-slate-100">
+      <section className="py-24 bg-white border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-main mb-4">Pourquoi choisir TalentMatcher ?</h2>
@@ -164,7 +164,7 @@ export default function Home() {
       </section>
 
       {/* Footer Simple */}
-      <footer className="py-12 bg-background border-t border-slate-100 text-center">
+      <footer className="py-12 bg-background border-t border-slate-200 text-center">
         <p className="text-muted text-sm px-4">
           © 2026 TalentMatcher. Produit micro-SaaS pour recruteurs autonomes.
         </p>
@@ -175,12 +175,12 @@ export default function Home() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <div className="p-8 rounded-3xl bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-slate-200 transition-all border border-transparent hover:border-slate-100 group">
-      <div className="mb-6 p-4 bg-white rounded-2xl w-fit shadow-sm group-hover:scale-110 transition-transform">
+    <div className="p-8 rounded-3xl bg-white hover:bg-slate-50 hover:shadow-2xl hover:shadow-slate-300 transition-all border border-slate-200 hover:border-primary/30 group">
+      <div className="mb-6 p-4 bg-slate-100 rounded-2xl w-fit shadow-inner group-hover:scale-110 transition-transform">
         {icon}
       </div>
       <h3 className="text-xl font-bold text-main mb-3">{title}</h3>
-      <p className="text-muted leading-relaxed">
+      <p className="text-muted leading-relaxed font-medium">
         {description}
       </p>
     </div>

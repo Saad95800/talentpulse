@@ -2,13 +2,13 @@
 
 @theme {
   /* Définition des tokens de couleur via variables CSS natives */
-  --color-background: #F8FAFC;
+  --color-background: #F1F5F9; /* Slate 100 au lieu de 50 pour plus de profondeur */
   --color-surface: #FFFFFF;
   --color-main: #0F172A;
-  --color-muted: #64748B;
+  --color-muted: #475569; /* Slate 600 au lieu de 500 pour un meilleur contraste texte */
   --color-primary: #2563EB;
   --color-primary-hover: #1D4ED8;
-  --color-secondary: #0EA5E9;
+  --color-secondary: #0369A1; /* Bleu plus soutenu */
 
   /* On peut aussi définir des arrondis ou des ombres custom ici */
   --radius-3xl: 1.5rem;

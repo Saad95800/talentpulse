@@ -42,9 +42,9 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
         </div>
 
         <div className="p-10 -mt-10">
-          <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-100 border border-slate-50 text-center">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-300 border border-slate-300 text-center">
             <h2 className="text-3xl font-black text-main mb-3 tracking-tight">Oups ! Crédits épuisés.</h2>
-            <p className="text-muted font-medium mb-8 leading-relaxed">
+            <p className="text-slate-600 font-bold mb-8 leading-relaxed">
               Vous avez utilisé vos 3 analyses gratuites. Pour continuer à transformer votre recrutement avec l'IA, passez au niveau supérieur.
             </p>
 
@@ -58,8 +58,8 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                 <span className="text-sm font-bold text-main">Export PDF illimité</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Support prioritaire</span>
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span className="text-sm font-black text-main">Support prioritaire</span>
               </div>
             </div>
 
@@ -77,14 +77,14 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
               
               <button 
                 onClick={onClose}
-                className="w-full bg-slate-50 text-muted py-4 rounded-2xl font-bold text-sm hover:bg-slate-100 transition-all border border-slate-100"
+                className="w-full bg-slate-200 text-slate-700 py-4 rounded-2xl font-black text-sm hover:bg-slate-300 transition-all border border-slate-300"
               >
                 Peut-être plus tard
               </button>
             </div>
           </div>
 
-          <div className="mt-8 flex items-center justify-center gap-2 text-xs font-bold text-primary uppercase tracking-widest bg-primary/5 py-3 rounded-2xl animate-pulse">
+          <div className="mt-8 flex items-center justify-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 py-3 rounded-2xl animate-pulse border border-primary/20">
             <Zap className="w-4 h-4 fill-current" />
             Offre spéciale : 1 mois offert pour les early adopters
           </div>

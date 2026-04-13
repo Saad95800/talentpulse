@@ -85,10 +85,10 @@ export default function VivierChat() {
       {/* Zone des messages */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 scroll-smooth"
+        className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-100 scroll-smooth shadow-inner"
       >
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center px-10 border-2 border-dashed border-slate-200 rounded-[2.5rem] mt-4">
+          <div className="h-full flex flex-col items-center justify-center text-center px-10 border-2 border-dashed border-slate-300 rounded-[2.5rem] mt-4">
             <div className="p-4 bg-white rounded-2xl shadow-sm mb-4">
               <MessageSquare className="w-8 h-8 text-primary/50" />
             </div>
@@ -114,14 +114,14 @@ export default function VivierChat() {
             key={i} 
             className={`flex items-start gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}
           >
-            <div className={`p-2 rounded-xl shrink-0 ${m.role === 'user' ? 'bg-primary text-white' : 'bg-white text-main shadow-sm border border-slate-100'}`}>
+            <div className={`p-2 rounded-xl shrink-0 ${m.role === 'user' ? 'bg-primary text-white' : 'bg-white text-main shadow-md border border-slate-300'}`}>
               {m.role === 'user' ? <UserIcon className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
             </div>
             <div className={`
               max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed
               ${m.role === 'user' 
-                ? 'bg-primary text-white rounded-tr-none shadow-lg shadow-primary/10' 
-                : 'bg-white text-main rounded-tl-none shadow-sm border border-slate-100 font-medium'}
+                ? 'bg-primary text-white rounded-tr-none shadow-xl shadow-primary/20' 
+                : 'bg-white text-main rounded-tl-none shadow-md border border-slate-200 font-bold'}
             `}>
               {m.content}
             </div>
@@ -130,12 +130,12 @@ export default function VivierChat() {
 
         {isLoading && (
           <div className="flex items-start gap-3 animate-in fade-in duration-300">
-            <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100">
+            <div className="p-2 bg-white rounded-xl shadow-md border border-slate-300">
               <Bot className="w-4 h-4 text-primary" />
             </div>
-            <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-100 flex items-center gap-3">
+            <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-200 flex items-center gap-3">
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              <span className="text-xs font-bold text-muted animate-pulse">L'IA analyse votre vivier...</span>
+              <span className="text-xs font-black text-slate-700 animate-pulse">L'IA analyse votre vivier...</span>
             </div>
           </div>
         )}
@@ -149,7 +149,7 @@ export default function VivierChat() {
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
             placeholder="Posez votre question sur les candidats..."
-            className="w-full pl-6 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-primary focus:bg-white transition-all font-medium text-main text-sm disabled:opacity-50"
+            className="w-full pl-6 pr-14 py-4 bg-slate-100 border border-slate-300 rounded-2xl outline-none focus:border-primary focus:bg-white transition-all font-black text-main text-sm disabled:opacity-50 placeholder:text-slate-500"
           />
           <button
             type="submit"
@@ -172,9 +172,9 @@ function Suggestion({ text, onClick }: { text: string, onClick: () => void }) {
   return (
     <button 
       onClick={onClick}
-      className="text-xs p-3 bg-white border border-slate-100 rounded-xl text-main font-bold hover:border-primary hover:text-primary transition-all text-left shadow-sm group"
+      className="text-[11px] p-3.5 bg-white border-2 border-slate-200 rounded-xl text-main font-black hover:border-primary hover:text-primary transition-all text-left shadow-md group"
     >
-      <span className="opacity-70 group-hover:opacity-100">{text}</span>
+      <span className="opacity-80 group-hover:opacity-100">{text}</span>
     </button>
   );
 }

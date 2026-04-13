@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { useDispatch } from 'react-redux';
 import { setUser } from '@/store/userSlice';
 import { registerLead } from '@/actions/lead.action';
-import { Mail, Phone, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Phone, Loader2, ArrowRight, User } from 'lucide-react';
 
 const leadSchema = z.object({
   name: z.string().min(2, { message: "Nom trop court" }),
@@ -61,7 +61,7 @@ export default function LeadCaptureForm({ onSuccess }: LeadCaptureFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-8 bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200 border border-slate-100">
+    <div className="w-full max-w-md mx-auto p-8 bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300 border border-slate-200">
       <div className="text-center mb-8">
         <h3 className="text-2xl font-bold text-main mb-2">Prêt à matcher ?</h3>
         <p className="text-muted text-sm">Entrez vos coordonnées pour obtenir vos 3 crédits gratuits.</p>
@@ -76,7 +76,7 @@ export default function LeadCaptureForm({ onSuccess }: LeadCaptureFormProps) {
               {...register('name')}
               type="text"
               placeholder="ex: Jean Dupont"
-              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.name ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all font-medium`}
+              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.name ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-100/50'} focus:border-primary focus:bg-white outline-none transition-all font-medium text-main placeholder:text-slate-400`}
             />
           </div>
           {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name.message}</p>}
@@ -90,7 +90,7 @@ export default function LeadCaptureForm({ onSuccess }: LeadCaptureFormProps) {
               {...register('email')}
               type="email"
               placeholder="ex: jean.dupont@rh.com"
-              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.email ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all font-medium`}
+              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.email ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-100/50'} focus:border-primary focus:bg-white outline-none transition-all font-medium text-main placeholder:text-slate-400`}
             />
           </div>
           {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email.message}</p>}
@@ -104,7 +104,7 @@ export default function LeadCaptureForm({ onSuccess }: LeadCaptureFormProps) {
               {...register('phone')}
               type="tel"
               placeholder="06 12 34 56 78"
-              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.phone ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all font-medium`}
+              className={`w-full pl-12 pr-4 py-4 rounded-2xl border ${errors.phone ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-100/50'} focus:border-primary focus:bg-white outline-none transition-all font-medium text-main placeholder:text-slate-400`}
             />
           </div>
           {errors.phone && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phone.message}</p>}

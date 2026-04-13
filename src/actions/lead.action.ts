@@ -27,8 +27,8 @@ export async function registerLead(name: string, email: string, phone: string) {
     });
 
     return { success: true, user: newUser };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur registerLead:", error);
-    return { success: false, error: "Erreur lors de l'enregistrement du lead." };
+    return { success: false, error: "Erreur: " + error?.message || error?.toString() || "Inconnue" };
   }
 }

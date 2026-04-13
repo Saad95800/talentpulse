@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { anthropic } from "@/lib/ai";
+import { aiComplete } from "@/lib/ai/index";
 
 /**
  * Interface pour le message de chat
@@ -22,7 +22,7 @@ export async function queryVivierIA(userId: string, messages: ChatMessage[]) {
     const candidates = await prisma.matchRecord.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 50, // Limite raisonnable pour le contexte
+      take: 200,
     });
 
     if (candidates.length === 0) {
@@ -54,26 +54,16 @@ Instructions :
 - Si l'utilisateur demande un résumé, fais un comparatif structuré.
 - Ne parle jamais de fichiers techniques ou de JSON, reste focalisé sur le recrutement.`;
 
-    // 4. Appel à l'IA
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20240620",
-      max_tokens: 1000,
-      temperature: 0.7,
-      system: systemPrompt,
-      messages: messages.map(m => ({
-        role: m.role,
-        content: m.content
-      })),
-    });
-
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error("Réponse IA non textuelle inattendue.");
-    }
+    // 4. Appel IA via l'abstraction (provider configuré : Gemini par défaut)
+    const text = await aiComplete(
+      messages,
+      { system: systemPrompt, maxTokens: 2000, temperature: 0.7 },
+      'main'
+    );
 
     return { 
       success: true, 
-      message: content.text 
+      message: text
     };
 
   } catch (error: any) {

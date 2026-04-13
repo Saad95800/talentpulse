@@ -1,13 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-if (!process.env.ANTHROPIC_API_KEY) {
-  // On ne throw pas ici pour permettre le build, 
-  // mais on vérifiera lors de l'appel à la fonction
-}
-
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'MISSING_KEY',
-});
+import { getAIProvider, createProvider } from '@/lib/ai/index';
 
 /**
  * Interface pour le résultat structuré du matching IA.
@@ -21,57 +12,61 @@ export interface MatchResult {
 
 /**
  * Génère un score de matching et une analyse détaillée entre un CV et une Fiche de Poste.
- * @param jobText Texte de la fiche de poste
- * @param cvText Texte du CV
- * @returns MatchResult
+ * Utilise le provider IA actif. En cas de 404/529 (modèle indisponible ou serveur surchargé),
+ * bascule automatiquement sur Gemini 2.0 Flash.
  */
 export async function generateMatchingScore(jobText: string, cvText: string): Promise<MatchResult> {
-  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'votre_cle_anthropic_ici') {
-    throw new Error("Clé API Anthropic manquante. Veuillez configurer ANTHROPIC_API_KEY dans le fichier .env");
-  }
+  const systemPrompt = `Tu es un expert en recrutement de niveau "Senior Executive Partner" et "Chasseur de Têtes" spécialisé dans les profils hautement qualifiés.
+Ton rôle est de fournir une analyse de matching d'une précision chirurgicale entre une fiche de poste et un CV.
+Tu dois évaluer non seulement les compétences techniques (hard skills), mais aussi le potentiel d'évolution et l'adéquation culturelle suggérée par le parcours.
 
-  try {
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20240620",
-      max_tokens: 1500,
-      temperature: 0,
-      system: `Tu es un expert en recrutement IT senior (Tech Recruiter). Ton rôle est d'analyser la pertinence d'un candidat pour un poste donné.
-Tu dois retourner ton analyse STRICTEMENT au format JSON. Aucun texte conversationnel ne doit précéder ou suivre le JSON.
+TU DOIS RETOURNER TON ANALYSE STRICTEMENT AU FORMAT JSON. Aucun texte conversationnel ne doit précéder ou suivre le JSON.
 Le format attendu est :
 {
   "score": number (0 à 100),
-  "competences_validees": string[],
-  "competences_manquantes": string[],
-  "argumentaire_client": string (un court paragraphe professionnel expliquant pourquoi le candidat matche ou non)
-}`,
-      messages: [
-        {
-          role: "user",
-          content: `Voici la Fiche de Poste :
----
-${jobText}
----
+  "competences_validees": string[] (liste détaillée des points forts),
+  "competences_manquantes": string[] (écarts critiques ou points de vigilance),
+  "argumentaire_client": string (un paragraphe de 4-5 phrases, très qualitatif, persuasif et structuré, destiné à un décideur RH)
+}`;
 
-Voici le CV du candidat :
----
-${cvText}
----
+  const userPrompt = `Voici la Fiche de Poste :\n---\n${jobText}\n---\n\nVoici le CV du candidat :\n---\n${cvText}\n---\n\nAnalyse le matching et renvoie uniquement le JSON.`;
 
-Analyse le matching et renvoie uniquement le JSON.`,
-        },
-      ],
-    });
+  const messages = [{ role: 'user' as const, content: userPrompt }];
+  const callOptions = { system: systemPrompt, maxTokens: 4000, temperature: 0 };
 
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error("Réponse IA non textuelle inattendue.");
+  // 1. Tenter avec le provider configuré (priorité Anthropic)
+  try {
+    const provider = await getAIProvider('matching');
+    const rawText  = await provider.complete(messages, callOptions);
+    return extractJSON(rawText);
+  } catch (primaryError: any) {
+    const msg    = primaryError?.message ?? '';
+    const status = primaryError?.status  ?? 0;
+
+    // Si le provider principal échoue pour une raison transitoire (surcharge ou modèle introuvable)
+    // → fallback silencieux sur Gemini 2.0 Flash
+    const isTransient =
+      status === 529 ||
+      status === 404 ||
+      status === 503 ||
+      msg.includes('overloaded') ||
+      msg.includes('not_found')  ||
+      msg.includes('unavailable');
+
+    if (isTransient && process.env.GEMINI_API_KEY) {
+      console.warn(`[AI Fallback] Provider principal indisponible (${status || msg.slice(0, 60)}). Bascule sur Gemini...`);
+      try {
+        const geminiProvider = createProvider('gemini', 'matching');
+        const rawText        = await geminiProvider.complete(messages, callOptions);
+        return extractJSON(rawText);
+      } catch (fallbackError: any) {
+        // Si Gemini échoue aussi, on remonte une erreur lisible
+        throw new Error('Nos serveurs IA sont temporairement surchargés. Veuillez réessayer dans quelques instants.');
+      }
     }
 
-    return extractJSON(content.text);
-
-  } catch (error) {
-    console.error("Erreur lors de la génération du score matching:", error);
-    throw new Error("Échec de l'analyse IA. " + (error as Error).message);
+    // Erreur non-transiente (401, quota…) : on la remonte directement
+    throw primaryError;
   }
 }
 

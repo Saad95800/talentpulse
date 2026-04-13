@@ -1,56 +1,134 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
 
 const steps = [
-  "Analyse de la Fiche de Poste...",
-  "Extraction des compétences clés...",
-  "Lecture du CV et du profil...",
-  "Calcul du taux de matching...",
-  "Rédaction de l'argumentaire client...",
-  "Finalisation du rapport..."
+  { icon: "📄", label: "Lecture de la fiche de poste..." },
+  { icon: "🧠", label: "Extraction des compétences clés..." },
+  { icon: "👤", label: "Analyse approfondie du CV..." },
+  { icon: "⚡", label: "Calcul du score de matching..." },
+  { icon: "✍️", label: "Rédaction de l'argumentaire client..." },
+  { icon: "📊", label: "Finalisation du rapport IA..." },
 ];
 
 export default function MatchingLoader() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % steps.length);
-    }, 3000);
-    return () => clearInterval(interval);
+    const stepInterval = setInterval(() => {
+      setCurrentStep(prev => {
+        const next = prev + 1;
+        if (next >= steps.length) {
+          clearInterval(stepInterval);
+          return prev;
+        }
+        return next;
+      });
+    }, 2800);
+
+    const progressInterval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 1, 95));
+    }, 170);
+
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
   }, []);
 
+  const step = steps[currentStep];
+
   return (
-    <div className="flex flex-col items-center justify-center p-12 min-h-[400px] animate-in fade-in zoom-in duration-500">
+    <div className="flex flex-col items-center justify-center p-10 min-h-[480px] select-none">
+      {/* Orb animé */}
       <div className="relative mb-10">
-        <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="relative bg-white p-8 rounded-full shadow-2xl shadow-primary/10 border border-primary/10">
-          <Loader2 className="w-16 h-16 text-primary animate-spin" strokeWidth={1.5} />
+        <div
+          className="absolute inset-0 rounded-full blur-3xl opacity-40 animate-pulse"
+          style={{ background: 'var(--color-primary)', transform: 'scale(1.4)' }}
+        />
+        <div
+          className="relative w-28 h-28 rounded-full flex items-center justify-center shadow-2xl border-4"
+          style={{ background: 'white', borderColor: 'var(--color-primary)' }}
+        >
+          {/* Anneau tournant */}
+          <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: '2s' }}>
+            <circle
+              cx="56" cy="56" r="48"
+              fill="none"
+              strokeWidth="4"
+              stroke="url(#ringGrad)"
+              strokeLinecap="round"
+              strokeDasharray="120 200"
+            />
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="1" />
+                <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="text-3xl" role="img" aria-label="step icon">{step.icon}</span>
         </div>
       </div>
 
-      <div className="text-center space-y-4 max-w-sm">
-        <h3 className="text-2xl font-bold text-main tracking-tight">Analyse en cours...</h3>
-        <p className="text-primary font-semibold text-lg animate-pulse min-h-[1.75rem]">
-          {steps[currentStep]}
+      {/* Texte central */}
+      <div className="text-center space-y-3 max-w-xs">
+        <h3 className="text-2xl font-black text-main tracking-tight">
+          Analyse en cours…
+        </h3>
+        <p
+          key={currentStep}
+          className="font-semibold text-base min-h-[1.75rem] transition-opacity duration-500"
+          style={{ color: 'var(--color-primary)', animation: 'fadeIn 0.4s ease' }}
+        >
+          {step.label}
         </p>
-        <p className="text-muted text-sm px-4">
-          Nos algorithmes d&apos;IA identifient les points de convergence entre le CV et le poste.
+        <p className="text-muted text-xs leading-relaxed px-2">
+          L'IA analyse les convergences entre le profil et le poste pour vous fournir un rapport de précision optimale.
         </p>
       </div>
 
-      <div className="mt-12 flex gap-2">
-        {steps.map((_, i) => (
+      {/* Barre de progression */}
+      <div className="mt-10 w-full max-w-xs">
+        <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted mb-2">
+          <span>Progression</span>
+          <span style={{ color: 'var(--color-primary)' }}>{progress}%</span>
+        </div>
+        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+          <div
+            className="h-full rounded-full transition-all duration-200"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(to right, var(--color-primary), #818cf8)',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Étapes en dots */}
+      <div className="mt-8 flex items-center gap-2">
+        {steps.map((s, i) => (
           <div
             key={i}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              i === currentStep ? 'w-8 bg-primary' : 'w-2 bg-slate-200'
-            }`}
+            title={s.label}
+            className="rounded-full transition-all duration-500"
+            style={{
+              width:      i === currentStep ? '28px' : '8px',
+              height:     '8px',
+              background: i <= currentStep ? 'var(--color-primary)' : '#e2e8f0',
+              opacity:    i > currentStep ? 0.5 : 1,
+            }}
           />
         ))}
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
