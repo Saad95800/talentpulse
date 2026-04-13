@@ -1,0 +1,64 @@
+# 📄 CAHIER DES CHARGES : ASSISTANT IA & MATCHING POUR RECRUTEURS FREELANCES
+
+## 1. CONTEXTE ET OBJECTIF DU PROJET
+Le marché du recrutement freelance souffre d'un manque d'outils adaptés : les recruteurs paient souvent des ATS onéreux (ex: 180€/mois) qu'ils n'utilisent pas, gèrent une forte charge mentale, et perdent un temps précieux à trier manuellement des centaines de CV [1-4]. 
+L'objectif de ce projet est de créer un "système sur-mesure" centralisé, intégrant l'Intelligence Artificielle, pour automatiser les tâches chronophages (notamment le matching CV/Fiche de poste) et générer automatiquement l'argumentaire de vente pour le client final (le "Send-out") [5-7].
+
+## 2. CIBLE ET MODÈLE ÉCONOMIQUE
+- **Cible principale** : Recruteurs freelances / indépendants (IT ou généralistes) [8].
+- **Business Model (Acquisition)** : Approche "Lead Magnet". L'outil est proposé avec 3 crédits d'essais gratuits en échange de l'email et du numéro de téléphone du prospect (permettant la relance commerciale à chaud).
+- **Business Model (Monétisation)** : Un "Paywall" bloque l'utilisateur à 0 crédit et le redirige vers un appel Calendly pour vendre l'outil sur-mesure en paiement unique (entre 2000€ et 4000€) avec un potentiel forfait de maintenance mensuel [9-11].
+
+## 3. STACK TECHNIQUE (Architecture)
+- **Framework Front-end / Back-end** : Next.js (App Router) avec React.
+- **Base de données** : MySQL gérée via l'ORM Prisma.
+- **State Management** : Redux Toolkit (gestion des `userSlice` et `matchingSlice`).
+- **Styling** : Tailwind CSS couplé à des variables Sass (design épuré B2B).
+- **Intelligence Artificielle** : SDK Anthropic (Claude 3.5) ou Google (Gemini 1.5) [12].
+- **Traitement de fichiers** : Librairie `pdf-parse` pour l'extraction de texte brut côté serveur.
+
+## 4. FONCTIONNALITÉS PRINCIPALES (MVP)
+
+### 4.1. Landing Page & Lead Capture (Acquisition)
+- Page d'accueil ultra-épurée axée sur la douleur principale : "Ne lisez plus 50 CV manuellement".
+- Formulaire de capture (Client Component) demandant l'email et le téléphone.
+- Création automatique de l'utilisateur en base de données avec un solde initial de 3 crédits.
+- Redirection automatique vers le Dashboard.
+
+### 4.2. Espace de Travail (Dashboard)
+- Interface "Split-screen" intuitive avec deux zones de Drag & Drop :
+  - Zone 1 : Upload de la Fiche de Poste (PDF).
+  - Zone 2 : Upload du CV du candidat (PDF).
+- Validation stricte des formats (MIME type `application/pdf`).
+- Bouton d'action "Générer le Matching IA (Coûte 1 crédit)".
+
+### 4.3. Moteur IA et Logique Métier (Le Cœur)
+- **Workflow Backend** :
+  1. Vérification du solde de crédits de l'utilisateur (déduction de 1 crédit via transaction atomique Prisma).
+  2. Extraction et nettoyage du texte des PDF (suppression des doubles sauts de ligne et caractères invisibles).
+  3. Envoi du texte au LLM avec un Prompt Système strict lui demandant d'agir comme un "Chasseur de têtes IT de haut niveau".
+- **Format de Sortie (JSON strict exigé)** :
+  - `score` : Note sur 10 de compatibilité.
+  - `competences_validees` : Tableau des critères respectés.
+  - `competences_manquantes` : Tableau des critères manquants.
+  - `argumentaire_client` : Le "Send-out", un paragraphe persuasif de 4-5 lignes prêt à être envoyé au N+1 [5].
+- Sauvegarde systématique de l'analyse dans la base de données (`MatchRecord`) pour l'historique du recruteur.
+
+### 4.4. Interface de Résultat et UX
+- Loader dynamique pendant l'analyse IA (messages défilants : "Lecture de la fiche de poste...", "Analyse IA...").
+- Affichage conditionnel des résultats :
+  - Composant `ScoreRing` : Anneau de score avec couleurs dynamiques (Vert si > 7, Orange, Rouge si < 5).
+  - Checklists visuelles (✅ et ❌) pour les compétences.
+  - Encart stylisé pour le "Send-out" avec un bouton natif "Copier le texte" pour un transfert immédiat au client.
+
+### 4.5. Monétisation (Le Paywall)
+- Modale bloquante (`PaywallModal`) qui s'active dès que les crédits tombent à 0.
+- Message marketing frustrant la perte de l'outil et incitant à l'abonnement.
+- Call-to-Action (Bouton) redirigeant directement vers le lien Calendly du développeur pour la vente (démonstration et closing).
+
+## 5. FONCTIONNALITÉS AVANCÉES & ROADMAP (V2)
+Ces fonctionnalités ont été identifiées lors de la recherche utilisateur pour la vente de versions sur-mesure plus poussées [7, 13] :
+1. **Agent IA Conversationnel du Vivier** : Un chat permettant au recruteur d'interroger sa propre base de données ("Trouve-moi un Product Designer avec 5 ans d'exp dans la Fintech parmi les candidats rencontrés") [14-16].
+2. **Scraping et Synchronisation LinkedIn** : Extension Chrome pour récupérer automatiquement les historiques de conversations privées LinkedIn et sourcer de nouveaux profils [17, 18].
+3. **Génération de Pages Candidats (Livrable Client)** : Transformer l'argumentaire "Send-out" textuel en une page web unique (URL personnalisée) intégrant le CV, le portfolio et les notes, à envoyer au client [19, 20].
+4. **Intégration Audio/Visio** : Transcription automatique des entretiens candidats et intégration au compte-rendu global de l'IA [21, 22].

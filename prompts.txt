@@ -1,0 +1,1272 @@
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET
+Tu es un Développeur Full-Stack Senior expert en Next.js, React et TypeScript. 
+Nous allons construire ensemble un MVP de Micro-SaaS : un "Algorithme de Matching IA" destiné aux recruteurs freelances. L'objectif de cet outil est de leur permettre d'uploader une Fiche de Poste (PDF) et un CV (PDF) pour obtenir un score de pertinence et un argumentaire de vente généré par l'IA.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 1.1)
+Ta tâche pour cette première étape est d'initialiser l'architecture de base du projet front-end et de nettoyer le code boilerplate par défaut pour avoir une base saine.
+
+# STACK TECHNIQUE REQUISE
+- Framework : Next.js (Dernière version stable)
+- Routage : App Router obligatoire (`app/`)
+- Langage : TypeScript (en mode strict)
+- Styling : Tailwind CSS
+- Structure : Utilisation obligatoire du répertoire `src/`
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INITIALISATION DU PROJET :
+- Crée la structure d'un projet Next.js avec TypeScript, Tailwind CSS, ESLint et l'App Router.
+- Assure-toi que tout le code source se trouve dans le répertoire `src/` (donc `src/app/`, `src/components/`, etc.).
+- Configure les alias d'importation dans le `tsconfig.json` pour utiliser `@/*` pointant vers `./src/*`.
+
+2. CONFIGURATION DE TAILWIND CSS :
+- Vérifie que les fichiers `tailwind.config.ts` (ou `.js`) et `postcss.config.js` sont correctement configurés pour scanner tous les fichiers dans `src/**/*.{js,ts,jsx,tsx,mdx}`.
+- Dans le fichier global de style (ex: `src/app/globals.css`), conserve uniquement les directives Tailwind (`@tailwind base; @tailwind components; @tailwind utilities;`) et supprime tout le style boilerplate de base fourni par Next.js.
+
+3. NETTOYAGE DU BOILERPLATE :
+- Modifie le fichier `src/app/layout.tsx`. Supprime le code inutile, mets la langue de la balise HTML en français (`lang="fr"`), et configure les métadonnées de base (Titre : "Algorithme de Matching IA | Pour Recruteurs", Description : "Évaluez instantanément la pertinence d'un CV par rapport à une fiche de poste grâce à l'IA.").
+- Modifie le fichier `src/app/page.tsx`. Supprime tout le contenu généré par défaut par Next.js. Remplace-le par un composant fonctionnel simple renvoyant une `main` avec un titre `<h1>` centré disant : "Bienvenue sur l'Algorithme de Matching IA".
+
+4. RÈGLES DE DÉVELOPPEMENT STRICTES :
+- Utilise les "Server Components" par défaut. N'ajoute la directive `"use client"` que si c'est strictement nécessaire pour l'interactivité.
+- Le typage TypeScript doit être rigoureux (pas de type `any`).
+- N'installe aucune autre librairie pour le moment, concentre-toi uniquement sur l'initialisation de cette stack.
+
+Confirme-moi que tout est initialisé et que le projet compile correctement avec `npm run dev` avant que nous passions à l'étape de configuration de Sass.
+
+--------------------------------------------------------------------------------
+
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'initialisation du projet Next.js (App Router) est terminée. Nous développons le MVP "Algorithme de Matching IA" destiné à une cible B2B (recruteurs freelances). Le design doit donc inspirer la confiance, la modernité et la clarté.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 1.2)
+Ta tâche consiste à installer et configurer le préprocesseur Sass, à restructurer les fichiers de style globaux, et à définir une charte graphique professionnelle et épurée en connectant les variables Sass au fichier de configuration de Tailwind CSS.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INSTALLATION DE SASS :
+- Exécute la commande nécessaire pour installer Sass en tant que dépendance de développement (ex: `npm install -D sass`).
+
+2. CONVERSION ET MISE À JOUR DES IMPORTS :
+- Renomme le fichier `src/app/globals.css` en `src/app/globals.scss`.
+- Mets à jour l'importation de ce fichier dans `src/app/layout.tsx` (remplace `import './globals.css'` par `import './globals.scss'`).
+
+3. DÉFINITION DE LA CHARTE GRAPHIQUE (DANS SASS) :
+- Dans le fichier `src/app/globals.scss`, conserve les directives Tailwind (`@tailwind base; @tailwind components; @tailwind utilities;`).
+- Sous ces directives, crée une section `:root` et définis les variables CSS (custom properties) pour une interface "épurée et professionnelle". Utilise les teintes suivantes (ou des teintes très proches, modernes et sobres) :
+  --color-background: #F8FAFC; /* Un blanc cassé/gris très clair pour le fond (Slate 50) */
+  --color-surface: #FFFFFF; /* Blanc pur pour les cartes et conteneurs */
+  --color-text-main: #0F172A; /* Gris très foncé pour le texte principal (Slate 900) */
+  --color-text-muted: #64748B; /* Gris moyen pour le texte secondaire (Slate 500) */
+  --color-primary: #2563EB; /* Un bleu professionnel et rassurant (Blue 600) */
+  --color-primary-hover: #1D4ED8; /* Bleu légèrement plus foncé pour les interactions (Blue 700) */
+  --color-secondary: #0EA5E9; /* Une couleur d'accentuation dynamique (Blue 500 ou Cyan) */
+
+4. CONNEXION AVEC TAILWIND CSS :
+- Ouvre le fichier `tailwind.config.ts` (ou `.js`).
+- Étends le thème par défaut (`theme.extend`) pour intégrer les variables CSS que tu viens de créer. 
+- Mappe ces variables dans les sections `colors`, `backgroundColor`, et `textColor` pour que nous puissions utiliser des classes comme `bg-background`, `bg-surface`, `text-main`, `text-primary`, etc.
+- Exemple de mapping attendu dans la configuration :
+  colors: {
+    background: "var(--color-background)",
+    surface: "var(--color-surface)",
+    primary: {
+      DEFAULT: "var(--color-primary)",
+      hover: "var(--color-primary-hover)",
+    },
+    secondary: "var(--color-secondary)",
+    main: "var(--color-text-main)",
+    muted: "var(--color-text-muted)",
+  }
+
+5. VÉRIFICATION VISUELLE :
+- Mets à jour le composant principal dans `src/app/page.tsx` en appliquant les nouvelles classes. Par exemple : donne au `main` la classe `bg-background min-h-screen text-main`, et crée un bouton de test utilisant `bg-primary hover:bg-primary-hover text-white`.
+
+Confirme-moi que Sass est bien installé, que la configuration Tailwind est connectée aux variables, et que l'application compile correctement sans erreur de style avant que nous passions à la configuration du State Management (Redux).
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'initialisation du projet et la configuration des styles (Tailwind + Sass) sont terminées et fonctionnelles. Nous continuons le développement de notre MVP "Algorithme de Matching IA" pour les recruteurs freelances.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 1.3)
+Ta tâche consiste à mettre en place le système de State Management de l'application en utilisant Redux Toolkit. Puisque nous utilisons le Next.js App Router (où les composants sont des Server Components par défaut), tu devras créer un composant Provider spécifique (Client Component) pour encapsuler l'application.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INSTALLATION DES DÉPENDANCES :
+- Installe les librairies nécessaires via le terminal : `npm install @reduxjs/toolkit react-redux`
+
+2. CRÉATION DE L'ARCHITECTURE DU STORE :
+- Crée un nouveau dossier `src/store/`.
+- Dans ce dossier, crée le fichier racine du store : `src/store/index.ts`.
+- Configure le store avec `configureStore` de Redux Toolkit. Pour le moment, laisse l'objet `reducer` vide (ex: `reducer: {}`), nous ajouterons les slices plus tard.
+- Exporte les types TypeScript fondamentaux à la fin du fichier : `RootState` (en utilisant `ReturnType<typeof store.getState>`) et `AppDispatch` (en utilisant `typeof store.dispatch`).
+
+3. CRÉATION DU REDUX PROVIDER (CLIENT COMPONENT) :
+- Crée un fichier `src/store/ReduxProvider.tsx`.
+- Ajoute OBLIGATOIREMENT la directive `"use client";` tout en haut de ce fichier.
+- Importe le `Provider` de `react-redux` et le `store` que tu viens de créer dans `index.ts`.
+- Crée et exporte un composant `ReduxProvider` qui prend `{ children }` en props et retourne `<Provider store={store}>{children}</Provider>`.
+
+4. INTÉGRATION DANS LE LAYOUT GLOBAL :
+- Ouvre le fichier `src/app/layout.tsx`.
+- Importe le composant `ReduxProvider`.
+- Encapsule le `{children}` à l'intérieur de la balise `<body>` avec ton `<ReduxProvider>`.
+- Assure-toi que le `layout.tsx` reste un Server Component (il NE DOIT PAS contenir `"use client"`).
+
+5. VÉRIFICATION :
+- Lance le serveur de développement avec `npm run dev`.
+- Vérifie dans la console et sur le navigateur qu'il n'y a aucune erreur de compilation ou de rendu liée au Provider ou à Redux (notamment l'erreur classique "React Context is unavailable in Server Components").
+
+Confirme-moi que l'installation de Redux Toolkit est terminée, que le Provider encapsule bien l'application et que le projet compile parfaitement sans erreur. Ne passe pas à la suite avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. La Phase 1 (Setup Next.js, Sass, Tailwind, Redux) est terminée et fonctionnelle. Avant d'attaquer la modélisation de la base de données, nous devons mettre en place notre environnement d'Assurance Qualité (QA) pour le MVP "Algorithme de Matching IA".
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 2.1)
+Ta tâche consiste à installer et configurer Jest ainsi que React Testing Library. La configuration doit être parfaitement optimisée pour Next.js (App Router) et TypeScript. Tu devras ensuite créer un test unitaire initial (dummy test) pour valider le bon fonctionnement du runner.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INSTALLATION DES DÉPENDANCES :
+- Exécute la commande d'installation pour les dépendances de développement (`devDependencies`) suivantes : 
+  `npm install -D jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom @types/jest`
+
+2. CONFIGURATION DE JEST POUR NEXT.JS :
+- Crée un fichier `jest.config.ts` à la racine du projet.
+- Utilise le package `next/jest` (qui est fourni nativement par Next.js) pour créer la configuration Jest. Cela permet à Next.js de configurer automatiquement le compilateur SWC et de gérer les alias (comme `@/*`).
+- Spécifie `testEnvironment: 'jest-environment-jsdom'` dans la configuration.
+- Crée un fichier `jest.setup.ts` à la racine du projet et ajoutes-y uniquement la ligne : `import '@testing-library/jest-dom';` (pour activer les matchers DOM personnalisés comme `toBeInTheDocument`).
+- Dans `jest.config.ts`, ajoute `setupFilesAfterEnv: ['<rootDir>/jest.setup.ts']`.
+
+3. CRÉATION DU DUMMY TEST :
+- Crée un dossier `src/__tests__/`.
+- À l'intérieur, crée un fichier `Home.test.tsx`.
+- Écris un test simple en utilisant React Testing Library. Ce test doit importer la page d'accueil (`src/app/page.tsx`), la rendre via la fonction `render()`, et utiliser `screen.getByRole` ou `screen.getByText` pour vérifier que le titre "Bienvenue sur l'Algorithme de Matching IA" (que tu as créé à l'étape 1.1) est bien présent dans le document.
+
+4. AJOUT DES SCRIPTS NPM :
+- Ouvre le fichier `package.json` et ajoute les scripts suivants dans la section `"scripts"` :
+  - `"test": "jest"`
+  - `"test:watch": "jest --watchAll"`
+
+5. VÉRIFICATION :
+- Exécute la commande `npm run test` dans le terminal.
+- Assure-toi que la configuration compile correctement le TypeScript et que le test passe avec succès (en vert).
+
+Confirme-moi que Jest et React Testing Library sont correctement installés, que le test unitaire du composant principal passe, et qu'il n'y a aucune erreur de typage. Ne passe pas à la suite avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'environnement de tests unitaires avec Jest est en place et le test factice est au vert. Nous devons maintenant configurer l'environnement de tests de bout en bout (E2E) pour valider les parcours utilisateurs de notre MVP "Algorithme de Matching IA".
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 2.2)
+Ta tâche consiste à installer Cypress, initialiser sa configuration de base pour un projet Next.js sous TypeScript, et créer un premier test E2E factice (dummy test) pour vérifier que l'environnement se lance correctement.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INSTALLATION DE CYPRESS :
+- Installe Cypress en tant que dépendance de développement en exécutant : `npm install -D cypress`
+
+2. INITIALISATION ET CONFIGURATION (cypress.config.ts) :
+- Crée le fichier de configuration `cypress.config.ts` à la racine du projet.
+- Configure Cypress spécifiquement pour les tests E2E. Tu dois absolument définir la propriété `baseUrl` sur `http://localhost:3000` (le port de développement par défaut de Next.js) dans l'objet `e2e`.
+- Initialise l'arborescence de base de Cypress à la racine du projet : crée un dossier `cypress/` contenant les sous-dossiers `e2e/`, `fixtures/`, et `support/`.
+- Dans `cypress/support/`, crée un fichier `e2e.ts` (même vide ou avec les imports par défaut) pour respecter la structure standard.
+
+3. CRÉATION DU PREMIER TEST E2E (DUMMY TEST) :
+- Dans le dossier `cypress/e2e/`, crée un fichier nommé `home.cy.ts`.
+- Rédige un test E2E simple avec la syntaxe de Cypress (`describe` et `it`) qui effectue les actions suivantes :
+  a) Visite la page d'accueil via `cy.visit('/')`.
+  b) Vérifie que la page charge correctement en affirmant que le titre principal est visible à l'écran (utilise `cy.contains("Bienvenue sur l'Algorithme de Matching IA")`).
+
+4. AJOUT DES SCRIPTS NPM :
+- Ouvre le fichier `package.json` et ajoute ces deux commandes dans la section `"scripts"` :
+  - `"cypress:open": "cypress open"` (pour lancer l'interface graphique Interactive de Cypress)
+  - `"cypress:run": "cypress run"` (pour lancer les tests en mode "headless" dans le terminal CI/CD)
+
+5. VÉRIFICATION :
+- Lance le serveur Next.js en arrière-plan (si ce n'est pas déjà fait).
+- Exécute le test en mode headless avec `npm run cypress:run` (ou via l'interface) pour valider que Cypress parvient à se connecter au port 3000, trouve le fichier `home.cy.ts` et que le test passe au vert sans erreur de typage TypeScript.
+
+Confirme-moi que l'installation et la configuration de Cypress sont terminées avec succès, et que le test E2E de la page d'accueil fonctionne. Ne passe pas à l'étape de base de données avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'architecture de base, le state management (Redux) et les environnements de tests (Jest & Cypress) sont en place et validés. Nous entamons maintenant la Phase 2 de notre MVP "Algorithme de Matching IA" pour les recruteurs freelances : la configuration de la base de données et du backend.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 3.1)
+Ta tâche consiste à installer et initialiser l'ORM Prisma pour communiquer avec une base de données MySQL. Tu devras générer le schéma de base et, surtout, mettre en place une instance sécurisée du client Prisma adaptée au comportement du framework Next.js.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INSTALLATION DES DÉPENDANCES PRISMA :
+- Installe la CLI Prisma en tant que dépendance de développement : `npm install -D prisma`
+- Installe le client Prisma en tant que dépendance standard : `npm install @prisma/client`
+
+2. INITIALISATION DE PRISMA :
+- Initialise Prisma en spécifiant explicitement MySQL comme base de données : `npx prisma init --datasource-provider mysql`
+- Confirme que cette commande a bien généré un dossier `prisma/` contenant le fichier `schema.prisma` à la racine du projet, ainsi qu'un fichier `.env`.
+
+3. CONFIGURATION DU SCHÉMA ET DE L'ENVIRONNEMENT :
+- Vérifie le fichier `prisma/schema.prisma`. Il doit contenir le bloc `generator client { provider = "prisma-client-js" }` et le bloc `datasource db { provider = "mysql", url = env("DATABASE_URL") }`.
+- Ouvre le fichier `.env` et assure-toi que la variable `DATABASE_URL` utilise la syntaxe standard pour MySQL (ex: `mysql://USER:PASSWORD@HOST:PORT/DATABASE`). Laisse un commentaire pour me rappeler de configurer mes propres accès MySQL.
+
+4. CRÉATION DU SINGLETON PRISMA CLIENT (SPÉCIFIQUE À NEXT.JS) :
+- Crée un nouveau dossier `src/lib/` s'il n'existe pas déjà.
+- Crée le fichier `src/lib/prisma.ts`.
+- Rédige le code d'instanciation du `PrismaClient` en utilisant l'objet `globalThis`. C'est une obligation stricte dans Next.js pour empêcher la création de multiples connexions à la base de données à chaque Hot Module Replacement (HMR) lors de l'exécution de `npm run dev`.
+- Exporte cette instance pour qu'elle puisse être utilisée partout dans l'application.
+
+5. VÉRIFICATION :
+- Exécute la commande `npx prisma validate` pour t'assurer que la syntaxe du fichier `schema.prisma` est parfaitement correcte.
+- Vérifie que le projet compile sans erreur de typage TypeScript.
+
+Confirme-moi que Prisma est installé, que le `schema.prisma` est prêt pour MySQL, et que le singleton `src/lib/prisma.ts` a bien été généré. Ne passe pas à la création des modèles de la base de données avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'initialisation de Prisma avec la base de données MySQL est terminée et le Singleton Prisma pour Next.js a bien été créé. Nous poursuivons la Phase 2 de notre MVP "Algorithme de Matching IA". Ce MVP est un "Lead Magnet" : son but est de capturer les coordonnées des visiteurs et de leur offrir quelques utilisations gratuites de l'IA.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 3.2)
+Ta tâche consiste à créer le premier modèle de données dans le fichier `schema.prisma` : le modèle `User`. Ce modèle représentera les recruteurs qui s'inscrivent sur la plateforme, et gérera leur solde de crédits d'utilisation de l'algorithme.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. ÉDITION DU SCHÉMA PRISMA :
+- Ouvre le fichier `prisma/schema.prisma`.
+- Assure-toi que les blocs `generator` et `datasource` (pour MySQL) sont toujours bien présents et intacts.
+
+2. CRÉATION DU MODÈLE "User" :
+- Ajoute un nouveau `model User`.
+- Définis les champs suivants avec la syntaxe stricte de Prisma pour MySQL :
+  - `id` : de type `String`, défini comme clé primaire (`@id`) et généré automatiquement en tant que UUID (`@default(uuid())`).
+  - `email` : de type `String`, obligatoire et unique (`@unique`).
+  - `phone` : de type `String`, obligatoire (cette donnée est cruciale pour notre stratégie commerciale de relance téléphonique).
+  - `credits` : de type `Int`, obligatoire, avec une valeur par défaut de 3 (`@default(3)`). Cela correspond aux 3 matchings gratuits offerts à l'inscription.
+  - `createdAt` : de type `DateTime`, généré automatiquement à la création (`@default(now())`).
+  - `updatedAt` : de type `DateTime`, mis à jour automatiquement (`@updatedAt`).
+
+3. EXEMPLE DE RÉSULTAT ATTENDU :
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  phone     String
+  credits   Int      @default(3)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+4. VÉRIFICATION DU SCHÉMA :
+- N'exécute PAS encore de migration dans la base de données.
+- Contente-toi d'exécuter la commande `npx prisma format` dans le terminal. Cette commande va formater le fichier et valider que la syntaxe du modèle est parfaitement correcte.
+
+Confirme-moi que le modèle `User` a bien été ajouté au fichier `schema.prisma` et que la commande de formatage n'a retourné aucune erreur. Ne passe pas à la création du modèle de l'historique des matchings avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Le modèle `User` a été créé et formaté avec succès dans Prisma. Nous poursuivons la modélisation de la base de données pour notre MVP "Algorithme de Matching IA". Les recruteurs ont un besoin vital de conserver une trace de leurs analyses pour ne plus jamais avoir à recommencer une recherche de zéro.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 3.3)
+Ta tâche consiste à créer le modèle `MatchRecord` dans le fichier `schema.prisma`. Ce modèle va stocker l'historique et les résultats des matchings générés par l'IA. Tu devras également établir une relation (One-to-Many) correcte entre le modèle `User` existant et ce nouveau modèle `MatchRecord`, puis exécuter la première migration vers la base de données MySQL.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU MODÈLE "MatchRecord" :
+- Ouvre le fichier `prisma/schema.prisma`.
+- Ajoute le modèle `MatchRecord` avec les champs stricts suivants pour MySQL :
+  - `id` : String, clé primaire (@id), généré par défaut en UUID (@default(uuid())).
+  - `userId` : String, qui servira de clé étrangère.
+  - `user` : Le champ de relation Prisma ciblant le modèle `User` (ex: `@relation(fields: [userId], references: [id], onDelete: Cascade)`).
+  - `jobTitle` : String (pour stocker le titre du poste analysé).
+  - `candidateName` : String (pour stocker le nom du candidat analysé).
+  - `score` : Float (la note sur 10 générée par l'IA).
+  - `aiResponse` : Json (pour stocker l'objet complet renvoyé par l'IA contenant les compétences et l'argumentaire client).
+  - `createdAt` : DateTime, généré par défaut (@default(now())).
+
+2. MISE À JOUR DU MODÈLE "User" :
+- Dans le modèle `User` que tu as créé précédemment, ajoute le champ de relation inverse pour que Prisma comprenne la relation One-to-Many :
+  - `matchRecords MatchRecord[]`
+
+3. EXEMPLE DE RÉSULTAT ATTENDU :
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  phone        String
+  credits      Int           @default(3)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  matchRecords MatchRecord[]
+}
+
+model MatchRecord {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobTitle      String
+  candidateName String
+  score         Float
+  aiResponse    Json
+  createdAt     DateTime @default(now())
+}
+
+4. VALIDATION ET MIGRATION :
+- Exécute `npx prisma format` pour valider la syntaxe des relations.
+- Exécute `npx prisma migrate dev --name init_user_and_matching_schema` pour pousser ce schéma dans la base de données MySQL et générer les types finaux du Prisma Client.
+
+Confirme-moi que les modèles sont correctement liés et que la migration vers la base de données MySQL s'est déroulée avec succès. Ne passe pas au développement de l'API d'authentification avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Les modèles `User` et `MatchRecord` ont été correctement définis dans le fichier `schema.prisma`. Nous finalisons maintenant la Phase 2 de notre MVP "Algorithme de Matching IA". 
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 3.4)
+Ta tâche consiste à générer la migration SQL pour créer physiquement les tables dans la base de données MySQL, générer les types TypeScript du client Prisma, et surtout, mettre en place le Singleton du client Prisma (`src/lib/prisma.ts`) indispensable pour les projets Next.js.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. EXÉCUTION DE LA MIGRATION :
+- Exécute la commande suivante dans le terminal pour créer les tables dans MySQL et générer le client Prisma : `npx prisma migrate dev --name init_db`
+- Ensuite, exécute `npx prisma generate` par mesure de sécurité pour t'assurer que les types TypeScript locaux sont parfaitement synchronisés avec le schéma.
+
+2. CRÉATION DU SINGLETON PRISMA (POUR NEXT.JS) :
+- Crée (ou écrase s'il existe déjà) le fichier `src/lib/prisma.ts`.
+- Rédige exactement le code suivant pour instancier le client Prisma. Ce code utilise `globalThis` pour éviter l'épuisement des connexions à la base de données (Too many connections) lors du rechargement à chaud (HMR) en mode développement :
+
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+const prismaClientSingleton = () => {
+  return new PrismaClient();
+};
+
+declare const globalThis: {
+  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+} & typeof global;
+
+const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+
+export default prisma;
+
+if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
+VÉRIFICATION DU TYPAGE ET DE LA CONNEXION :
+Crée temporairement un script de test ou utilise un Server Component existant (comme page.tsx) pour importer prisma depuis src/lib/prisma.ts.
+Vérifie que l'auto-complétion de TypeScript fonctionne parfaitement sur prisma.user et prisma.matchRecord.
+Assure-toi que le projet compile avec npm run dev sans aucune erreur liée à Prisma ou à la base de données.
+Confirme-moi que la migration MySQL a réussi, que le client a été généré, et que le fichier src/lib/prisma.ts est en place avec le code du Singleton. Ne passe pas au développement de l'API (Prompt 4.1) avant ma validation.
+
+***
+
+Dès que votre agent aura validé l'exécution de la migration et la création de ce fichier, toute l'architecture de votre base de données sera robuste et prête pour la production ! Dites-moi simplement **"Passe au prompt 4.1"** quand vous serez prêt à coder le système d'inscription de vos leads (recruteurs) et la gestion de leurs crédits gratuits.
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'architecture de la base de données MySQL est en place grâce à Prisma et le Singleton est fonctionnel. Nous démarrons maintenant la création du Backend de notre MVP "Algorithme de Matching IA". Ce MVP sert de Lead Magnet : l'objectif business est de récolter les emails et les numéros de téléphone des recruteurs en échange de quelques utilisations gratuites de l'IA.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 4.1)
+Ta tâche consiste à créer une "Server Action" Next.js sécurisée qui servira de point d'entrée pour la capture de leads (Lead Capture). Cette fonction recevra les informations du formulaire, vérifiera si le recruteur existe déjà dans la base, et le créera avec ses crédits offerts le cas échéant.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU FICHIER DES SERVER ACTIONS :
+- Crée un nouveau dossier `src/actions/` (ou utilise le répertoire approprié de ton architecture).
+- À l'intérieur, crée le fichier `lead.action.ts` (ou `user.action.ts`).
+- Ajoute OBLIGATOIREMENT la directive `"use server";` sur la toute première ligne de ce fichier pour indiquer à Next.js que toutes les fonctions exportées ici s'exécuteront côté serveur.
+
+2. IMPORTS NÉCESSAIRES :
+- Importe l'instance du singleton Prisma que nous avons créée précédemment (`import prisma from '@/lib/prisma';`).
+
+3. DÉVELOPPEMENT DE LA FONCTION `registerLead` :
+- Exporte une fonction asynchrone avec la signature exacte suivante : `export async function registerLead(email: string, phone: string)`
+- Ajoute une validation de base : vérifie que l'email et le téléphone ne sont pas des chaînes vides. Si l'une des deux manque, retourne un objet contenant un message d'erreur clair.
+- Implémente la logique métier suivante dans un bloc `try/catch` :
+  a) Utilise `prisma.user.findUnique` pour chercher un utilisateur possédant cet `email`.
+  b) Si l'utilisateur EXISTE DÉJÀ : retourne l'objet utilisateur récupéré.
+  c) Si l'utilisateur N'EXISTE PAS : utilise `prisma.user.create` pour l'insérer en base de données avec l'`email` et le `phone` fournis. Le champ `credits` prendra automatiquement la valeur par défaut de 3 (définie dans le schéma Prisma). Retourne ensuite le nouvel utilisateur créé.
+
+4. GESTION DES ERREURS ET TYPAGE :
+- Dans le bloc `catch`, ajoute un `console.error` pour garder une trace des erreurs côté serveur.
+- La fonction doit avoir un type de retour cohérent (par exemple, retourner soit un objet `{ success: true, user: User }` soit un objet `{ success: false, error: string }`) afin que le front-end puisse facilement interpréter le résultat.
+
+5. VÉRIFICATION :
+- Assure-toi que la fonction est bien exportée et que l'auto-complétion de TypeScript reconnaît les propriétés de l'objet renvoyé par Prisma (`id`, `email`, `phone`, `credits`).
+
+Confirme-moi que le fichier d'action a été créé, que la directive "use server" est bien présente, et que la logique de Lead Capture est prête. Ne passe pas à la fonction de déduction des crédits (Prompt 4.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'action de création de lead (`registerLead`) est en place et fonctionnelle. Notre MVP "Algorithme de Matching IA" est un Lead Magnet qui offre 3 utilisations gratuites aux recruteurs. Nous devons maintenant implémenter la logique métier qui va déduire ces crédits à chaque fois qu'ils utilisent l'IA.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 4.2)
+Ta tâche consiste à créer une nouvelle Server Action Next.js `deductCredit` qui va vérifier le solde de l'utilisateur. Si le solde est supérieur à 0, l'action doit décrémenter ce solde de 1 de manière sécurisée et autoriser l'utilisation de l'outil. Si le solde est à 0, l'action doit bloquer le processus et renvoyer une erreur explicite.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. LOCALISATION DU FICHIER :
+- Ouvre le fichier des Server Actions que tu as créé à l'étape précédente (ex: `src/actions/lead.action.ts` ou `user.action.ts`).
+- Assure-toi que la directive `"use server";` est bien toujours présente en haut du fichier.
+
+2. DÉVELOPPEMENT DE LA FONCTION `deductCredit` :
+- Exporte une nouvelle fonction asynchrone avec la signature suivante : `export async function deductCredit(userId: string)`
+- Si `userId` est manquant ou vide, retourne immédiatement `{ success: false, error: "ID utilisateur manquant." }`.
+
+3. LOGIQUE MÉTIER ET TRANSACTION PRISMA :
+- Implémente un bloc `try/catch`.
+- Dans le `try`, cherche d'abord l'utilisateur : `const user = await prisma.user.findUnique({ where: { id: userId } });`
+- Si l'utilisateur n'existe pas, retourne `{ success: false, error: "Utilisateur introuvable." }`.
+- Si `user.credits <= 0`, l'utilisateur a épuisé ses essais gratuits. Retourne OBLIGATOIREMENT l'objet exact suivant : `{ success: false, error: "Crédits épuisés" }`. (Ce message précis servira au Front-end pour afficher la modale de Paywall / Call-to-action Calendly).
+- Si l'utilisateur a des crédits (> 0), mets à jour son solde. Utilise l'opération atomique de Prisma pour éviter les race-conditions : 
+  `const updatedUser = await prisma.user.update({ where: { id: userId }, data: { credits: { decrement: 1 } } });`
+- Si la mise à jour réussit, retourne `{ success: true, creditsRemaining: updatedUser.credits }`.
+
+4. GESTION DES ERREURS :
+- Dans le bloc `catch`, ajoute un `console.error` pour logger l'erreur serveur et retourne `{ success: false, error: "Erreur lors de la déduction du crédit." }`.
+
+5. VÉRIFICATION :
+- Assure-toi que TypeScript ne lève aucune erreur sur les types de retour de la fonction.
+- Vérifie que tu importes bien le singleton `prisma` depuis `src/lib/prisma.ts`.
+
+Confirme-moi que cette fonction a été ajoutée et que le typage est correct. Ne passe pas à la phase d'upload et de parsing de PDF (Phase 3) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. La Phase 2 (Base de données Prisma, MySQL et gestion des Leads/Crédits) est entièrement terminée et validée. Nous entamons maintenant la Phase 3 de notre MVP "Algorithme de Matching IA" : le traitement des documents et l'Intelligence Artificielle.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 5.1)
+Ta tâche consiste à créer une route API Next.js (App Router) robuste et sécurisée, capable de recevoir, lire et valider des fichiers envoyés depuis le Front-end via `FormData`. Cette route doit spécifiquement s'attendre à recevoir deux documents au format PDF : la Fiche de Poste et le CV du candidat.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DE LA ROUTE API :
+- Crée l'arborescence de dossiers suivante si elle n'existe pas : `src/app/api/upload/`
+- À l'intérieur, crée le fichier `route.ts`.
+
+2. DÉVELOPPEMENT DE LA MÉTHODE POST :
+- Dans `route.ts`, importe `NextResponse` depuis `next/server`.
+- Exporte une fonction asynchrone nommée `POST(request: Request)`.
+- Enveloppe toute la logique dans un bloc `try/catch` pour gérer proprement les erreurs serveur.
+
+3. LECTURE DU FORMDATA ET EXTRACTION :
+- Dans le bloc `try`, utilise `const formData = await request.formData();` pour récupérer les données entrantes.
+- Extrais les deux fichiers attendus :
+  `const jobFile = formData.get('jobFile') as File | null;`
+  `const cvFile = formData.get('cvFile') as File | null;`
+
+4. VALIDATIONS DE SÉCURITÉ :
+- Vérifie que les deux fichiers sont bien présents. Si l'un des deux manque, retourne immédiatement une erreur 400 via `NextResponse.json` : `{ success: false, error: "La Fiche de Poste et le CV sont obligatoires." }`.
+- Vérifie le type MIME des deux fichiers. Ils doivent strictement être égaux à `application/pdf`. Si ce n'est pas le cas, retourne une erreur 400 : `{ success: false, error: "Seul le format PDF est autorisé." }`.
+
+5. PRÉPARATION DES DONNÉES (POUR L'ÉTAPE SUIVANTE) :
+- Convertis ces objets `File` en `Buffer` ou `ArrayBuffer` de la manière suivante pour qu'ils soient prêts à être lus par notre futur extracteur de texte :
+  `const jobBuffer = Buffer.from(await jobFile.arrayBuffer());`
+  `const cvBuffer = Buffer.from(await cvFile.arrayBuffer());`
+- Pour l'instant, termine la fonction en retournant un succès factice simulant la bonne réception : 
+  `return NextResponse.json({ success: true, message: "Fichiers PDF reçus et validés avec succès.", jobSize: jobBuffer.length, cvSize: cvBuffer.length });`
+
+6. GESTION DES ERREURS :
+- Dans le bloc `catch`, ajoute un `console.error("Erreur Upload API:", error);` et retourne une erreur 500 : `{ success: false, error: "Une erreur est survenue lors de la réception des fichiers." }`.
+
+7. VÉRIFICATION :
+- Assure-toi qu'il n'y a aucune erreur de typage TypeScript concernant l'interface `File` ou `Buffer`.
+
+Confirme-moi que la route API est créée et que la logique de validation des PDF est en place. Ne passe pas au module d'extraction de texte (Prompt 5.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. La route API pour l'upload des fichiers (Prompt 5.1) est en place et valide correctement la réception des buffers PDF. Nous poursuivons la Phase 3 de notre MVP "Algorithme de Matching IA". L'un des plus gros "pain points" des recruteurs est d'exploiter efficacement les centaines de CV stockés sur leur ordinateur. Pour que notre IA de matching soit performante, nous devons d'abord extraire le texte brut de ces PDF de manière fiable et propre.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 5.2)
+Ta tâche consiste à installer une librairie de parsing PDF compatible avec l'environnement serveur de Node.js (Next.js App Router). Tu devras ensuite créer une fonction utilitaire robuste capable de prendre un `Buffer` en entrée, d'en extraire le texte, et surtout de nettoyer ce texte pour qu'il soit parfaitement optimisé avant d'être envoyé au LLM.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. INSTALLATION DE LA LIBRAIRIE :
+- Installe la librairie `pdf-parse` (qui est le standard pour Node.js) : `npm install pdf-parse`
+- Installe également ses types TypeScript s'ils existent : `npm install -D @types/pdf-parse` (Si les types n'existent pas, crée un fichier `src/types/pdf-parse.d.ts` avec `declare module 'pdf-parse';` pour éviter les erreurs TypeScript).
+
+2. CRÉATION DU FICHIER UTILITAIRE :
+- Crée un nouveau fichier `src/lib/pdf.ts` (ou `src/utils/pdf.ts` selon ton arborescence).
+- Importe `pdf-parse` au début du fichier.
+
+3. DÉVELOPPEMENT DE LA FONCTION D'EXTRACTION :
+- Exporte une fonction asynchrone avec la signature exacte suivante : 
+  `export async function extractTextFromPDF(buffer: Buffer): Promise<string>`
+- Implémente un bloc `try/catch`.
+- Dans le `try`, appelle la méthode de parsing : `const data = await pdfParse(buffer);`
+- Récupère le texte extrait brut : `let rawText = data.text;`
+
+4. LOGIQUE DE NETTOYAGE DU TEXTE (CRITIQUE POUR L'IA) :
+- Les PDF génèrent souvent un formatage chaotique. Applique les expressions régulières (Regex) suivantes sur `rawText` pour le nettoyer :
+  a) Remplace les sauts de ligne multiples (2 ou plus) par un seul saut de ligne : `rawText.replace(/\n{2,}/g, '\n')`
+  b) Remplace les espaces multiples par un seul espace : `rawText.replace(/\s{2,}/g, ' ')`
+  c) Supprime les caractères non imprimables ou invisibles (ex: `\u0000`) qui pourraient faire crasher l'API du LLM.
+- Retourne le texte final nettoyé via un `return rawText.trim();`.
+
+5. GESTION DES ERREURS :
+- Dans le bloc `catch`, ajoute un log serveur clair : `console.error("Erreur lors de l'extraction du PDF:", error);`
+- Lance une nouvelle erreur explicite (throw new Error) : `throw new Error("Impossible de lire le contenu du fichier PDF. Le fichier est peut-être corrompu ou protégé par un mot de passe.");`
+
+6. VÉRIFICATION ET TYPAGE :
+- Assure-toi que cette fonction n'utilise aucune API spécifique au navigateur (DOM, window), car elle s'exécutera strictement côté serveur dans Next.js.
+- Vérifie que l'auto-complétion TypeScript ne remonte aucune erreur sur le paramètre `Buffer`.
+
+Confirme-moi que l'installation de pdf-parse est faite et que la fonction utilitaire de nettoyage est prête à être utilisée. Ne passe pas au développement du moteur IA (Prompt 6.1) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Le module d'upload et d'extraction de texte propre depuis les PDF (CV et Fiches de Poste) est terminé et fonctionnel. Nous poursuivons la Phase 3 de notre MVP "Algorithme de Matching IA". L'objectif est maintenant de connecter notre backend à un modèle de langage (LLM) puissant, capable d'analyser ces textes avec une grande précision (comme un véritable chasseur de têtes).
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 6.1)
+Ta tâche consiste à installer le SDK officiel du modèle d'Intelligence Artificielle choisi (Anthropic pour Claude 3.5 ou Google pour Gemini 1.5), puis à configurer l'instance du client dans un fichier de service dédié. Ce fichier servira de socle pour toutes nos futures requêtes à l'IA.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. VÉRIFICATION DE L'ENVIRONNEMENT ET INSTALLATION DU SDK :
+- Vérifie le fichier `.env` à la racine du projet. 
+- Selon la clé API que j'y ai configurée (`ANTHROPIC_API_KEY` ou `GEMINI_API_KEY`), installe le SDK correspondant via npm :
+  - Si Anthropic : `npm install @anthropic-ai/sdk`
+  - Si Google Gemini : `npm install @google/generative-ai`
+- (Si aucune clé n'est encore configurée, installe par défaut le SDK d'Anthropic et ajoute un commentaire dans le `.env` pour me rappeler d'y insérer ma clé).
+
+2. CRÉATION DU FICHIER DE SERVICE IA :
+- Va dans le dossier `src/lib/` (celui où se trouve déjà `prisma.ts` et `pdf.ts`).
+- Crée un nouveau fichier nommé `ai.ts`.
+
+3. INITIALISATION DU CLIENT LLM :
+- Dans `src/lib/ai.ts`, importe le SDK que tu viens d'installer.
+- Instancie le client de manière sécurisée en t'assurant qu'il va bien lire la clé d'API depuis `process.env`.
+- Si tu utilises Anthropic :
+  `import Anthropic from '@anthropic-ai/sdk';`
+  `export const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });`
+- Si tu utilises Gemini :
+  `import { GoogleGenerativeAI } from '@google/generative-ai';`
+  `export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);`
+
+4. SÉCURITÉ ET BONNES PRATIQUES :
+- Assure-toi que ce fichier `src/lib/ai.ts` ne contient aucune logique côté client. Il ne doit être exécuté que côté serveur (Next.js Server Actions ou API Routes).
+- Ajoute une vérification simple (throw Error) lors de l'instanciation si la clé d'API est manquante dans les variables d'environnement, avec un message clair : "Clé API IA manquante dans le fichier .env".
+
+5. VÉRIFICATION :
+- Assure-toi que l'installation du package n'a généré aucun conflit de dépendances.
+- Vérifie que le projet compile toujours correctement avec `npm run dev`.
+
+Confirme-moi que le SDK est installé et que le fichier `src/lib/ai.ts` est prêt à être utilisé. Ne passe pas à la rédaction du prompt système (Prompt 6.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Le client IA (Anthropic ou Gemini) a été correctement instancié dans `src/lib/ai.ts`. Nous sommes à la phase cruciale de notre MVP "Algorithme de Matching IA". L'objectif est d'utiliser ce LLM pour analyser le texte d'un CV et d'une Fiche de Poste (précédemment extraits), et de retourner un résultat structuré.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 6.2)
+Ta tâche consiste à créer la fonction métier `generateMatchingScore` dans le service IA. Tu dois y injecter un prompt système ultra-strict pour obliger le modèle à agir comme un chasseur de têtes IT de haut niveau, et surtout, à forcer la réponse pour qu'elle soit EXCLUSIVEMENT au format JSON (sans aucun texte conversationnel avant ou après).
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. DÉFINITION DE L'INTERFACE TYPESCRIPT :
+- Dans `src/lib/ai.ts`, déclare une interface exportée pour typer le retour de l'IA :
+  ```typescript
+  export interface MatchResult {
+    score: number;
+    competences_validees: string[];
+    competences_manquantes: string[];
+    argumentaire_client: string;
+  }
+DÉVELOPPEMENT DE LA FONCTION PRINCIPALE :
+Exporte une fonction asynchrone : export async function generateMatchingScore(jobText: string, cvText: string): Promise<MatchResult>
+Ajoute un bloc try/catch robuste.
+RÉDACTION DU PROMPT SYSTÈME (LE CERVEAU DE L'OUTIL) :
+Crée une constante systemPrompt avec le texte exact suivant : "Tu es un expert en recrutement IT et un chasseur de têtes d'élite. Ton rôle est d'évaluer de manière stricte et objective la pertinence d'un profil par rapport à une fiche de poste. Tu dois impérativement comparer les compétences techniques et l'expérience. Tu dois retourner ta réponse UNIQUEMENT au format JSON valide, sans aucun formatage Markdown (pas de balises ```json), ni aucune phrase d'introduction ou de conclusion. La structure exacte du JSON attendu est la suivante : { "score": <nombre décimal sur 10 reflétant le taux de compatibilité>, "competences_validees": ["liste", "des", "mots-clés", "trouvés"], "competences_manquantes": ["liste", "des", "critères", "manquants"], "argumentaire_client": "Un paragraphe persuasif, très professionnel de 4 à 5 lignes. Il s'agit du pitch de vente que le recruteur va copier-coller pour présenter le candidat à son client (le N+1) et le convaincre de le rencontrer en entretien." }"
+APPEL À L'API LLM :
+Utilise le client configuré à l'étape 6.1 pour envoyer la requête.
+Envoie le systemPrompt comme directive de comportement.
+Le message de l'utilisateur (user prompt) doit inclure les textes dynamiques de la manière suivante : "Voici la Fiche de Poste :\n\n${jobText}\n\nVoici le CV du candidat :\n\n${cvText}"
+(Si tu utilises le SDK d'Anthropic, place le prompt système dans l'attribut system. Si tu utilises Gemini, utilise SystemInstruction).
+PARSING DU RÉSULTAT ET NETTOYAGE :
+Récupère le texte brut renvoyé par l'IA.
+Même avec des directives strictes, les LLM rajoutent parfois des balises Markdown. Implémente un nettoyage sécurisé avant de parser : const cleanedResponse = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+Parse la réponse avec JSON.parse(cleanedResponse).
+Valide que l'objet parsé contient bien les clés requises (score, competences_validees, etc.) avant de le retourner.
+GESTION DES ERREURS :
+Dans le catch, log l'erreur (console.error("Erreur LLM:", error)) et lève une nouvelle erreur claire : throw new Error("L'IA n'a pas pu générer l'analyse. Veuillez réessayer.");
+Confirme-moi que cette fonction a été créée, que l'interface TypeScript est en place, et que le parsing du JSON est sécurisé. Ne passe pas à la phase d'orchestration (Prompt 6.3) avant ma validation.
+
+***
+
+Dès que l'agent aura validé la création de cette fonction, le « cœur cognitif » de votre application sera prêt ! Dites-moi simplement **"Passe au prompt 6.3"** pour que nous liions l'upload du fichier, le paiement par crédit et l'appel à l'IA dans un seul et même contrôleur !
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Les fonctions de déduction de crédits (Prompt 4), d'extraction de texte PDF (Prompt 5) et le moteur de matching IA (Prompt 6) sont terminés. Nous finalisons la Phase 3 de notre MVP "Algorithme de Matching IA" pour les recruteurs freelances. 
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 6.3)
+Ta tâche consiste à créer le "Chef d'Orchestre" de notre backend : une Server Action globale nommée `processMatchingWorkflow`. Cette fonction sera appelée par le Front-end lorsque le recruteur cliquera sur "Générer le Matching". Elle doit coordonner de manière sécurisée la vérification des crédits, la lecture des PDF, l'appel à l'IA, et la sauvegarde de l'historique dans la base de données.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU FICHIER D'ACTION :
+- Dans le dossier `src/actions/`, crée un nouveau fichier `matching.action.ts`.
+- Ajoute OBLIGATOIREMENT la directive `"use server";` sur la première ligne.
+- Importe les fonctions et modules suivants :
+  - `prisma` depuis `src/lib/prisma`
+  - `deductCredit` depuis l'action utilisateur (créée au Prompt 4.2)
+  - `extractTextFromPDF` depuis `src/lib/pdf` (créée au Prompt 5.2)
+  - `generateMatchingScore` depuis `src/lib/ai` (créée au Prompt 6.2)
+
+2. SIGNATURE DE LA FONCTION :
+- Exporte une fonction asynchrone : `export async function processMatchingWorkflow(formData: FormData)`
+- Cette fonction reçoit directement un objet `FormData` du client contenant : `userId` (string), `jobFile` (File PDF) et `cvFile` (File PDF).
+
+3. LOGIQUE D'ORCHESTRATION (Dans un bloc try/catch global) :
+- **Étape A (Validation des inputs) :** Vérifie que `userId`, `jobFile` et `cvFile` sont présents. Si ce n'est pas le cas, retourne une erreur.
+- **Étape B (Paiement / Paywall) :** Appelle `await deductCredit(userId)`. Si le retour indique que le succès est `false` (ex: "Crédits épuisés"), arrête tout et retourne immédiatement cette erreur au Front-end (cela servira à déclencher la modale d'Upsell Calendly).
+- **Étape C (Préparation des Buffers) :** Convertis les deux fichiers en buffers :
+  `const jobBuffer = Buffer.from(await jobFile.arrayBuffer());`
+  `const cvBuffer = Buffer.from(await cvFile.arrayBuffer());`
+- **Étape D (Extraction) :** Appelle `extractTextFromPDF` pour le CV et pour la Fiche de Poste.
+- **Étape E (Le Cerveau IA) :** Appelle `await generateMatchingScore(jobText, cvText)`. Tu récupères ici l'objet JSON contenant le score, les compétences et l'argumentaire client.
+- **Étape F (Sauvegarde BDD) :** Enregistre ce résultat dans l'historique pour que le recruteur ne perde jamais ses analyses. Utilise `prisma.matchRecord.create` en passant `userId`, un `jobTitle` générique (ou extrait du nom du fichier), un `candidateName` générique (ou extrait du nom du fichier CV), le `score` (venant de l'IA), et `aiResponse` (l'objet JSON complet venant de l'IA).
+
+4. RETOUR AU FRONT-END :
+- Si tout s'est bien passé, retourne un objet structuré : 
+  `return { success: true, data: resultIA, recordId: newRecord.id };`
+- Dans le bloc `catch`, log l'erreur serveur avec `console.error` et retourne un objet d'erreur standard : `{ success: false, error: "Une erreur est survenue lors de l'analyse du profil." }`.
+
+5. VÉRIFICATION ET SÉCURITÉ :
+- Assure-toi que toutes les opérations asynchrones sont bien précédées de `await`.
+- Vérifie qu'il n'y a pas d'erreurs de typage TypeScript, particulièrement lors du passage du JSON de l'IA vers le champ `aiResponse` de Prisma.
+
+Confirme-moi que cette Server Action est codée et que la compilation TypeScript est au vert. Ne passe pas au développement de l'interface Front-end (Phase 4) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Toute la logique Backend (Phase 2 et 3) comprenant la base de données, l'extraction de PDF, la gestion des leads/crédits et le moteur de matching IA est terminée et fonctionnelle. Nous entamons maintenant la Phase 4 de notre MVP "Algorithme de Matching IA" : le développement du Front-end et de l'Interface Utilisateur (UI).
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 7.1)
+Ta tâche consiste à configurer la première partie de notre State Management avec Redux Toolkit. Tu vas créer un "slice" dédié à l'utilisateur (`userSlice`) qui stockera ses informations de contact (Lead) et son solde de crédits en temps réel, puis tu l'intègreras au store global que nous avons initialisé à la Phase 1.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU FICHIER SLICE :
+- Dans le dossier `src/store/`, crée un sous-dossier `slices/`.
+- À l'intérieur, crée le fichier `userSlice.ts`.
+
+2. DÉFINITION DES TYPES ET DE L'ÉTAT INITIAL :
+- Importe `createSlice` et `PayloadAction` depuis `@reduxjs/toolkit`.
+- Déclare l'interface TypeScript suivante pour typer l'état de l'utilisateur :
+  ```typescript
+  export interface UserState {
+    isLoggedIn: boolean;
+    id: string | null;
+    email: string | null;
+    phone: string | null;
+    credits: number;
+  }
+Définis l'initialState avec les valeurs par défaut : isLoggedIn: false, les chaînes à null, et credits: 0.
+DÉVELOPPEMENT DU SLICE ET DES REDUCERS :
+Crée le slice avec createSlice({ name: 'user', initialState, reducers: { ... } }).
+Ajoute les reducers suivants :
+setUser: Accepte un PayloadAction contenant { id, email, phone, credits }. Il passe isLoggedIn à true et met à jour les autres champs.
+decrementCredit: Ne prend pas de payload. Si state.credits > 0, il fait state.credits -= 1. (Cela permettra de mettre à jour l'UI instantanément quand le backend confirmera la déduction d'un crédit).
+clearUser: Réinitialise l'état à initialState (utile pour une éventuelle déconnexion).
+EXPORTATIONS :
+Exporte les actions générées : export const { setUser, decrementCredit, clearUser } = userSlice.actions;
+Exporte le reducer par défaut : export default userSlice.reducer;
+MISE À JOUR DU STORE GLOBAL :
+Ouvre le fichier src/store/index.ts (créé lors du Prompt 1.3).
+Importe le userReducer depuis le fichier que tu viens de créer.
+Ajoute-le dans l'objet reducer de la fonction configureStore (ex: reducer: { user: userReducer }).
+VÉRIFICATION :
+Assure-toi qu'il n'y a aucune erreur de typage TypeScript.
+Vérifie que le projet compile toujours correctement avec npm run dev.
+Confirme-moi que le userSlice a été créé et intégré au store. Ne passe pas au slice de matching (Prompt 7.2) avant ma validation.
+
+***
+
+Dès que votre agent aura intégré ce slice au store Redux, dites-moi simplement **"Passe au prompt 7.2"** et nous configurerons la gestion de l'état pour les fichiers PDF et le loader de l'IA !
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Le `userSlice` de notre store Redux est créé et fonctionnel. Nous continuons la Phase 4 de notre MVP "Algorithme de Matching IA" en mettant en place le gestionnaire d'état pour le cœur de notre application : le tunnel de matching.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 7.2)
+Ta tâche consiste à créer un deuxième slice Redux nommé `matchingSlice`. Ce slice aura pour rôle de gérer l'état de l'interface utilisateur pendant le processus de matching : savoir si les fichiers sont sélectionnés, gérer l'état de chargement pendant l'appel à l'IA, et stocker le résultat final renvoyé par le backend.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU FICHIER SLICE :
+- Dans le dossier `src/store/slices/`, crée le fichier `matchingSlice.ts`.
+
+2. DÉFINITION DES TYPES ET DE L'ÉTAT INITIAL :
+- Importe `createSlice` et `PayloadAction` depuis `@reduxjs/toolkit`.
+- Déclare l'interface du résultat attendu de l'IA (identique à celle du backend) :
+  ```typescript
+  export interface MatchResult {
+    score: number;
+    competences_validees: string[];
+    competences_manquantes: string[];
+    argumentaire_client: string;
+  }
+Déclare l'interface de l'état du slice. ATTENTION : Redux n'accepte pas les valeurs non-sérialisables (comme les objets File). Nous ne stockerons donc que le nom des fichiers pour mettre à jour l'UI :
+Définis l'initialState avec isLoading: false et le reste à null.
+DÉVELOPPEMENT DU SLICE ET DES REDUCERS :
+Crée le slice avec createSlice({ name: 'matching', initialState, reducers: { ... } }).
+Ajoute les reducers suivants :
+setJobFileName: Accepte un PayloadAction<string | null> pour mettre à jour le nom de la Fiche de Poste sélectionnée.
+setCvFileName: Accepte un PayloadAction<string | null> pour mettre à jour le nom du CV sélectionné.
+setIsLoading: Accepte un PayloadAction<boolean> pour activer/désactiver le loader visuel (spinner).
+setMatchResult: Accepte un PayloadAction<MatchResult> pour stocker la réponse de l'IA une fois générée.
+resetMatching: Réinitialise complètement l'état à initialState (très utile pour le bouton "Nouveau Matching").
+EXPORTATIONS :
+Exporte toutes les actions générées : export const { setJobFileName, setCvFileName, setIsLoading, setMatchResult, resetMatching } = matchingSlice.actions;
+Exporte le reducer par défaut : export default matchingSlice.reducer;
+MISE À JOUR DU STORE GLOBAL :
+Ouvre le fichier src/store/index.ts.
+Importe le matchingReducer depuis le fichier que tu viens de créer.
+Ajoute-le dans l'objet reducer de la fonction configureStore sous la clé matching (ex: reducer: { user: userReducer, matching: matchingReducer }).
+VÉRIFICATION :
+Assure-toi qu'il n'y a aucune erreur TypeScript dans tes interfaces et tes reducers.
+Vérifie que le projet compile avec npm run dev sans aucune erreur Redux.
+Confirme-moi que le matchingSlice a été créé en respectant la règle de sérialisation et qu'il est intégré au store global. Ne passe pas au développement de l'interface (Prompt 8.1) avant ma validation.
+
+***
+
+Dès que votre agent aura validé la création de ce deuxième (et dernier) slice Redux, notre gestionnaire d'état sera parfait ! 
+
+Dites-moi simplement **"Passe au prompt 8.1"** et nous lui ferons développer la fameuse **Landing Page** et le formulaire de capture de Leads (pour récupérer les numéros de téléphone de vos prospects) !
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior et expert en UI/UX B2B. Toute la logique Backend et le State Management (Redux) sont en place. Nous attaquons maintenant le développement de l'Interface Utilisateur (UI) de notre MVP "Algorithme de Matching IA". 
+Ce produit s'adresse à des recruteurs freelances dont la plus grande douleur est de lire des centaines de CV manuellement et de perdre de l'information. La page d'accueil doit agir comme un "Lead Magnet" redoutable : elle doit être ultra-épurée, inspirer confiance et inciter à l'action.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 8.1)
+Ta tâche consiste à créer l'UI de la page d'accueil (Hero Section). Tu vas utiliser Tailwind CSS et les variables Sass configurées à l'étape 1.2. Tu dois intégrer un copywriting percutant et préparer l'espace (placeholder) qui accueillera le formulaire de capture de Lead à l'étape suivante.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. PRÉPARATION DU COMPOSANT PRINCIPAL :
+- Ouvre le fichier `src/app/page.tsx`.
+- Supprime tout le code de test précédent.
+- Assure-toi que ce fichier reste un Server Component pour le moment (pas de `"use client"` nécessaire ici, nous créerons des composants clients séparés pour l'interactivité).
+
+2. STRUCTURE ET DESIGN GLOBAL (TAILWIND + SASS) :
+- Crée une structure de page (balise `<main>`) centrée, aérée et moderne. Utilise la classe `bg-background` (le blanc cassé défini dans nos variables Sass) et `min-h-screen`.
+- Utilise un design "Split-screen" (deux colonnes sur Desktop, une colonne sur Mobile) ou un "Center-aligned Hero" très propre. 
+- L'UI doit respirer : utilise des marges généreuses (`py-20`, `gap-8`, `leading-relaxed`).
+
+3. INTÉGRATION DU COPYWRITING (LE MESSAGE) :
+- Ajoute un sur-titre (Badge ou texte coloré discret en `text-secondary`) : "✨ L'outil secret des top recruteurs freelances".
+- Ajoute un Titre principal (balise `<h1>`, très gros, typographie audacieuse en `text-main`) : "Ne lisez plus 50 CV manuellement pour trouver la perle rare." Mets en évidence les mots "50 CV manuellement" avec la couleur `text-primary`.
+- Ajoute un Sous-titre (balise `<p>`, texte gris en `text-muted`, taille moyenne) : "Notre Intelligence Artificielle compare instantanément votre Fiche de Poste avec le CV du candidat, calcule le taux de matching et rédige votre argumentaire client (Send-out) en 10 secondes."
+
+4. PRÉPARATION DE LA ZONE LEAD MAGNET :
+- Sous le texte, crée un conteneur visuel bien distinct (une carte blanche avec un léger `shadow-lg`, des bords arrondis `rounded-xl`, fond `bg-surface`).
+- À l'intérieur de cette carte, ajoute temporairement un texte de placeholder : "<!-- Zone du Formulaire de Lead Capture (À venir) -->".
+- En dessous de cette carte, ajoute de petits éléments de réassurance (Social Proof) avec des icônes discrètes (ex: "🔒 100% RGPD", "⚡ 3 crédits offerts", "🎯 +60% de gain de temps").
+
+5. VÉRIFICATION RESPONSIVE :
+- Assure-toi que les tailles de texte s'adaptent (ex: `text-4xl md:text-6xl` pour le H1).
+- Vérifie que la disposition passe bien en colonne simple sur smartphone (`flex-col md:flex-row` si tu as choisi le split-screen).
+
+Confirme-moi que la page d'accueil a été codée avec Tailwind et Sass, que le design est épuré (SaaS B2B) et que l'espace pour le formulaire est prêt. Ne passe pas à la création du formulaire (Prompt 8.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. La structure visuelle de la page d'accueil (Prompt 8.1) est en place. Nous finalisons la Phase 4 en créant le moteur de notre "Lead Magnet". 
+L'objectif business (basé sur des stratégies d'acquisition agressives) est de capturer l'email et surtout le numéro de téléphone du recruteur en échange de 3 crédits gratuits. Ces informations permettront de le recontacter (Cold Calling / Warm Calling) pour lui vendre la solution complète.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 8.2)
+Ta tâche consiste à créer le composant interactif `LeadCaptureForm`. Ce formulaire doit recueillir les données, appeler la Server Action `registerLead` créée précédemment, mettre à jour le store Redux global avec les données de l'utilisateur, puis rediriger le prospect vers l'application (le Dashboard).
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU COMPOSANT CLIENT :
+- Dans le dossier `src/components/`, crée un nouveau fichier `LeadCaptureForm.tsx`.
+- Ajoute OBLIGATOIREMENT la directive `"use client";` sur la première ligne, car ce composant gère des états interactifs (`useState`) et des événements côté client (`onSubmit`).
+
+2. IMPORTS NÉCESSAIRES :
+- Importe `useState` de React.
+- Importe `useRouter` DEPUIS `next/navigation` (très important dans l'App Router, ne pas utiliser `next/router`).
+- Importe `useDispatch` depuis `react-redux` (ou depuis ton hook typé si tu en as créé un dans `src/store/hooks.ts`).
+- Importe l'action `setUser` depuis `src/store/slices/userSlice`.
+- Importe la Server Action `registerLead` depuis `src/actions/lead.action` (créée à l'étape 4.1).
+
+3. GESTION DE L'ÉTAT (STATE) :
+- Déclare les états locaux suivants : `email` (string), `phone` (string), `isLoading` (boolean, initialisé à false) et `error` (string | null).
+
+4. DÉVELOPPEMENT DE LA LOGIQUE DE SOUMISSION (`handleSubmit`) :
+- Crée la fonction asynchrone `handleSubmit(e: React.FormEvent)`.
+- Empêche le rechargement de la page (`e.preventDefault()`).
+- Passe `isLoading` à `true` et réinitialise `error` à `null`.
+- Dans un bloc `try/catch`, appelle : `const result = await registerLead(email, phone);`
+- Si `result.success` est faux, affiche le message d'erreur dans le state `error`.
+- Si `result.success` est vrai : 
+  a) Mets à jour Redux : `dispatch(setUser({ id: result.user.id, email: result.user.email, phone: result.user.phone, credits: result.user.credits }));`
+  b) Redirige l'utilisateur : `router.push('/dashboard');`
+- Dans le `finally`, repasse `isLoading` à `false`.
+
+5. DESIGN DU FORMULAIRE (TAILWIND + SASS) :
+- Structure un formulaire vertical (`flex flex-col gap-4`).
+- Ajoute un champ Email (`type="email"`, `required`) et un champ Téléphone (`type="tel"`, `required`).
+- Design des inputs : bordures discrètes, fond clair, focus avec un anneau de la couleur primaire (`focus:ring-2 focus:ring-primary outline-none px-4 py-3 rounded-lg`).
+- Design du bouton Submit : utilise la couleur primaire (`bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-hover transition-colors`).
+- Si `isLoading` est vrai, le texte du bouton doit devenir "Création de votre compte..." et le bouton doit être désactivé (`disabled`).
+- Affiche l'état `error` en rouge (`text-red-500 text-sm`) s'il y a une erreur.
+
+6. INTÉGRATION DANS LA PAGE D'ACCUEIL :
+- Ouvre `src/app/page.tsx`.
+- Importe le composant `LeadCaptureForm`.
+- Remplace le commentaire HTML `<!-- Zone du Formulaire de Lead Capture (À venir) -->` (laissé au Prompt 8.1) par ton nouveau composant `<LeadCaptureForm />`.
+
+Confirme-moi que le formulaire est codé, intégré à la page d'accueil, connecté à Redux et à la Server Action. Ne passe pas à la création de la page Dashboard (Prompt 9.1) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. La Landing Page et le système de capture de Leads (Phase 4) sont terminés et connectés au backend. Lorsqu'un utilisateur soumet le formulaire, il est redirigé vers `/dashboard`. Nous devons maintenant construire cette page : c'est l'espace de travail central de notre MVP "Algorithme de Matching IA", là où le recruteur va uploader ses PDF.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 9.1)
+Ta tâche consiste à créer un composant de Drag & Drop réutilisable pour l'upload de fichiers PDF. Tu devras ensuite construire l'interface de la page Dashboard en y intégrant deux zones distinctes (une pour la Fiche de Poste à gauche, une pour le CV à droite) et lier ces zones au `matchingSlice` de Redux pour l'affichage, tout en gardant les fichiers natifs dans un state local.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU COMPOSANT RÉUTILISABLE (`DragAndDropZone.tsx`) :
+- Dans `src/components/`, crée un fichier `DragAndDropZone.tsx`.
+- Ajoute la directive `"use client";`.
+- Définis les props suivantes : `title` (string), `accept` (string, ex: ".pdf"), `onFileDrop` (fonction qui renvoie un objet `File`), et `selectedFileName` (string | null).
+- Implémente la logique de Drag & Drop avec les événements React : `onDragOver`, `onDragLeave`, et `onDrop` (n'oublie pas `e.preventDefault()` pour éviter l'ouverture du fichier par le navigateur).
+- Ajoute un input caché (`<input type="file" className="hidden" />`) déclenché par un clic sur la zone via une `ref` (pour permettre aussi la sélection classique).
+- Design (Tailwind) : Une zone avec des bordures pointillées (`border-dashed border-2`), un changement de couleur au survol (`hover:bg-primary/5`), et une icône explicite. Si `selectedFileName` est présent, affiche une icône de succès et le nom du fichier à la place de l'invite de dépôt.
+
+2. CRÉATION DE LA PAGE DASHBOARD (`src/app/dashboard/page.tsx`) :
+- Crée ce fichier s'il n'existe pas et ajoute `"use client";` (cette page aura besoin de states locaux et de Redux).
+- Importe les hooks `useDispatch` et `useSelector` de Redux, ainsi que les actions `setJobFileName` et `setCvFileName` depuis `matchingSlice`.
+
+3. GESTION DES ÉTATS (STATE) ET DE LA LOGIQUE :
+- RAPPEL CRITIQUE : Redux ne doit stocker que des données sérialisables. Tu NE DOIS PAS stocker les objets `File` dans Redux.
+- Déclare un state local pour stocker les fichiers physiques qui seront envoyés à l'API plus tard : 
+  `const [jobFile, setJobFile] = useState<File | null>(null);`
+  `const [cvFile, setCvFile] = useState<File | null>(null);`
+- Crée les fonctions handlers (ex: `handleJobDrop(file: File)`) qui font deux choses :
+  a) Mettre à jour le state local avec l'objet `File`.
+  b) Dispatcher le nom du fichier dans Redux (`dispatch(setJobFileName(file.name))`).
+
+4. STRUCTURE UI DU DASHBOARD :
+- Applique un design épuré utilisant nos variables Sass (`bg-background`, `text-main`).
+- Ajoute un Header simple (Titre : "Nouvelle Analyse de Matching", Sous-titre : "Glissez-déposez vos documents au format PDF pour lancer l'algorithme").
+- Utilise une grille CSS pour séparer l'écran en deux colonnes sur Desktop (`grid grid-cols-1 md:grid-cols-2 gap-8`).
+- Colonne de gauche : Intègre le composant `<DragAndDropZone>` avec le titre "1. Fiche de Poste".
+- Colonne de droite : Intègre le composant `<DragAndDropZone>` avec le titre "2. CV du Candidat".
+- En dessous de la grille, prépare un bouton de Call-to-Action centré : "Générer le Matching IA" (désactive ce bouton `disabled` si les deux fichiers ne sont pas sélectionnés).
+
+5. VÉRIFICATION :
+- Lance l'application.
+- Vérifie que tu peux glisser-déposer un PDF (ou cliquer pour uploader) dans les deux zones.
+- Assure-toi que le nom des fichiers s'affiche bien visuellement une fois sélectionnés, et que le state Redux est correctement mis à jour sans erreurs de sérialisation dans la console.
+
+Confirme-moi que le composant Drag & Drop est codé, que le Dashboard affiche les deux zones, et que la séparation State Local (File) / State Global (Nom du fichier) fonctionne parfaitement. Ne passe pas au câblage de l'orchestration (Prompt 9.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'interface du Dashboard avec les zones de Drag & Drop (Prompt 9.1) est en place. Nous finalisons la Phase 4 de notre MVP "Algorithme de Matching IA". L'objectif est maintenant de connecter cette interface à notre backend (l'orchestrateur IA créé en Phase 3) via un bouton d'action central, et de gérer l'attente de l'utilisateur avec une interface de chargement (loader) haut de gamme.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 9.2)
+Ta tâche consiste à ajouter le bouton d'appel à l'action "Lancer le Matching (Coûte 1 crédit)", de développer la fonction de soumission qui va préparer le `FormData` et appeler la Server Action `processMatchingWorkflow`, et de créer un composant de chargement visuel avec du texte dynamique pour faire patienter l'utilisateur pendant l'appel à l'IA.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU BOUTON D'ACTION (DASHBOARD) :
+- Ouvre `src/app/dashboard/page.tsx`.
+- Sous la grille des DragAndDropZones, ajoute un grand bouton principal centré.
+- Texte du bouton : "✨ Générer le Matching IA (Coûte 1 crédit)".
+- Design : Utilise un dégradé ou la couleur `bg-primary`, avec un texte blanc, large, avec des coins arrondis (`rounded-xl`), et un effet de survol (`hover:scale-105 transition-transform`).
+- État désactivé : Le bouton doit être `disabled` et grisé si `!jobFile` OU `!cvFile` OU `isLoading` (depuis Redux).
+
+2. DÉVELOPPEMENT DE LA LOGIQUE DE SOUMISSION (`handleMatch`) :
+- Dans le composant Dashboard, crée une fonction asynchrone `handleMatch()`.
+- Assure-toi d'avoir récupéré l'`userId` depuis le `userSlice` de Redux. S'il n'y a pas d'utilisateur, gère l'erreur (ex: redirection ou message).
+- Au clic :
+  a) Dispatch `dispatch(setIsLoading(true))` pour afficher le loader.
+  b) Prépare les données : `const formData = new FormData(); formData.append('userId', user.id); formData.append('jobFile', jobFile); formData.append('cvFile', cvFile);`
+  c) Appelle la Server Action : `const result = await processMatchingWorkflow(formData);`
+  d) Si `result.success` est vrai : dispatch `dispatch(setMatchResult(result.data))` ET dispatch `dispatch(decrementCredit())` (pour mettre à jour l'UI des crédits instantanément).
+  e) Si `result.success` est faux (ex: "Crédits épuisés"), affiche l'erreur (via un toast ou une alerte) et ne décrémente pas les crédits.
+  f) Dans le `finally`, dispatch `dispatch(setIsLoading(false))`.
+
+3. CRÉATION DU COMPOSANT DE CHARGEMENT DYNAMIQUE (`MatchingLoader.tsx`) :
+- Dans `src/components/`, crée un fichier `MatchingLoader.tsx` (Client Component).
+- Utilise un effet visuel moderne (un spinner stylisé, une barre de progression infinie ou des vagues pulsantes via Tailwind `animate-pulse`).
+- Ajoute une logique de texte dynamique via `useEffect` et `setInterval` pour faire défiler ces phrases toutes les 2 ou 3 secondes :
+  - "Lecture de la Fiche de Poste..."
+  - "Extraction des compétences du CV..."
+  - "Analyse IA de la compatibilité en cours..."
+  - "Rédaction de l'argumentaire client..."
+- Dans `dashboard/page.tsx`, si `isLoading` est `true` (depuis Redux), masque les zones de Drag & Drop et le bouton, et affiche ce `<MatchingLoader />` à la place, bien centré au milieu de l'écran.
+
+4. VÉRIFICATION ET SÉCURITÉ :
+- Vérifie que TypeScript ne lève aucune erreur concernant les `FormData` ou les imports des actions Redux.
+- Teste le workflow entier dans ton navigateur : uploade 2 PDF, clique sur le bouton, vérifie que le loader s'affiche avec le texte dynamique, et que l'appel backend s'exécute correctement.
+
+Confirme-moi que le bouton est fonctionnel, que le loader dynamique est codé, et que l'interface est reliée à l'action d'orchestration backend. Ne passe pas à la conception de la page de Résultats (Prompt 9.3) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'orchestration du matching IA (backend) et le système d'upload avec Loader (Phase 4) sont terminés et fonctionnent parfaitement. Nous entamons maintenant l'affichage du résultat. C'est l'écran le plus important d'un point de vue "Business" : il doit délivrer la promesse de valeur au recruteur en lui affichant le taux de compatibilité et en lui fournissant son argumentaire de vente clé en main (le "Send-out").
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 10.1)
+Ta tâche consiste à créer le composant `MatchResultView` qui recevra les données renvoyées par l'IA. Il doit être extrêmement visuel et professionnel. Tu vas concevoir un indicateur circulaire pour le score (avec des couleurs dynamiques), deux listes claires pour les compétences, et un encart très stylisé permettant de copier l'argumentaire en un clic.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU COMPOSANT CLIENT :
+- Dans le dossier `src/components/`, crée le fichier `MatchResultView.tsx`.
+- Ajoute la directive `"use client";` tout en haut du fichier (ce composant gérera une action de copier-coller).
+- Importe le hook `useSelector` depuis `react-redux` (ou ton hook typé) pour récupérer `result` depuis `matchingSlice`.
+- Si `result` est `null`, le composant doit retourner `null`.
+
+2. DÉVELOPPEMENT DU SCORE CIRCULAIRE DYNAMIQUE :
+- En haut du composant, crée une zone centrée pour afficher le `score` sur 10.
+- Implémente une logique de couleur conditionnelle basée sur la valeur du score :
+  - Si score >= 7 : Vert (`text-green-500`, `border-green-500`)
+  - Si score >= 5 et < 7 : Orange (`text-orange-500`, `border-orange-500`)
+  - Si score < 5 : Rouge (`text-red-500`, `border-red-500`)
+- Design : Utilise un grand cercle Tailwind (ex: `w-32 h-32 rounded-full border-8 flex items-center justify-center text-4xl font-bold`).
+
+3. DÉVELOPPEMENT DES LISTES DE COMPÉTENCES :
+- Sous le score, crée une grille à deux colonnes sur Desktop (`grid grid-cols-1 md:grid-cols-2 gap-8 mt-8`).
+- Colonne de gauche ("Compétences Validées") : Mappe sur le tableau `competences_validees`. Affiche chaque élément sous forme de liste avec une coche verte (✅ ou icône SVG verte) devant.
+- Colonne de droite ("Compétences Manquantes") : Mappe sur le tableau `competences_manquantes`. Affiche chaque élément avec une croix rouge ou orange (❌ ou icône SVG) devant.
+
+4. DÉVELOPPEMENT DU BLOC "ARGUMENTAIRE CLIENT" (LE SEND-OUT) :
+- Sous la grille des compétences, ajoute un grand bloc pour afficher l'`argumentaire_client`.
+- Design de l'encart : fond clair (`bg-surface`), bordure arrondie (`rounded-xl`), avec une bordure latérale gauche épaisse aux couleurs de la marque (`border-l-4 border-primary`).
+- En-tête de l'encart : "💬 Votre Argumentaire Client (Send-out)".
+- Ajoute un bouton "Copier le texte" en haut à droite de cet encart. Utilise `navigator.clipboard.writeText(result.argumentaire_client)` au clic, et change brièvement le texte du bouton en "Copié ! ✅" grâce à un `useState` local.
+
+5. INTÉGRATION DANS LE DASHBOARD :
+- Ouvre le fichier `src/app/dashboard/page.tsx`.
+- Importe `MatchResultView`.
+- Modifie la logique d'affichage : 
+  - Si `isLoading` est vrai : Afficher le `<MatchingLoader />`.
+  - Sinon, si `result` existe : Afficher `<MatchResultView />` et ajouter en dessous un bouton "Nouvelle Analyse" qui appelle la fonction `dispatch(resetMatching())` pour remettre l'UI à zéro.
+  - Sinon (par défaut) : Afficher la grille avec les `<DragAndDropZone />` et le bouton de soumission.
+
+6. VÉRIFICATION :
+- Vérifie l'absence d'erreurs TypeScript.
+- Simule un matching complet sur ton navigateur et vérifie que l'écran de résultat s'affiche bien, que les couleurs du score s'adaptent, et que le bouton de copie fonctionne parfaitement.
+
+Confirme-moi que ce composant est créé et intégré au Dashboard avec toutes les conditions requises. Ne passe pas à la dernière étape (Prompt 10.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. L'écran de résultat (MatchResultView) est terminé et délivre parfaitement la valeur de notre MVP "Algorithme de Matching IA" en fournissant le score et l'argumentaire client (Send-out). 
+Nous entamons maintenant la toute dernière étape de notre produit : la monétisation. L'utilisateur disposait de 3 crédits offerts. Une fois ces crédits épuisés, nous devons le bloquer (Paywall) et l'inciter fortement à réserver un appel commercial pour débloquer un accès illimité.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 10.2)
+Ta tâche consiste à créer le composant `PaywallModal`. Cette modale devra s'afficher en surimpression (overlay) si l'utilisateur tente de lancer un "Nouveau Matching" (ou s'il clique sur le bouton de génération) alors que son solde de crédits, vérifié via Redux, est à 0. 
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. CRÉATION DU COMPOSANT MODALE :
+- Dans le dossier `src/components/`, crée un fichier `PaywallModal.tsx`.
+- Ajoute la directive `"use client";`.
+- Le composant doit accepter des props comme `isOpen` (boolean) et `onClose` (fonction pour fermer la modale, bien que l'utilisateur doive idéalement cliquer sur le CTA).
+
+2. DESIGN ET STRUCTURE (TAILWIND + SASS) :
+- Crée un Overlay (fond sombre et flouté) : `fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4`.
+- Crée la carte de la modale : `bg-surface w-full max-w-md rounded-2xl shadow-2xl p-8 relative animate-fade-in`.
+- Ajoute un bouton de fermeture discret (Croix) en haut à droite.
+
+3. INTÉGRATION DU COPYWRITING MARKETING :
+- Ajoute une icône accrocheuse en haut au centre (ex: 🚀 ou 🔒).
+- Titre (H2, centré, `text-main font-bold text-2xl mb-4`) : "Vos crédits offerts sont épuisés !"
+- Texte persuasif (Paragraphe, centré, `text-muted mb-6`) : "Vous avez vu la puissance de notre IA pour vos recrutements. Ne recommencez plus jamais à lire des dizaines de CV manuellement. Passez à la vitesse supérieure et débloquez un accès illimité."
+
+4. LE CALL-TO-ACTION (CALENDLY) :
+- Sous le texte, ajoute un grand bouton stylisé (balise `<a>` avec `target="_blank"` et `rel="noopener noreferrer"`).
+- Texte du bouton : "📞 Réserver mon appel de 10 min".
+- Design du bouton : Utilise la couleur primaire, un texte blanc, gras, avec un effet de pulsation ou de survol (`bg-primary hover:bg-primary-hover text-white w-full py-4 rounded-xl font-bold transition-all transform hover:scale-105`).
+- *Laisse un commentaire dans le code (ex: `href="MON_LIEN_CALENDLY"`) pour que je puisse y insérer mon lien personnel.*
+
+5. INTÉGRATION DANS L'ORCHESTRATION (DASHBOARD) :
+- Ouvre le fichier `src/app/dashboard/page.tsx`.
+- Importe le composant `<PaywallModal />`.
+- Déclare un état local `const [isPaywallOpen, setIsPaywallOpen] = useState(false);`.
+- Dans la fonction `handleMatch()` (créée au Prompt 9.2), modifie la logique de vérification initiale : 
+  `if (user.credits <= 0) { setIsPaywallOpen(true); return; }`
+- Insère le composant `<PaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} />` tout à la fin du JSX du Dashboard pour qu'il s'affiche par-dessus le reste.
+
+6. VÉRIFICATION :
+- Simule un utilisateur avec 0 crédit dans le store Redux.
+- Clique sur le bouton de lancement du matching.
+- Vérifie que l'appel API ne se lance pas, que le loader ne s'affiche pas, et que la modale de Paywall apparaît correctement avec son lien Calendly.
+
+Confirme-moi que la modale a été créée, qu'elle est connectée à la vérification des crédits dans le Dashboard et que le design marketing est respecté. 
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Toute l'application de notre MVP "Algorithme de Matching IA" (Backend, IA, Interface Utilisateur et State Management) est désormais codée et fonctionnelle. Pour garantir la fiabilité de l'application avant sa mise en production, nous devons nous assurer que la gestion de l'état (Redux) est robuste, notamment en ce qui concerne le solde des crédits (notre Paywall) et l'état du tunnel de matching.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 11.1)
+Ta tâche consiste à rédiger les tests unitaires avec Jest pour nos deux slices Redux : `userSlice` et `matchingSlice`. Tu dois vérifier que chaque action (ajout/déduction de crédits, changement d'état de chargement, stockage du succès de l'IA) modifie l'état global exactement comme prévu.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. PRÉPARATION DE L'ENVIRONNEMENT DE TEST :
+- Dans le dossier `src/store/slices/`, crée un sous-dossier `__tests__/` (ou crée les fichiers `.test.ts` directement à côté de tes slices selon la convention de ton choix).
+- Crée deux fichiers : `userSlice.test.ts` et `matchingSlice.test.ts`.
+
+2. RÉDACTION DES TESTS POUR `userSlice.test.ts` :
+- Importe le reducer par défaut et les actions (`setUser`, `decrementCredit`, `clearUser`) depuis `userSlice`.
+- Écris un bloc `describe('userSlice', () => { ... })`.
+- Test 1 : Vérifie que le reducer retourne l'`initialState` correct par défaut (isLoggedIn: false, credits: 0, etc.).
+- Test 2 : Vérifie que l'action `setUser` met à jour correctement l'état (passe `isLoggedIn` à true, assigne l'email, le téléphone et les crédits initiaux).
+- Test 3 : Vérifie que l'action `decrementCredit` soustrait exactement 1 au solde de crédits lorsque celui-ci est supérieur à 0.
+- Test 4 : Vérifie que `decrementCredit` ne descend pas le solde en dessous de 0 (le solde doit rester à 0 si l'action est appelée alors qu'il n'y a plus de crédits).
+
+3. RÉDACTION DES TESTS POUR `matchingSlice.test.ts` :
+- Importe le reducer par défaut et les actions (`setIsLoading`, `setMatchResult`, `resetMatching`) depuis `matchingSlice`.
+- Écris un bloc `describe('matchingSlice', () => { ... })`.
+- Test 1 : Vérifie l'`initialState` par défaut (isLoading: false, result: null, etc.).
+- Test 2 : Vérifie que `setIsLoading(true)` passe bien l'état `isLoading` à true (simulant l'attente de l'appel à l'IA).
+- Test 3 : Vérifie que `setMatchResult` stocke correctement un objet JSON factice complet simulé (contenant `score`, `competences_validees`, `competences_manquantes` et `argumentaire_client`).
+- Test 4 : Vérifie que l'action `resetMatching` remet bien tous les champs à leur valeur initiale (utile pour le bouton "Nouvelle Analyse").
+
+4. VÉRIFICATION ET EXÉCUTION :
+- Lance la suite de tests unitaires via ton terminal (ex: `npm run test` ou `npx jest`).
+- Assure-toi qu'il n'y a aucune erreur de typage TypeScript dans l'écriture de tes tests (notamment sur le mock de l'objet `MatchResult`).
+
+Confirme-moi que les deux fichiers de tests ont été créés et que tous les tests passent au vert dans la console. Ne passe pas à la rédaction des tests E2E Cypress (Prompt 11.2) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Les tests unitaires du state management (Redux) sont terminés et validés au vert. Nous poursuivons la Phase 5 (Qualité et Fiabilité) de notre MVP "Algorithme de Matching IA". L'un des risques majeurs et récurrents avec les modèles de langage (LLM), c'est qu'ils peuvent parfois renvoyer un format inattendu (comme des balises markdown), du texte parasite, ou oublier des champs obligatoires dans l'objet JSON. Notre backend doit être parfaitement blindé contre ces comportements.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 11.2)
+Ta tâche consiste à écrire des tests unitaires avec Jest pour vérifier la robustesse de la logique de nettoyage, de parsing et de validation de la réponse retournée par l'IA (logique implémentée dans `src/lib/ai.ts` lors de la Phase 3). Le but est de s'assurer que notre application gère ces erreurs gracieusement sans faire crasher le serveur.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. ISOLATION DE LA LOGIQUE DE PARSING (SI NÉCESSAIRE) :
+- Si la logique de nettoyage du Markdown et de validation du JSON est directement imbriquée dans l'appel API `generateMatchingScore` dans `src/lib/ai.ts`, extrais-la d'abord dans une fonction utilitaire pure et exportée nommée `parseAndValidateAIResponse(rawResponse: string): MatchResult`. 
+- Cette séparation (Clean Architecture) facilitera grandement les tests unitaires sans avoir besoin de mocker l'API entière d'Anthropic ou de Gemini.
+
+2. PRÉPARATION DU FICHIER DE TEST :
+- Dans le dossier `src/lib/__tests__/` (ou à la racine de `src/lib/` selon ta convention), crée un fichier `ai.test.ts`.
+- Importe la fonction `parseAndValidateAIResponse` (et l'interface `MatchResult`).
+
+3. RÉDACTION DES TESTS UNITAIRES (JEST) :
+- Écris un bloc `describe('parseAndValidateAIResponse', () => { ... })`.
+- **Test 1 (Succès idéal) :** Passe une chaîne JSON parfaite contenant tous les champs (`score`, `competences_validees`, `competences_manquantes`, `argumentaire_client`). Vérifie que la fonction retourne l'objet correctement typé.
+- **Test 2 (Nettoyage Markdown) :** Passe une chaîne contenant du texte parasite et des balises (ex: `Voici votre analyse : \n\n\`\`\`json\n{ "score": 8, ... }\n\`\`\``). Vérifie que tes Regex nettoient le texte et que le JSON est parsé avec succès.
+- **Test 3 (JSON Malformé / Syntax Error) :** Passe une chaîne de caractères tronquée ou invalide (ex: `{ "score": 8, "competences": [` avec des accolades manquantes). Vérifie que la fonction intercepte l'erreur de `JSON.parse` et lève une erreur explicite (throw Error) avec un message comme "Erreur de formatage IA" au lieu de faire crasher l'application.
+- **Test 4 (Validation métier / Champs manquants) :** Passe un JSON syntaxiquement valide, mais auquel il manque des clés obligatoires (ex: on retire le champ `argumentaire_client`). Vérifie que ta fonction lève une erreur de validation pour empêcher l'enregistrement d'une donnée corrompue dans notre base de données Prisma.
+
+4. VÉRIFICATION :
+- Exécute ta commande de test (ex: `npm run test`) pour t'assurer que cette suite passe au vert.
+
+Confirme-moi que les tests de parsing sont codés, que les 4 scénarios de robustesse sont couverts et qu'ils passent tous avec succès. Ne passe pas aux tests End-to-End (E2E) avec Cypress (Prompt 11.3) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior. Les tests unitaires du backend (parsing IA) et du State Management (Redux) sont terminés et tous au vert. Nous clôturons la Phase 5 de notre MVP "Algorithme de Matching IA" en testant les composants visuels critiques de notre interface (Front-end).
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 11.3)
+Ta tâche consiste à utiliser Jest et React Testing Library pour tester le rendu visuel du composant affichant le score de matching (que nous appellerons `ScoreRing`, idéalement extrait de `MatchResultView` sous forme de composant pur/dumb component pour faciliter les tests). Tu dois vérifier que le composant applique correctement les classes CSS Tailwind dynamiques en fonction de la note sur 10.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. ISOLATION DU COMPOSANT (SI NÉCESSAIRE) :
+- Si l'affichage circulaire du score est codé en dur dans `MatchResultView` (qui est connecté à Redux), extrais d'abord cette partie visuelle dans un nouveau composant pur `src/components/ScoreRing.tsx` qui prend simplement `score: number` en props. (Cela respecte les principes de la Clean Architecture et facilite grandement les tests isolés).
+
+2. PRÉPARATION DE L'ENVIRONNEMENT DE TEST :
+- Dans le dossier `src/components/__tests__/` (ou à côté du composant), crée le fichier `ScoreRing.test.tsx`.
+- Importe `render` et `screen` depuis `@testing-library/react`.
+- Importe le composant `ScoreRing`.
+
+3. RÉDACTION DES TESTS UNITAIRES (REACT TESTING LIBRARY) :
+- Écris un bloc `describe('Composant ScoreRing', () => { ... })`.
+- **Test 1 (Couleur Verte pour un excellent score) :** 
+  - Rends le composant avec la prop `score={8}` (`render(<ScoreRing score={8} />)`).
+  - Utilise `screen.getByText(/8/i)` pour vérifier que le chiffre s'affiche bien.
+  - Vérifie que l'élément contenant le texte possède bien les classes Tailwind de succès (ex: `expect(element).toHaveClass('text-green-500')` et `border-green-500`).
+- **Test 2 (Couleur Rouge pour un mauvais score) :**
+  - Rends le composant avec la prop `score={4}`.
+  - Vérifie que le chiffre "4" est bien affiché.
+  - Vérifie que les classes Tailwind d'échec sont appliquées (`text-red-500`, `border-red-500`).
+- **Test 3 (Couleur Orange pour un score moyen) :**
+  - Ajoute un test pour un score de 6 et vérifie les classes `text-orange-500` et `border-orange-500`.
+
+4. EXÉCUTION ET VÉRIFICATION :
+- Lance la commande de test (ex: `npm run test`).
+- Assure-toi que les tests Front-end passent au vert et qu'il n'y a pas d'erreur liée à l'environnement DOM (JSDOM) de Jest.
+
+Confirme-moi que le composant a été isolé si besoin, que les tests de rendu conditionnel des couleurs sont écrits et qu'ils passent avec succès. Ne passe pas à la phase de Déploiement et de Production (Phase 6) avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior et un expert en QA (Assurance Qualité). Notre MVP "Algorithme de Matching IA" possède désormais des tests unitaires et composants solides. L'objectif business de notre Landing Page est vital : capturer les coordonnées des recruteurs (Lead Magnet) en échange de 3 crédits gratuits pour pouvoir les recontacter. Nous devons absolument garantir que ce tunnel d'acquisition (End-to-End) ne casse jamais lors de nos futures mises en production.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 12.1)
+Ta tâche consiste à rédiger un test E2E (End-to-End) automatisé avec Cypress. Ce test simulera le parcours complet et réel d'un prospect : la visite de la page d'accueil, le remplissage du formulaire interactif avec un email et un téléphone factices, la soumission, et la vérification stricte de la redirection vers le Dashboard.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. PRÉPARATION DE L'ENVIRONNEMENT CYPRESS :
+- Si Cypress n'est pas encore initialisé dans le projet, configure-le rapidement (création de `cypress.config.ts` et de l'arborescence par défaut).
+- Dans le dossier `cypress/e2e/`, crée un fichier spécifique nommé `lead-capture.cy.ts`.
+
+2. RÉDACTION DU SCÉNARIO DE TEST (E2E) :
+- Initialise un bloc principal : `describe('Tunnel Acquisition - Lead Capture', () => { ... })`.
+- Utilise le hook `beforeEach` pour te rendre sur la Landing Page avant chaque test : `cy.visit('/')`.
+
+3. SIMULATION DES ACTIONS UTILISATEUR :
+- Crée un test : `it('doit capturer les informations du recruteur et rediriger vers le dashboard', () => { ... })`.
+- Simule la saisie dans le champ email (cible-le de préférence via `type="email"` ou un sélecteur robuste) : 
+  `cy.get('input[type="email"]').type('test.prospect@recruteur.com');`
+- Simule la saisie dans le champ téléphone : 
+  `cy.get('input[type="tel"]').type('0601020304');`
+- Cible le bouton de soumission du formulaire et simule le clic utilisateur : 
+  `cy.get('button[type="submit"]').click();`
+
+4. VÉRIFICATION DES ASSERTIONS (CRITIQUE) :
+- Vérifie l'état de l'interface post-clic : si ton bouton change de texte pendant le chargement (ex: "Création de votre compte..."), ajoute une assertion pour le vérifier.
+- Vérifie la mécanique métier et le routing : assure-toi que l'application redirige bien le prospect vers l'espace de travail. 
+  `cy.url().should('include', '/dashboard');`
+- Ajoute une vérification de l'interface d'arrivée pour confirmer que le rendu côté client est abouti : 
+  `cy.contains('Fiche de Poste').should('be.visible');` (ou tout autre texte fixe présent dans le composant DragAndDropZone).
+
+5. EXÉCUTION ET BONNES PRATIQUES :
+- Assure-toi que les sélecteurs Cypress utilisés ne sont pas fragiles (privilégie les balises sémantiques ou l'ajout de `data-cy` si nécessaire dans tes composants React).
+
+Confirme-moi que le fichier Cypress a été créé et que le scénario couvre bien de A à Z la capture du Lead. Ne passe à aucune autre étape avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior et un expert en QA. Le test E2E de notre Lead Capture (Prompt 12.1) est validé. Nous devons maintenant tester le cœur de notre application MVP : le tunnel de Matching IA. 
+C'est la fonctionnalité qui résout le "pain point ultime" des recruteurs en générant le score et l'argumentaire client (Send-out). Puisque l'appel à l'API IA (Claude/Gemini) coûte des crédits et prend du temps, nous ne devons pas faire de réels appels réseau pendant les tests automatisés. Nous allons donc "mocker" (simuler) la réponse du backend.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 12.2)
+Ta tâche consiste à rédiger un test Cypress E2E (`matching-flow.cy.ts`) qui va simuler la présence de crédits, simuler l'upload de deux fichiers PDF, intercepter l'appel réseau vers la Server Action (ou l'API) pour renvoyer une fausse réponse IA instantanée, et enfin vérifier que les résultats visuels (Score, Compétences, Argumentaire) s'affichent correctement dans le DOM.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. PRÉPARATION DE L'ENVIRONNEMENT ET DES DONNÉES FACTICES :
+- Dans `cypress/e2e/`, crée le fichier `matching-flow.cy.ts`.
+- Au début du fichier, déclare un objet `mockMatchResult` respectant l'interface `MatchResult` (ex: `score: 9`, `competences_validees: ['React', 'Node.js']`, `competences_manquantes: ['Docker']`, `argumentaire_client: "Candidat idéal avec un excellent profil technique..."`).
+
+2. INITIALISATION ET GESTION DU STATE (PAYWALL) :
+- Dans le `beforeEach`, visite la page `/dashboard` (`cy.visit('/dashboard')`).
+- Puisque l'application utilise Redux pour vérifier les crédits (Paywall), injecte programmatiquement un utilisateur connecté avec un solde de crédits > 0 dans le store Redux via `cy.window().its('store')` (si le store est exposé pour Cypress) ou utilise la méthode de ton choix pour bypasser le Paywall afin que le bouton "Lancer le Matching" soit cliquable.
+
+3. MOCKING DU BACKEND (INTERCEPT) :
+- Utilise `cy.intercept()` pour cibler la requête réseau déclenchée par le formulaire (Post vers la Server Action ou la route d'API). 
+- Configure cet intercept pour qu'il retourne un statut 200 et notre objet factice : `{ success: true, data: mockMatchResult }`.
+- Donne un alias à cet intercept (ex: `.as('processMatching')`).
+
+4. SIMULATION DES ACTIONS UTILISATEUR :
+- Rédige le test : `it('doit uploader les PDF, afficher le loader, et afficher les résultats', () => { ... })`.
+- Utilise la commande Cypress (ou le package `cypress-file-upload` si installé) pour simuler l'attachement d'un faux fichier `.pdf` dans la zone de Drag & Drop de la Fiche de Poste, et un autre dans la zone du CV.
+- Vérifie que le bouton "Générer le Matching IA" est dégrisé (activé).
+- Clique sur le bouton.
+
+5. VÉRIFICATION DU DOM (UX ET RÉSULTATS) :
+- Immédiatement après le clic, vérifie que le composant `<MatchingLoader />` apparaît à l'écran (ex: `cy.contains('Analyse en cours').should('be.visible')`).
+- Utilise `cy.wait('@processMatching')` pour attendre que la requête simulée soit "terminée".
+- Vérifie que le Loader disparaît.
+- Vérifie que le composant `<MatchResultView />` apparaît.
+- Fais les assertions finales : 
+  a) `cy.contains('9').should('be.visible')` (Le score circulaire)
+  b) `cy.contains('React').should('be.visible')` (Les compétences validées)
+  c) `cy.contains('Candidat idéal avec un excellent profil').should('be.visible')` (L'argumentaire client)
+
+6. EXÉCUTION :
+- Assure-toi que les sélecteurs Cypress sont robustes.
+- Lance le test et confirme-moi qu'il passe au vert de bout en bout.
+
+Confirme-moi que ce test E2E est fonctionnel et que l'interception de l'appel IA marche parfaitement. Ne passe pas à la suite avant ma validation.
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+# CONTEXTE DU PROJET (RAPPEL)
+Tu es un Développeur Full-Stack Senior et un expert en QA. Notre MVP "Algorithme de Matching IA" a prouvé sa valeur avec les tests précédents. Nous devons maintenant sécuriser le modèle économique (Business Model). L'outil offre 3 crédits gratuits, mais une fois épuisés, l'utilisateur doit être bloqué par un Paywall l'incitant à réserver un appel Calendly pour s'abonner. Il est vital de s'assurer que ce Paywall ne casse jamais, sinon l'entreprise perdrait de l'argent en payant les requêtes API de l'IA sans rien facturer.
+
+# OBJECTIF DE L'ÉTAPE ACTUELLE (PROMPT 12.3)
+Ta tâche consiste à écrire un test Cypress E2E (`paywall.cy.ts`) qui va forcer l'état des crédits de l'utilisateur à 0 dans le store Redux. Ensuite, le test devra simuler une tentative de matching (upload de fichiers et clic sur le bouton), vérifier que l'appel API vers le backend est bloqué, et confirmer que la modale d'Upsell Calendly s'affiche bien à l'écran.
+
+# TÂCHES EXACTES À EXÉCUTER
+
+1. PRÉPARATION DE L'ENVIRONNEMENT DE TEST :
+- Dans `cypress/e2e/`, crée le fichier `paywall.cy.ts`.
+- Déclare le bloc de test : `describe('Tunnel Monétisation - Paywall et Upsell', () => { ... })`.
+
+2. MANIPULATION DU STATE REDUX (FORCER LES CRÉDITS À 0) :
+- Dans un `beforeEach`, visite la page `/dashboard` (`cy.visit('/dashboard')`).
+- Utilise l'objet `window` de Cypress pour accéder au store Redux (`cy.window().its('store')`).
+- Dispatch une action pour connecter un utilisateur factice avec STRICTEMENT 0 crédit : 
+  `store.dispatch({ type: 'user/setUser', payload: { id: '123', email: 'test@test.com', phone: '0600000000', credits: 0, isLoggedIn: true } })`.
+
+3. SÉCURITÉ DE L'API (INTERCEPT) :
+- Utilise `cy.intercept('POST', '/api/matching', cy.spy().as('apiCall'))` (ou l'URL correspondant à ta Server Action). Cela permettra de s'assurer que la requête ne part SURTOUT PAS vers l'IA si les crédits sont à 0.
+
+4. SIMULATION DE L'ACTION UTILISATEUR :
+- Écris le test : `it('doit bloquer la génération et afficher la modale Calendly si les crédits sont épuisés', () => { ... })`.
+- Simule l'upload d'une Fiche de Poste et d'un CV factices pour que le bouton "Générer le Matching" s'active (ne soit plus `disabled`).
+- Simule le clic sur le bouton "Générer le Matching".
+
+5. ASSERTIONS ET VÉRIFICATIONS (LE CŒUR DU TEST) :
+- Vérifie que la modale s'affiche : `cy.get('[data-testid="paywall-modal"]').should('be.visible')` (ou utilise un texte unique de la modale comme `cy.contains('Vos crédits offerts sont épuisés').should('be.visible')`).
+- Vérifie la présence du lien Calendly : `cy.contains('Réserver mon appel').should('have.attr', 'href').and('include', 'calendly.com')`.
+- Vérification de sécurité CRITIQUE : Assure-toi que le backend n'a pas été appelé pour éviter les coûts d'API inutiles : `cy.get('@apiCall').should('not.have.been.called')`.
+
+6. EXÉCUTION :
+- Lance le test Cypress et assure-toi que le flux de blocage et la modale s'exécutent avec succès.
+
+--------------------------------------------------------------------------------
+

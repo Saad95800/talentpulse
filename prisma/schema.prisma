@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  phone        String
+  credits      Int           @default(3)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  matchRecords MatchRecord[]
+}
+
+model MatchRecord {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobTitle      String
+  candidateName String
+  score         Float
+  aiResponse    Json
+  createdAt     DateTime @default(now())
+}
