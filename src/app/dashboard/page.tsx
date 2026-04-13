@@ -10,6 +10,9 @@ import MatchResultView from '@/components/MatchResultView';
 import PaywallModal from '@/components/PaywallModal';
 import { resetResult } from '@/store/matchingSlice';
 import { RefreshCcw, LayoutDashboard, History } from 'lucide-react';
+import VivierChat from '@/components/VivierChat';
+import { MatchResult } from '@/lib/ai';
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -17,6 +20,7 @@ export default function DashboardPage() {
   const { isLoggedIn, name, credits } = useSelector((state: RootState) => state.user);
   const { loading, currentResult } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'analyse' | 'vivier'>('analyse');
 
   // Protection de la route : rediriger vers la home si non inscrit
   useEffect(() => {
@@ -29,12 +33,13 @@ export default function DashboardPage() {
 
   const handleNewAnalysis = () => {
     dispatch(resetResult());
+    setActiveTab('analyse');
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background pb-20">
       {/* Header du Dashboard */}
-      <header className="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-30">
+      <header className="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-primary/10 p-2 rounded-xl">
@@ -46,6 +51,22 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Navigation par onglets Desktop */}
+          <nav className="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <TabButton 
+              active={activeTab === 'analyse'} 
+              onClick={() => setActiveTab('analyse')}
+              icon={<RefreshCcw className="w-4 h-4" />}
+              label="Analyse & Matching"
+            />
+            <TabButton 
+              active={activeTab === 'vivier'} 
+              onClick={() => setActiveTab('vivier')}
+              icon={<History className="w-4 h-4" />}
+              label="Mon Vivier IA"
+            />
+          </nav>
+
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
               <span className="text-xs font-bold text-muted uppercase tracking-wider">Tes Crédits :</span>
@@ -53,43 +74,78 @@ export default function DashboardPage() {
                 {credits}
               </span>
             </div>
-            <button 
-              onClick={() => router.push('/')}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-muted"
-              title="Retour à l'accueil"
-            >
-              <RefreshCcw className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Contenu principal adaptatif */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-          {loading ? (
-            <MatchingLoader />
-          ) : currentResult ? (
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-100">
-                <h2 className="text-2xl font-bold text-main">Résultat de l&apos;analyse</h2>
-                <button
-                  onClick={handleNewAnalysis}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-main font-bold rounded-xl transition-all"
-                >
-                  <RefreshCcw className="w-4 h-4" />
-                  Nouvelle analyse
-                </button>
-              </div>
-              <MatchResultView />
-            </div>
-          ) : (
-            <MatchingDashboard />
-          )}
+      {/* Navigation Mobile */}
+      <div className="md:hidden sticky top-[73px] z-20 bg-white border-b border-slate-200 p-2">
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setActiveTab('analyse')}
+            className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'analyse' ? 'bg-primary text-white' : 'bg-slate-50 text-muted'}`}
+          >
+            Analyse
+          </button>
+          <button 
+            onClick={() => setActiveTab('vivier')}
+            className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'vivier' ? 'bg-primary text-white' : 'bg-slate-50 text-muted'}`}
+          >
+            Vivier IA
+          </button>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        {activeTab === 'analyse' ? (
+          <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+            {loading ? (
+              <MatchingLoader />
+            ) : currentResult ? (
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-100">
+                  <h2 className="text-2xl font-bold text-main">Résultat de l&apos;analyse</h2>
+                  <button
+                    onClick={handleNewAnalysis}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-main font-bold rounded-xl transition-all"
+                  >
+                    <RefreshCcw className="w-4 h-4" />
+                    Nouvelle analyse
+                  </button>
+                </div>
+                <MatchResultView result={currentResult} candidateName="Candidat" />
+              </div>
+            ) : (
+              <MatchingDashboard />
+            )}
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <VivierChat />
+            </div>
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 h-fit sticky top-28">
+              <h4 className="font-black text-main uppercase tracking-widest text-xs mb-6 px-1">Conseils d'utilisation</h4>
+              <ul className="space-y-4">
+                <Tip 
+                  title="Recherche par score" 
+                  desc="Demandez l'IA de classer vos candidats par pertinence technique." 
+                />
+                <Tip 
+                  title="Synthèse globale" 
+                  desc="Obtenez un résumé des points forts et faibles de votre vivier actuel." 
+                />
+                <Tip 
+                  title="Aide à la décision" 
+                  desc="Interrogez l'assistant pour savoir qui présenter en priorité à votre client." 
+                />
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Pied de page du Dashboard */}
-        <div className="mt-8 flex flex-col md:flex-row items-center justify-between text-muted text-sm px-4">
+        <div className="mt-12 flex flex-col md:flex-row items-center justify-between text-muted text-[10px] font-bold uppercase tracking-widest px-4 opacity-50">
           <div className="flex items-center gap-6 mb-4 md:mb-0">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -100,7 +156,7 @@ export default function DashboardPage() {
               <span>Historique Sauvegardé</span>
             </div>
           </div>
-          <p>© 2026 Talent Matcher - Tous droits réservés</p>
+          <p>© 2026 Talent Matcher - Advanced AI Suite</p>
         </div>
       </div>
 
@@ -111,3 +167,31 @@ export default function DashboardPage() {
     </main>
   );
 }
+
+function TabButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`
+        flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all
+        ${active ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-main'}
+      `}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function Tip({ title, desc }: { title: string, desc: string }) {
+  return (
+    <li className="flex gap-4 group">
+      <div className="w-1 h-auto bg-slate-100 rounded-full group-hover:bg-primary transition-colors" />
+      <div>
+        <h5 className="text-sm font-bold text-main mb-1">{title}</h5>
+        <p className="text-xs text-muted leading-relaxed font-medium">{desc}</p>
+      </div>
+    </li>
+  );
+}
+
