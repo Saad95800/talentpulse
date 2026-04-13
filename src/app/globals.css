@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  /* Définition des tokens de couleur via variables CSS natives */
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-main: #0F172A;
+  --color-muted: #64748B;
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-secondary: #0EA5E9;
+
+  /* On peut aussi définir des arrondis ou des ombres custom ici */
+  --radius-3xl: 1.5rem;
+}
+
+@layer base {
+  html, body {
+    @apply antialiased text-main bg-background scroll-smooth;
+  }
+}
+
+@layer components {
+  /* On peut remettre les utilitaires spécifiques ici si besoin */
+}
