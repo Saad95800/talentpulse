@@ -77,17 +77,23 @@
     {
       "nom": "Phase 11 : Tests Unitaires & Robustesse IA",
       "prompts": [
-        { "id": "11.1", "titre": "Tests unitaires Redux (Slices)", "etat": "non éxécutée" },
-        { "id": "11.2", "titre": "Tests de robustesse Parsing IA", "etat": "non éxécutée" },
-        { "id": "11.3", "titre": "Tests unitaires UI (ScoreRing)", "etat": "non éxécutée" }
+        { "id": "11.1", "titre": "Tests unitaires Redux (Slices)", "etat": "éxécutée" },
+        { "id": "11.2", "titre": "Tests de robustesse Parsing IA", "etat": "éxécutée" },
+        { "id": "11.3", "titre": "Tests unitaires UI (ScoreRing)", "etat": "éxécutée" }
       ]
     },
     {
       "nom": "Phase 12 : Tests End-to-End (Cypress)",
       "prompts": [
-        { "id": "12.1", "titre": "Test E2E Inscription Lead", "etat": "non éxécutée" },
-        { "id": "12.2", "titre": "Test E2E Flux de Matching IA", "etat": "non éxécutée" },
-        { "id": "12.3", "titre": "Test E2E Paywall & Blocage", "etat": "non éxécutée" }
+        { "id": "12.1", "titre": "Test E2E Inscription Lead", "etat": "éxécutée" },
+        { "id": "12.2", "titre": "Test E2E Flux de Matching IA", "etat": "éxécutée" },
+        { "id": "12.3", "titre": "Test E2E Paywall & Blocage", "etat": "éxécutée" }
+      ]
+    },
+    {
+      "nom": "Phase 13 : Extension V2 (Vivier IA)",
+      "prompts": [
+        { "id": "13.1", "titre": "Assistant IA Conversationnel du Vivier", "etat": "éxécutée" }
       ]
     }
   ]
