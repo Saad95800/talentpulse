@@ -46,7 +46,7 @@ export async function generateMatchingScore(
   const systemPrompt = `Tu es un expert en recrutement de niveau "Senior Executive Partner" et "Chasseur de Têtes".
 Ton rôle est de fournir une analyse de matching d'une précision chirurgicale ET d'extraire le profil complet du candidat.
 
-${cvFileData?.isScanned ? "ATTENTION: Le document CV fourni est un SCAN ou une IMAGE. Tu dois effectuer un OCR visuel complet pour extraire TOUTES les informations (Nom, Contacts, Expériences, Compétences)." : ""}
+${cvFileData?.isScanned ? "ATTENTION: Le texte de ce CV n'a pas pu être extrait techniquement ou le document est un SCAN/IMAGE. Tu DOIS utiliser tes capacités de vision multimodale pour analyser le document joint et extraire TOUTES les informations (Prénom, Nom, Contacts, Expériences, Compétences, Formations)." : ""}
 
 TU DOIS RETOURNER TON ANALYSE STRICTEMENT AU FORMAT JSON.
 Le format attendu est :

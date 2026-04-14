@@ -42,6 +42,7 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
       try {
         const cMapUrl = `file:///${path.join(process.cwd(), 'node_modules', 'pdfjs-dist', 'cmaps').replace(/\\/g, '/')}/`;
         
+        // Tentative d'extraction textuelle standard
         const parser = new PDFParse({ 
           data: new Uint8Array(buffer),
           cMapUrl,
@@ -52,19 +53,20 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
         const pdfData = await parser.getText();
         result.text = cleanExtractedText(pdfData.text || '');
         
-        // Si le texte est très court, on suspecte un scan
-        if (result.text.trim().length < 100) {
+        // Si le texte est très court ou absent, on force le passage par l'OCR IA
+        if (result.text.trim().length < 150) {
+          console.log(`[Document] PDF sans texte ou trop court (${result.text.length} chars). Passage en mode OCR.`);
           result.isScanned = true;
         }
         
         return result;
       } catch (pdfError) {
-        const errorName = pdfError instanceof Error ? pdfError.name : '';
-        const errorMsg = pdfError instanceof Error ? pdfError.message : '';
-        if (errorName === 'PasswordException' || errorMsg.includes('password')) {
-          throw new Error("Ce fichier PDF est protégé par un mot de passe.");
-        }
-        throw pdfError;
+        // HYPER ROBUSTESSE : En cas d'erreur de la bibliothèque (PDF corrompu, format non supporté, etc.)
+        // au lieu de bloquer l'utilisateur, on bascule en mode "scan" pour laisser l'IA Vision tenter sa chance.
+        console.warn(`[Document] Échec technique de lecture PDF (${filename}). Basculement sur l'OCR IA.`);
+        result.isScanned = true;
+        result.text = ""; // On laisse le texte vide, l'IA se basera sur le buffer
+        return result;
       }
     } 
     else if (['jpg', 'jpeg', 'png'].includes(ext)) {
