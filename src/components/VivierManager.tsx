@@ -196,6 +196,10 @@ export default function VivierManager() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         candidate={selectedCandidate} 
+        onUpdate={(updated) => {
+          setCandidates(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated, name: `${updated.firstName || ''} ${updated.lastName || ''}`.trim() || c.name } : c));
+          setSelectedCandidate(updated as any);
+        }}
       />
     </div>
   );

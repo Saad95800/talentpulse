@@ -36,100 +36,88 @@ export interface MatchResult {
 }
 
 /**
- * Génère un score de matching et une analyse détaillée entre un CV et une Fiche de Poste.
+ * ÉTAPE 1 : Extraction pure du profil candidat (Utilise Gemini Flash par défaut pour la vitesse/coût)
+ * Sert d'OCR intelligent et de constructeur de profil.
+ */
+export async function extractCandidateInfo(
+  cvText: string,
+  cvFileData?: { buffer: Buffer, mimeType: string, isScanned: boolean }
+): Promise<CandidateInfo> {
+  const systemPrompt = `Tu es un expert en extraction de données RH. Ton rôle est d'extraire le profil COMPLET d'un candidat à partir d'un CV.
+${cvFileData?.isScanned ? "ATTENTION: Le document est un SCAN/IMAGE. Utilise tes capacités de vision pour extraire les données." : ""}
+
+TU DOIS RETOURNER UN JSON STRICT :
+{
+  "firstName": string,
+  "lastName": string,
+  "email": string,
+  "phone": string,
+  "address": string,
+  "linkedin": string,
+  "website": string,
+  "summary": string,
+  "languages": string[],
+  "skills": string[],
+  "experiences": [{ "company": string, "position": string, "period": string, "description": string }],
+  "educations": [{ "school": string, "degree": string, "year": string }]
+}`;
+
+  const userPrompt = cvFileData?.isScanned 
+    ? "Extrais le profil depuis ce document joint." 
+    : `Extrais le profil depuis ce texte :\n${cvText}`;
+
+  // On force Gemini pour cette étape d'OCR car il est imbattable en rapport Vitesse/Coût/Vision
+  const provider = createProvider('gemini', 'matching');
+  const options = { system: systemPrompt, maxTokens: 2000, temperature: 0 };
+  
+  let rawText: string;
+  if (cvFileData) {
+    rawText = await provider.completeWithDocument(cvText, cvFileData.buffer, cvFileData.mimeType, options);
+  } else {
+    rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+  }
+
+  return extractJSON<CandidateInfo>(rawText);
+}
+
+/**
+ * ÉTAPE 2 : Analyse de Matching (Peut utiliser un modèle plus "réflexif" comme Claude)
  */
 export async function generateMatchingScore(
   jobText: string, 
   cvText: string,
-  cvFileData?: { buffer: Buffer, mimeType: string, isScanned: boolean }
+  existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
-  const systemPrompt = `Tu es un expert en recrutement de niveau "Senior Executive Partner" et "Chasseur de Têtes".
-Ton rôle est de fournir une analyse de matching d'une précision chirurgicale ET d'extraire le profil complet du candidat.
+  const systemPrompt = `Tu es un expert en recrutement Senior. Ton rôle est d'analyser le matching entre un poste et un candidat.
+Sois précis, critique et objectif. Ton argumentaire doit aider un recruteur à décider.
 
-${cvFileData?.isScanned ? "ATTENTION: Le texte de ce CV n'a pas pu être extrait techniquement ou le document est un SCAN/IMAGE. Tu DOIS utiliser tes capacités de vision multimodale pour analyser le document joint et extraire TOUTES les informations (Prénom, Nom, Contacts, Expériences, Compétences, Formations)." : ""}
-
-TU DOIS RETOURNER TON ANALYSE STRICTEMENT AU FORMAT JSON.
-Le format attendu est :
+RETOURNE UN JSON :
 {
   "score": number (0-100),
   "competences_validees": string[],
   "competences_manquantes": string[],
-  "argumentaire_client": string,
-  "candidateInfo": {
-    "firstName": string,
-    "lastName": string,
-    "email": string,
-    "phone": string,
-    "address": string,
-    "linkedin": string (URL),
-    "website": string (URL),
-    "summary": string (bio pro),
-    "languages": string[],
-    "skills": string[],
-    "experiences": [
-      { "company": string, "position": string, "period": string, "description": string }
-    ],
-    "educations": [
-      { "school": string, "degree": string, "year": string }
-    ]
-  }
+  "argumentaire_client": string
 }`;
 
-  const userPrompt = `Voici la Fiche de Poste :\n---\n${jobText}\n---\n\n${cvFileData?.isScanned ? "Voici le CV (sous forme de document/image joint) :" : `Voici le texte du CV :\n---\n${cvText}\n---`}\n\nAnalyse le matching et renvoie uniquement le JSON.`;
+  const userPrompt = `FICHE DE POSTE :\n${jobText}\n\nCANDIDAT :\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nAnalyse le matching.`;
 
-  const messages = [{ role: 'user' as const, content: userPrompt }];
-  const callOptions = { system: systemPrompt, maxTokens: 4000, temperature: 0 };
-
-  // Helper pour l'appel au provider
-  const callProvider = async (provider: any) => {
-    if (cvFileData && provider.completeWithDocument) {
-      return await provider.completeWithDocument(cvText, cvFileData.buffer, cvFileData.mimeType, callOptions);
-    }
-    return await provider.complete(messages, callOptions);
+  const provider = await getAIProvider('matching');
+  const options = { system: systemPrompt, maxTokens: 2000, temperature: 0 };
+  const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+  
+  const matchParts = extractJSON<{score: number, competences_validees: string[], competences_manquantes: string[], argumentaire_client: string}>(rawText);
+  
+  return {
+    ...matchParts,
+    candidateInfo: existingInfo || { firstName: "Inconnu", lastName: "Inconnu" } // Fallback si pas d'info
   };
-
-  // 1. Tenter avec le provider configuré (priorité Anthropic)
-  try {
-    const provider = await getAIProvider('matching');
-    const rawText  = await callProvider(provider);
-    return extractJSON(rawText);
-  } catch (primaryError) {
-    const msg    = primaryError instanceof Error ? primaryError.message : '';
-    // @ts-expect-error - primaryError can have a status property from provider
-    const status = primaryError?.status ?? 0;
-
-    // Si le provider principal échoue pour une raison transitoire
-    const isTransient =
-      status === 529 ||
-      status === 404 ||
-      status === 503 ||
-      msg.includes('overloaded') ||
-      msg.includes('not_found')  ||
-      msg.includes('unavailable');
-
-    if (isTransient && process.env.GEMINI_API_KEY) {
-      console.warn(`[AI Fallback] Provider principal indisponible (${status || msg.slice(0, 60)}). Bascule sur Gemini...`);
-      try {
-        const geminiProvider = createProvider('gemini', 'matching');
-        const rawText        = await callProvider(geminiProvider);
-        return extractJSON(rawText);
-      } catch {
-        throw new Error('Nos serveurs IA sont temporairement surchargés. Veuillez réessayer dans quelques instants.');
-      }
-    }
-
-    throw primaryError;
-  }
 }
 
-function extractJSON(text: string): MatchResult {
+function extractJSON<T>(text: string): T {
   try {
-    // 1. Tenter d'extraire le bloc JSON s'il y a des triple backticks
     const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     let jsonString = match ? match[1].trim() : text.trim();
     
-    // 2. Nettoyage si jamais il reste des caractères invisibles ou du texte parasite
-    // On cherche le premier '{' et le dernier '}' pour isoler l'objet JSON
     const firstBrace = jsonString.indexOf('{');
     const lastBrace  = jsonString.lastIndexOf('}');
     
@@ -137,14 +125,9 @@ function extractJSON(text: string): MatchResult {
       jsonString = jsonString.substring(firstBrace, lastBrace + 1);
     }
 
-    try {
-      return JSON.parse(jsonString) as MatchResult;
-    } catch (parseError) {
-      console.error("[AI] Échec du parsing JSON final. Erreur:", parseError, "Texte brut:", text);
-      throw new Error("Format de réponse IA invalide (JSON attendu).");
-    }
+    return JSON.parse(jsonString) as T;
   } catch (err) {
-    if (err instanceof Error && err.message.includes("Format de réponse")) throw err;
-    throw new Error("Impossible d'extraire les données de la réponse IA.");
+    console.error("[AI] Échec extraction JSON:", text);
+    throw new Error("Erreur de format IA (JSON attendu).");
   }
 }

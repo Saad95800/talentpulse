@@ -45,9 +45,20 @@ function DocumentInput({
   } 
 }: DocumentInputProps) {
   
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
+      let fileToSet = acceptedFiles[0];
+      
+      // Compression si c'est une image
+      if (fileToSet.type.startsWith('image/')) {
+        try {
+          fileToSet = await compressImage(fileToSet);
+        } catch (e) {
+          console.error("Erreur compression image:", e);
+        }
+      }
+      
+      setFile(fileToSet);
     }
   }, [setFile]);
 
@@ -86,7 +97,7 @@ function DocumentInput({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-black text-emerald-950 truncate">{file.name}</p>
               <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">
-                {(file.size / 1024).toFixed(0)} KB • Validé
+                {(file.size / 1024).toFixed(0)} KB • Prêt pour analyse
               </p>
             </div>
             <button 
@@ -139,9 +150,57 @@ function DocumentInput({
   );
 }
 
+/**
+ * Utilitaire de compression d'image client-side via Canvas
+ */
+async function compressImage(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Max 1600px pour un CV (suffisant pour OCR)
+        const MAX_SIZE = 1600;
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            reject(new Error("Canvas blob error"));
+          }
+        }, 'image/jpeg', 0.85); // Qualité 85% : excellent pour OCR et poids réduit
+      };
+    };
+    reader.onerror = (e) => reject(e);
+  });
+}
+
 export default function MatchingDashboard() {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: RootState) => state.matching);
+  const [loadingStep, setLoadingStep] = useState("");
   
   // States pour la Fiche de Poste
   const [jobInputType, setJobInputType] = useState<'file' | 'text'>('file');
@@ -155,11 +214,10 @@ export default function MatchingDashboard() {
 
   const userId = useSelector((state: RootState) => state.user.user?.id);
 
-  const { checkAuth } = useAuth();
-console.log(loading)
   const handleMatch = async () => {
     dispatch(setLoading(true));
     dispatch(setError(""));
+    setLoadingStep("Préparation des fichiers...");
 
     // Validation basique avant soumission
     const hasJob = (jobInputType === 'file' && jobFile) || (jobInputType === 'text' && jobText.trim().length > 0);
@@ -191,10 +249,15 @@ console.log(loading)
     if (cvInputType === 'text' && cvText) formData.append('cvTextRaw', cvText);
 
     try {
-      console.log("[MatchingDashboard] Démarrage du processus pour userId:", userId);
+      console.log("[MatchingDashboard] Démarrage du processus pour userId:", activeUserId);
       dispatch(setLoading(true))
-      await new Promise(r => setTimeout(r, 50));
+      setLoadingStep("Extraction du contenu...");
+      await new Promise(r => setTimeout(r, 600));
+      
+      setLoadingStep("Analyse OCR et Vision...");
       const result = await processMatchingWorkflow(formData);
+      
+      setLoadingStep("Finalisation...");
       dispatch(setLoading(false))
       console.log("[MatchingDashboard] Résultat reçu:", result.success ? "Succès" : "Erreur: " + result.error);
       
@@ -209,13 +272,11 @@ console.log(loading)
     } catch (e) {
       const message = e instanceof Error ? e.message : "Inconnue";
       console.error("[MatchingDashboard] Erreur fatale:", e);
-      
-      // Log de l'erreur brute
-      await logError("Erreur Client lors du Matching", e, userId);
-      
+      await logError("Erreur Client lors du Matching", e, activeUserId);
       dispatch(setError("Erreur fatale lors du matching: " + message));
     } finally {
       dispatch(setLoading(false));
+      setLoadingStep("");
     }
   };
 
@@ -265,8 +326,11 @@ console.log(loading)
         >
           {loading ? (
             <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="animate-pulse">Analyse en cours...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+              <div className="flex flex-col items-start leading-tight">
+                <span className="animate-pulse">Analyse en cours...</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 italic">{loadingStep}</span>
+              </div>
             </>
           ) : (
             <>

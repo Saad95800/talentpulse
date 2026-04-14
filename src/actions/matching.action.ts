@@ -4,8 +4,8 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { deductCredit, checkCredits } from "./credits.action";
 import { extractTextFromFile } from "@/lib/document";
-import { generateMatchingScore } from "@/lib/ai";
-import { logError, logInfo } from "./logger.action";
+import { generateMatchingScore, extractCandidateInfo } from "@/lib/ai";
+import { logError, logInfo, logWarn } from "./logger.action";
 
 /**
  * Chef d'Orchestre : Vérification crédit -> Extraction texte -> IA -> Sauvegarde DB -> Déduction crédit.
@@ -44,6 +44,12 @@ export async function processMatchingWorkflow(formData: FormData) {
     let jobText = "";
     let jobTitle = "Texte Saisi";
     
+    // Validation de sécurité sur la taille cumulée (Max 10MB total pour éviter timeout serveur)
+    const totalSize = (jobFile?.size || 0) + (cvFile?.size || 0);
+    if (totalSize > 10 * 1024 * 1024) {
+      return { success: false, error: "La taille cumulée des fichiers dépasse 10 Mo. Veuillez compresser vos documents." };
+    }
+
     if (jobFile && jobFile.size > 0) {
       console.log(`[Workflow] Extraction Job: ${jobFile.name} (${jobFile.size} bytes)`);
       const jobBuffer = Buffer.from(await jobFile.arrayBuffer());
@@ -72,7 +78,6 @@ export async function processMatchingWorkflow(formData: FormData) {
         cvText = cvDoc.text;
         candidateName = cvFile.name.replace(/\.[^/.]+$/, "");
         
-        // On prépare les données pour l'IA (Multimodal / OCR)
         cvFileData = {
           buffer: cvBuffer,
           mimeType: cvDoc.mimeType || 'application/pdf',
@@ -87,27 +92,18 @@ export async function processMatchingWorkflow(formData: FormData) {
       cvText = cvTextRaw;
     }
 
-    // Vérification post-extraction
-    // Pour les scans, on autorise un texte court car l'IA fera l'OCR
-    if (!cvFileData?.isScanned && (jobText.trim().length < 50 || cvText.trim().length < 50)) {
-       return { 
-         success: false, 
-         error: "Le texte extrait est trop court pour effectuer une analyse pertinente. Vérifiez vos documents." 
-       };
-    }
-
-    // Étape E : Le Cerveau IA
-    const resultIA = await generateMatchingScore(jobText, cvText, cvFileData);
+    // Étape E : Le Cerveau IA - Workflow Multi-Modèle Optimisé
+    // 1. Extraction du profil (Fast Path - Gemini Flash)
+    console.log("[Workflow] Étape 1: Extraction Profil...");
+    const candidateInfo = await extractCandidateInfo(cvText, cvFileData);
+    
+    // 2. Analyse de Matching (Intelligence Path - Claude/Générique)
+    console.log("[Workflow] Étape 2: Matching Sémantique...");
+    const resultIA = await generateMatchingScore(jobText, cvText, candidateInfo);
 
     // Étape F : Sauvegarde Structurelle BDD (Vivier IA)
-    // Nous créons systématiquement les entités Mission et Candidate pour le Vivier.
-    // DEBUG: Vérification de la présence des modèles dans Prisma
     if (!prisma.mission || !prisma.candidate) {
-      const missing = [];
-      if (!prisma.mission) missing.push("Mission");
-      if (!prisma.candidate) missing.push("Candidate");
-      console.error(`[Workflow] ERREUR CRITIQUE : Modèles manquants dans le client Prisma : ${missing.join(', ')}`);
-      throw new Error(`Le système de base de données est en cours de mise à jour (${missing.join(', ')} manquants). Veuillez réessayer dans quelques instants.`);
+      throw new Error("Base de données indisponible.");
     }
 
     const mission = await prisma.mission.create({
@@ -118,23 +114,22 @@ export async function processMatchingWorkflow(formData: FormData) {
       }
     });
 
-    const info = resultIA.candidateInfo || {};
     const candidate = await prisma.candidate.create({
       data: {
         userId,
-        name: `${info.firstName || ''} ${info.lastName || ''}`.trim() || candidateName,
-        firstName: info.firstName,
-        lastName: info.lastName,
-        email: info.email,
-        phone: info.phone,
-        address: info.address,
-        linkedin: info.linkedin,
-        website: info.website,
-        summary: info.summary,
-        languages: (info.languages || []) as any,
-        skills: (info.skills || []) as any,
-        experiences: (info.experiences || []) as any,
-        educations: (info.educations || []) as any,
+        name: `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || candidateName,
+        firstName: candidateInfo.firstName,
+        lastName: candidateInfo.lastName,
+        email: candidateInfo.email,
+        phone: candidateInfo.phone,
+        address: candidateInfo.address,
+        linkedin: candidateInfo.linkedin,
+        website: candidateInfo.website,
+        summary: candidateInfo.summary,
+        languages: (candidateInfo.languages || []) as any,
+        skills: (candidateInfo.skills || []) as any,
+        experiences: (candidateInfo.experiences || []) as any,
+        educations: (candidateInfo.educations || []) as any,
         cvText,
       }
     });
