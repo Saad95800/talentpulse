@@ -39,7 +39,8 @@ export interface IAIProvider {
 
   completeWithDocument?(
     text:      string,
-    pdfBuffer: Buffer,
+    buffer:    Buffer,
+    mimeType:  string,
     options?:  AICompletionOptions
   ): Promise<string>;
 }

@@ -3,8 +3,8 @@ describe('Tunnel Monétisation - Paywall et Upsell', () => {
     cy.visit('/dashboard');
     
     // On force les crédits à 0 via le store Redux exposé
-    cy.window().its('store').then((store: any) => {
-      store.dispatch({
+    cy.window().its('store').then((store: unknown) => {
+      (store as { dispatch: (action: unknown) => void }).dispatch({
         type: 'user/setUser',
         payload: {
           id: '123',

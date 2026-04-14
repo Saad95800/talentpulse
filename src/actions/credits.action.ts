@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 
-const ADMIN_EMAIL = "contact@reactivedigital.fr";
 
 /**
  * Récupère le nombre de crédits restants pour un utilisateur.
@@ -14,13 +13,12 @@ export async function fetchUserCredits(userId: string) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { credits: true, email: true },
+      select: { credits: true, role: true },
     });
 
-    if (user?.email === ADMIN_EMAIL) return 999999;
+    if (user?.role === 'ADMIN') return 999999;
     return user?.credits ?? 0;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des crédits:", error);
+  } catch {
     return 0;
   }
 }
@@ -35,7 +33,7 @@ export async function checkCredits(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return { success: false, error: "Utilisateur introuvable." };
 
-    if (user.email === ADMIN_EMAIL) {
+    if (user.role === 'ADMIN') {
       return { success: true, isUnlimited: true };
     }
 
@@ -44,7 +42,7 @@ export async function checkCredits(userId: string) {
     }
 
     return { success: true, isUnlimited: false, currentCredits: user.credits };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Impossible de vérifier les crédits." };
   }
 }
@@ -60,7 +58,7 @@ export async function deductCredit(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return { success: false, error: "Utilisateur introuvable." };
 
-    if (user.email === ADMIN_EMAIL) {
+    if (user.role === 'ADMIN') {
       return { success: true, creditsRemaining: 999999 };
     }
 
@@ -76,8 +74,7 @@ export async function deductCredit(userId: string) {
     });
 
     return { success: true, creditsRemaining: updatedUser.credits };
-  } catch (error) {
-    console.error("Erreur lors de la déduction du crédit:", error);
+  } catch {
     return { success: false, error: "Erreur lors de la déduction du crédit." };
   }
 }

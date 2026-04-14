@@ -1,48 +1,58 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface UserState {
-  isLoggedIn: boolean;
-  id: string | null;
+export interface User {
+  id: string;
   name: string | null;
-  email: string | null;
-  phone: string | null;
+  email: string;
+  phone: string;
   credits: number;
+  role: 'ADMIN' | 'USER';
+}
+
+interface UserState {
+  user: User | null;
+  token: string | null;
+  isLoggedIn: boolean;
+  isVerified: boolean;
 }
 
 const initialState: UserState = {
+  user: null,
+  token: null,
   isLoggedIn: false,
-  id: null,
-  name: null,
-  email: null,
-  phone: null,
-  credits: 0,
+  isVerified: false,
 };
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<{ id: string; name: string | null; email: string; phone: string; credits: number }>) => {
-      state.isLoggedIn = true;
-      state.id = action.payload.id;
-      state.name = action.payload.name;
-      state.email = action.payload.email;
-      state.phone = action.payload.phone;
-      state.credits = action.payload.credits;
+    setUser: (state, action: PayloadAction<User & { token?: string }>) => {
+      const { token, ...userData } = action.payload;
+      state.user = userData;
+      if (token) {
+        state.token = token;
+        state.isLoggedIn = true;
+      }
+      state.isVerified = true;
     },
     updateCredits: (state, action: PayloadAction<number>) => {
-      state.credits = action.payload;
+      if (state.user) {
+        state.user.credits = action.payload;
+      }
     },
-    clearUser: (state) => {
+    setToken: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;
+      state.isLoggedIn = true;
+    },
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
       state.isLoggedIn = false;
-      state.id = null;
-      state.name = null;
-      state.email = null;
-      state.phone = null;
-      state.credits = 0;
+      state.isVerified = false;
     },
   },
 });
 
-export const { setUser, updateCredits, clearUser } = userSlice.actions;
+export const { setUser, updateCredits, setToken, logout } = userSlice.actions;
 export default userSlice.reducer;

@@ -7,6 +7,8 @@ import { RootState } from '@/store';
 import { setLoading, setResult, setError } from '@/store/matchingSlice';
 import { updateCredits } from '@/store/userSlice';
 import { processMatchingWorkflow } from '@/actions/matching.action';
+import { useAuth } from '@/hooks/useAuth';
+import { logError, logWarn } from '@/actions/logger.action';
 import { 
   FileUp, 
   FileText, 
@@ -37,6 +39,8 @@ function DocumentInput({
     'application/pdf': ['.pdf'], 
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'], 
     'application/msword': ['.doc'],
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
     'text/plain': ['.txt'] 
   } 
 }: DocumentInputProps) {
@@ -106,7 +110,7 @@ function DocumentInput({
               <FileUp className="w-7 h-7" />
             </div>
             <p className="text-slate-500 font-medium text-xs px-4 text-center leading-relaxed">
-              {description} <br/> <span className="font-bold text-slate-400 mt-2 block">(PDF, DOCX, TXT)</span>
+              {description} <br/> <span className="font-bold text-slate-400 mt-2 block">(PDF, DOCX, JPG, PNG)</span>
             </p>
             
             {isDragActive && (
@@ -149,25 +153,36 @@ export default function MatchingDashboard() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvText, setCvText] = useState("");
 
-  const userId = useSelector((state: RootState) => state.user.id);
+  const userId = useSelector((state: RootState) => state.user.user?.id);
 
+  const { checkAuth } = useAuth();
+console.log(loading)
   const handleMatch = async () => {
-    if (!userId) return;
-    
+    dispatch(setLoading(true));
+    dispatch(setError(""));
+
     // Validation basique avant soumission
     const hasJob = (jobInputType === 'file' && jobFile) || (jobInputType === 'text' && jobText.trim().length > 0);
     const hasCv = (cvInputType === 'file' && cvFile) || (cvInputType === 'text' && cvText.trim().length > 0);
     
     if (!hasJob || !hasCv) {
        dispatch(setError("Veuillez fournir une fiche de poste et un CV avant de lancer l'analyse."));
+       dispatch(setLoading(false));
        return;
     }
 
-    dispatch(setLoading(true));
-    dispatch(setError(""));
+    const activeUserId = userId || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('tm_user') || '{}').id : null);
+
+    if (!activeUserId) {
+      console.error("[MatchingDashboard] userId manquant au moment du match");
+      await logWarn("Tentative de matching sans userId", "system", { pathname: window.location.pathname });
+      dispatch(setError("Session expirée ou utilisateur introuvable. Veuillez vous reconnecter."));
+      dispatch(setLoading(false));
+      return;
+    }
 
     const formData = new FormData();
-    formData.append('userId', userId);
+    formData.append('userId', activeUserId);
     
     if (jobInputType === 'file' && jobFile) formData.append('jobFile', jobFile);
     if (jobInputType === 'text' && jobText) formData.append('jobTextRaw', jobText);
@@ -176,7 +191,12 @@ export default function MatchingDashboard() {
     if (cvInputType === 'text' && cvText) formData.append('cvTextRaw', cvText);
 
     try {
+      console.log("[MatchingDashboard] Démarrage du processus pour userId:", userId);
+      dispatch(setLoading(true))
+      await new Promise(r => setTimeout(r, 50));
       const result = await processMatchingWorkflow(formData);
+      dispatch(setLoading(false))
+      console.log("[MatchingDashboard] Résultat reçu:", result.success ? "Succès" : "Erreur: " + result.error);
       
       if (result.success && result.data) {
         if (result.creditsRemaining !== undefined) {
@@ -187,7 +207,13 @@ export default function MatchingDashboard() {
         dispatch(setError(result.error || "Une erreur est survenue lors du scan."));
       }
     } catch (e) {
-      dispatch(setError("Erreur fatale lors du matching."));
+      const message = e instanceof Error ? e.message : "Inconnue";
+      console.error("[MatchingDashboard] Erreur fatale:", e);
+      
+      // Log de l'erreur brute
+      await logError("Erreur Client lors du Matching", e, userId);
+      
+      dispatch(setError("Erreur fatale lors du matching: " + message));
     } finally {
       dispatch(setLoading(false));
     }
@@ -263,12 +289,6 @@ export default function MatchingDashboard() {
       </div>
 
       <style>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer {
-          animation: shimmer 1.5s infinite;
-        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
         }

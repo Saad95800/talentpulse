@@ -5,31 +5,54 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
 import MatchingDashboard from '@/components/MatchingDashboard';
-import MatchingLoader from '@/components/MatchingLoader';
 import MatchResultView from '@/components/MatchResultView';
+import MatchingLoader from '@/components/MatchingLoader';
 import PaywallModal from '@/components/PaywallModal';
-import { resetResult } from '@/store/matchingSlice';
-import { RefreshCcw, LayoutDashboard, History, Zap } from 'lucide-react';
+import { resetResult, setResult } from '@/store/matchingSlice';
 import VivierChat from '@/components/VivierChat';
+import VivierManager from '@/components/VivierManager';
+import HistoryList from '@/components/HistoryList';
 import { MatchResult } from '@/lib/ai';
+import { useAuth } from '@/hooks/useAuth';
+import { logout } from '@/store/userSlice';
+import { LogOut, LayoutDashboard, RefreshCcw, History, Zap } from 'lucide-react';
 
 
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { isLoggedIn, name, credits } = useSelector((state: RootState) => state.user);
-  const { loading, currentResult } = useSelector((state: RootState) => state.matching);
+  const { user, isLoggedIn } = useSelector((state: RootState) => state.user);
+  const credits = user?.credits ?? 0;
+  const { currentResult, loading } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'analyse' | 'vivier'>('analyse');
+  const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique'>('analyse');
+  const [vivierMode, setVivierMode] = useState<'list' | 'chat'>('list');
 
-  // Protection de la route : rediriger vers la home si non inscrit
+  // Gestion de la session via le hook useAuth
+  useAuth();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push('/');
+  };
+
+  // Protection de la route : rediriger vers la home si non inscrit ou en cours de chargement
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn && !localStorage.getItem('tm_token')) {
       router.push('/');
     }
   }, [isLoggedIn, router]);
 
-  if (!isLoggedIn) return null;
+  if (!isLoggedIn || !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-bold text-sm tracking-widest uppercase animate-pulse">Initialisation du Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleNewAnalysis = () => {
     dispatch(resetResult());
@@ -38,6 +61,25 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-background pb-20">
+      {/* Global Matching Loader Overlay - EMERGENCY VISIBILITY MODE */}
+      <div 
+        style={{ 
+          display: loading ? 'flex' : 'none', 
+          zIndex: 999999,
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.8)', // Slate-900 opaque
+          backdropFilter: 'blur(16px)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.3s ease'
+        }}
+      >
+        <div className="w-full max-w-lg p-10 bg-white rounded-[3rem] shadow-[0_0_100px_rgba(37,99,235,0.6)] border border-white/20 transform scale-100">
+           <MatchingLoader />
+        </div>
+      </div>
+
       {/* Header du Dashboard */}
       <header className="bg-white border-b border-slate-300 py-4 px-6 sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -47,7 +89,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-main">Dashboard Recruteur</h1>
-              <p className="text-muted text-xs font-medium">👋 Bienvenue, <span className="text-primary">{name || 'Recruteur'}</span></p>
+              <p className="text-muted text-xs font-medium">👋 Bienvenue, <span className="text-primary">{user?.name || 'Recruteur'}</span></p>
             </div>
           </div>
 
@@ -62,26 +104,39 @@ export default function DashboardPage() {
             <TabButton 
               active={activeTab === 'vivier'} 
               onClick={() => setActiveTab('vivier')}
-              icon={<History className="w-4 h-4" />}
+              icon={<Zap className="w-4 h-4" />}
               label="Mon Vivier IA"
+            />
+            <TabButton 
+              active={activeTab === 'historique'} 
+              onClick={() => setActiveTab('historique')}
+              icon={<History className="w-4 h-4" />}
+              label="Historique"
             />
           </nav>
 
-          <div className="flex items-center gap-4">
-            <div className="px-4 py-2 bg-white border border-slate-300 rounded-xl flex items-center gap-3 shadow-inner">
-              <span className="text-xs font-bold text-muted uppercase tracking-wider">Tes Crédits :</span>
-              <span className={`text-lg font-black ${credits > 0 ? 'text-primary' : 'text-red-500'}`}>
-                {credits > 900000 ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-500">
-                    <Zap className="w-4 h-4 fill-emerald-500" /> Illimités
-                  </span>
-                ) : (
-                  credits
-                )}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 bg-white border border-slate-300 rounded-xl flex items-center gap-3 shadow-inner">
+                <span className="text-xs font-bold text-muted uppercase tracking-wider">Tes Crédits :</span>
+                <span className={`text-lg font-black ${credits > 0 ? 'text-primary' : 'text-red-500'}`}>
+                  {credits > 900000 ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-500">
+                      <Zap className="w-4 h-4 fill-emerald-500" /> Illimités
+                    </span>
+                  ) : (
+                    credits
+                  )}
+                </span>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-100 transition-all group"
+                title="Déconnexion"
+              >
+                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
             </div>
           </div>
-        </div>
       </header>
 
       {/* Navigation Mobile */}
@@ -97,7 +152,13 @@ export default function DashboardPage() {
             onClick={() => setActiveTab('vivier')}
             className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'vivier' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
           >
-            Vivier IA
+            Vivier
+          </button>
+          <button 
+            onClick={() => setActiveTab('historique')}
+            className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'historique' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
+          >
+            Historique
           </button>
         </div>
       </div>
@@ -105,9 +166,7 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         {activeTab === 'analyse' ? (
           <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300 border border-slate-200 overflow-hidden">
-            {loading ? (
-              <MatchingLoader />
-            ) : currentResult ? (
+            {currentResult ? (
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-200">
                   <h2 className="text-2xl font-bold text-main">Résultat de l&apos;analyse</h2>
@@ -125,28 +184,57 @@ export default function DashboardPage() {
               <MatchingDashboard />
             )}
           </div>
+        ) : activeTab === 'vivier' ? (
+          <div className="space-y-8">
+            {/* Sous-navigation Vivier */}
+            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 w-fit shadow-sm">
+              <button 
+                onClick={() => setVivierMode('list')}
+                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${vivierMode === 'list' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-main'}`}
+              >
+                Liste du Vivier
+              </button>
+              <button 
+                onClick={() => setVivierMode('chat')}
+                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${vivierMode === 'chat' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-main'}`}
+              >
+                Assistant IA
+              </button>
+            </div>
+
+            {vivierMode === 'list' ? (
+              <VivierManager />
+            ) : (
+              <div className="grid lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <VivierChat />
+                </div>
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 h-fit sticky top-28">
+                  <h4 className="font-black text-main uppercase tracking-widest text-xs mb-6 px-1">Assistant Vivier</h4>
+                  <ul className="space-y-4">
+                    <Tip 
+                      title="Analyse comparative" 
+                      desc="Demandez l&apos;IA de comparer deux candidats de votre vivier sur une mission précise." 
+                    />
+                    <Tip 
+                      title="Recherche sémantique" 
+                      desc="Trouvez l&apos;expert React même s'il ne l&apos;a pas écrit explicitement." 
+                    />
+                    <Tip 
+                      title="Synthèse IA" 
+                      desc="Obtenez un résumé des points forts et faibles de vos recrues potentielles." 
+                    />
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <VivierChat />
-            </div>
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 h-fit sticky top-28">
-              <h4 className="font-black text-main uppercase tracking-widest text-xs mb-6 px-1">Conseils d'utilisation</h4>
-              <ul className="space-y-4">
-                <Tip 
-                  title="Recherche par score" 
-                  desc="Demandez l'IA de classer vos candidats par pertinence technique." 
-                />
-                <Tip 
-                  title="Synthèse globale" 
-                  desc="Obtenez un résumé des points forts et faibles de votre vivier actuel." 
-                />
-                <Tip 
-                  title="Aide à la décision" 
-                  desc="Interrogez l'assistant pour savoir qui présenter en priorité à votre client." 
-                />
-              </ul>
-            </div>
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 overflow-hidden min-h-[500px]">
+            <HistoryList onSelectAnalysis={(res: MatchResult) => {
+              dispatch(setResult(res));
+              setActiveTab('analyse');
+            }} />
           </div>
         )}
 

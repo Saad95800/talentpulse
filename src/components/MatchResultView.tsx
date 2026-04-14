@@ -16,7 +16,17 @@ interface MatchResultViewProps {
   candidateName: string;
 }
 
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import MatchReportPDF from './pdf/MatchReportPDF';
+import { Download } from 'lucide-react';
+
 export default function MatchResultView({ result, candidateName }: MatchResultViewProps) {
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-emerald-600 stroke-emerald-600';
     if (score >= 50) return 'text-amber-600 stroke-amber-600';
@@ -28,6 +38,7 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
 
   return (
     <div className="w-full max-w-5xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      {/* ... structure existante ... */}
       {/* Header Result */}
       <div className="bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-300 border border-slate-300 mb-10 overflow-hidden relative">
         <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -134,19 +145,27 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
             Verdict du Chasseur de Têtes
           </h3>
           <p className="text-lg md:text-xl font-medium leading-relaxed text-indigo-100 italic">
-            "{result.argumentaire_client}"
+            &quot;{result.argumentaire_client}&quot;
           </p>
         </div>
       </section>
 
       {/* Actions */}
       <div className="mt-12 flex justify-center">
-        <button 
-          onClick={() => window.print()}
-          className="bg-white text-main border border-slate-300 px-10 py-5 rounded-2xl font-black text-lg hover:bg-slate-100 transition-all shadow-xl hover:-translate-y-1"
-        >
-          Exporter l'analyse (PDF)
-        </button>
+        {isClient && (
+          <PDFDownloadLink
+            document={<MatchReportPDF result={result} candidateName={candidateName} />}
+            fileName={`Analyse_TalentMatcher_${candidateName.replace(/\s+/g, '_')}.pdf`}
+            className="flex items-center gap-3 bg-primary text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-primary-hover transition-all shadow-xl hover:-translate-y-1"
+          >
+            {({ loading }) => (
+              <>
+                <Download className="w-5 h-5" />
+                {loading ? "Génération du PDF..." : "Exporter l'analyse (PDF)"}
+              </>
+            )}
+          </PDFDownloadLink>
+        )}
       </div>
     </div>
   );

@@ -65,23 +65,68 @@ export class GeminiProvider implements IAIProvider {
       if (!text) throw new Error('Réponse Gemini vide.');
       return text;
 
-    } catch (e: any) {
+    } catch (e) {
       throw e;
     }
   }
 
   async completeWithDocument(
     text:      string,
-    _pdfBuffer: Buffer,
+    buffer:    Buffer,
+    mimeType:  string,
     options:   AICompletionOptions = {}
   ): Promise<string> {
-    const prompt = options.system
-      ? `${options.system}\n\nContenu du CV :\n\n${text}`
-      : `Contenu du CV :\n\n${text}`;
+    const apiKey = process.env.GEMINI_API_KEY!;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`;
 
-    return this.complete([{ role: 'user', content: prompt }], {
-      maxTokens:   options.maxTokens,
-      temperature: options.temperature,
+    const parts: any[] = [];
+
+    // Instruction de limitation de pages si c'est un PDF
+    const pageLimitInstruction = mimeType === 'application/pdf' 
+      ? "\n\nIMPORTANT: Ce document est peut-être long. Analyse UNIQUEMENT les 10 premières pages." 
+      : "";
+
+    if (options.system) {
+      parts.push({ text: options.system + pageLimitInstruction });
+    }
+
+    // Ajouter le texte extrait s'il existe
+    if (text && text.length > 0) {
+      parts.push({ text: `Texte extrait du document :\n${text}` });
+    }
+
+    // Ajouter le binaire (PDF ou Image)
+    parts.push({
+      inlineData: {
+        mimeType,
+        data: buffer.toString('base64')
+      }
     });
+
+    const body = {
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        maxOutputTokens: options.maxTokens  ?? 4096,
+        temperature:     options.temperature ?? 0,
+      },
+    };
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(`Gemini Multimodal Error: ${data?.error?.message || res.status}`);
+
+      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!resultText) throw new Error('Réponse Gemini Multimodale vide.');
+      return resultText;
+    } catch (e) {
+      console.error("[Gemini] Multimodal failed, falling back to text only if possible", e);
+      throw e;
+    }
   }
 }

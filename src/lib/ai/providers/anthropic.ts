@@ -25,21 +25,24 @@ export class AnthropicProvider implements IAIProvider {
       const block = response.content.find(b => b.type === 'text');
       if (!block || block.type !== 'text') throw new Error('Réponse Anthropic vide.');
       return block.text;
-    } catch (e: any) {
-      const msg: string = e?.message ?? '';
-      if (e?.status === 404 || msg.includes('not_found')) {
+    } catch (e) {
+      const msg: string = e instanceof Error ? e.message : '';
+      // @ts-expect-error - status property is dynamic on SDK errors
+      const status = e?.status;
+
+      if (status === 404 || msg.includes('not_found')) {
         throw new Error(
           'Le modèle Anthropic demandé n\'est pas accessible avec votre clé API. ' +
           'Essayez de changer de provider IA dans vos paramètres (Gemini recommandé).'
         );
       }
-      if (e?.status === 429 || msg.includes('rate_limit') || msg.includes('rate limit')) {
+      if (status === 429 || msg.includes('rate_limit') || msg.includes('rate limit')) {
         throw new Error(
           'Limite de tokens Anthropic atteinte. Réessayez dans quelques secondes ' +
           'ou changez de provider IA.'
         );
       }
-      if (e?.status === 401 || msg.includes('401') || msg.includes('authentication')) {
+      if (status === 401 || msg.includes('401') || msg.includes('authentication')) {
         throw new Error('Clé API Anthropic invalide. Vérifiez ANTHROPIC_API_KEY dans votre fichier .env.');
       }
       throw e;
@@ -48,31 +51,47 @@ export class AnthropicProvider implements IAIProvider {
 
   async completeWithDocument(
     text:      string,
-    pdfBuffer: Buffer,
+    buffer:    Buffer,
+    mimeType:  string,
     options:   AICompletionOptions = {}
   ): Promise<string> {
-    const content: Anthropic.ContentBlockParam[] = [];
+    const content: Anthropic.MessageParam['content'] = [];
 
-    if (text.length < 200) {
+    // Instruction de limitation de pages
+    const pageLimitInstruction = mimeType === 'application/pdf' 
+      ? "\n\n(IMPORTANT: Analyse UNIQUEMENT les 10 premières pages du document PDF fourni)" 
+      : "";
+
+    // 1. Ajouter le binaire (PDF ou Image)
+    if (mimeType.startsWith('image/')) {
       content.push({
-        type:   'document',
+        type: 'image',
         source: {
-          type:       'base64',
-          media_type: 'application/pdf',
-          data:       pdfBuffer.toString('base64'),
+          type: 'base64',
+          media_type: mimeType as any,
+          data: buffer.toString('base64'),
         },
-      } as any);
-    } else {
-      content.push({ type: 'text', text: `Contenu du CV :\n\n${text}` });
+      });
+    } else if (mimeType === 'application/pdf') {
+      content.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: buffer.toString('base64'),
+        },
+      });
     }
 
-    if (options.system) {
-      content.push({ type: 'text', text: options.system });
+    // 2. Ajouter le texte s'il y en a
+    if (text && text.length > 0) {
+      content.push({ type: 'text', text: `Texte extrait :\n${text}` });
     }
 
     const response = await this.client.messages.create({
       model:      this.model,
       max_tokens: options.maxTokens ?? 4096,
+      system:     options.system ? options.system + pageLimitInstruction : pageLimitInstruction,
       messages:   [{ role: 'user', content }],
     });
 

@@ -1,0 +1,222 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { getAdminHistoryAction } from "@/actions/history.action";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { 
+  Users, 
+  FileText, 
+  Search, 
+  LogOut, 
+  BarChart3, 
+  Clock,
+  ArrowRight,
+  TrendingUp
+} from "lucide-react";
+
+interface AdminHistoryRecord {
+  id: string;
+  userId: string;
+  candidateName: string;
+  jobTitle: string;
+  score: number;
+  createdAt: Date;
+  user: {
+    email: string;
+    name: string | null;
+  };
+}
+
+export default function AdminDashboard() {
+  const { user, token, logout, checkAuth } = useAuth();
+  const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const init = async () => {
+      const isValid = await checkAuth();
+      if (!isValid || user?.role !== 'ADMIN') {
+        router.push("/admin-talent-scraper");
+        return;
+      }
+
+      if (token) {
+        const res = await getAdminHistoryAction(token);
+        if (res.success && res.records) {
+          setHistory(res.records);
+        }
+      }
+      setLoading(false);
+    };
+    init();
+  }, [token, checkAuth, router, user?.role]);
+
+  const filteredHistory = history.filter(h => 
+    h.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    h.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    h.user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: history.length,
+    today: history.filter(h => new Date(h.createdAt).toDateString() === new Date().toDateString()).length,
+    avgScore: history.length > 0 ? (history.reduce((acc, h) => acc + h.score, 0) / history.length).toFixed(1) : 0
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-200">
+      {/* Sidebar / Topbar */}
+      <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+              TalentMatcher Admin
+            </h1>
+          </div>
+          <button 
+            onClick={() => { logout(); router.push("/admin-talent-scraper"); }}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+          >
+            <LogOut className="w-4 h-4" /> Déconnexion
+          </button>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-500/10 rounded-xl">
+                <FileText className="w-6 h-6 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Analyses Totales</p>
+                <p className="text-2xl font-bold text-white">{stats.total}</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-500/10 rounded-xl">
+                <Clock className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Analyses Aujourd&apos;hui</p>
+                <p className="text-2xl font-bold text-white">{stats.today}</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500/10 rounded-xl">
+                <BarChart3 className="w-6 h-6 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Score Moyen</p>
+                <p className="text-2xl font-bold text-white">{stats.avgScore}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Table */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-500" />
+              Journal des Matchings
+            </h2>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input 
+                type="text" 
+                placeholder="Rechercher (email, candidat, offre)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-800/30 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                  <th className="px-6 py-4">Utilisateur</th>
+                  <th className="px-6 py-4">Type Offre / Client</th>
+                  <th className="px-6 py-4 text-center">Score</th>
+                  <th className="px-6 py-4">Fichiers</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {filteredHistory.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-800/20 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-white font-medium">{row.user.name || 'N/A'}</span>
+                        <span className="text-xs text-slate-500">{row.user.email}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-blue-400 font-medium">{row.jobTitle}</span>
+                        <span className="text-xs text-slate-500">vs {row.candidateName}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                        row.score >= 70 ? 'bg-emerald-500/10 text-emerald-400' : 
+                        row.score >= 40 ? 'bg-amber-500/10 text-amber-400' : 
+                        'bg-red-500/10 text-red-400'
+                      }`}>
+                        {row.score}%
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                       <span className="text-xs text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> Analyse IA complète
+                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500">
+                      {format(new Date(row.createdAt), 'dd MMM yyyy HH:mm', { locale: fr })}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-500 hover:text-white">
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {filteredHistory.length === 0 && (
+            <div className="p-12 text-center text-slate-500 italic">
+              Aucune donnée correspondant à votre recherche.
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -75,8 +75,9 @@ export async function aiComplete(
   try {
     const provider = await getAIProvider(usage);
     return await provider.complete(messages, options);
-  } catch (error: any) {
-    const msg    = error?.message ?? '';
+  } catch (error) {
+    const msg    = error instanceof Error ? error.message : '';
+    // @ts-expect-error - error can have status from provider
     const status = error?.status  ?? 0;
 
     // Détection des erreurs transitoires (Surcharge, Modèle introuvable ou Service indisponible)
@@ -94,7 +95,7 @@ export async function aiComplete(
       try {
         const geminiProvider = createProvider('gemini', usage);
         return await geminiProvider.complete(messages, options);
-      } catch (fallbackError: any) {
+      } catch (fallbackError) {
         console.error("[AI Global Fallback] Échec du fallback Gemini:", fallbackError);
         throw new Error("L'assistant IA est temporairement indisponible. Veuillez réessayer dans quelques instants.");
       }

@@ -1,17 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import * as mariadb from 'mariadb';
 
 const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL;
 
   if (!connectionString) {
-    console.error('❌ [Prisma] DATABASE_URL is not defined in environment variables.');
-    return new PrismaClient(); // Fallback empty
+    return new PrismaClient();
   }
 
-  const cleanUrl = connectionString.trim().replace(/^"|"$/g, '');
-  const url = new URL(cleanUrl);
+  const url = new URL(connectionString.trim().replace(/^"|"$/g, ''));
   
   const poolConfig = {
     host: url.hostname || '127.0.0.1',
@@ -22,9 +19,7 @@ const prismaClientSingleton = () => {
     connectionLimit: 10
   };
 
-  console.log('✅ [Prisma] Initializing PrismaMariaDb with config:', { ...poolConfig, password: '***' });
   const adapter = new PrismaMariaDb(poolConfig);
-  
   return new PrismaClient({ adapter });
 };
 

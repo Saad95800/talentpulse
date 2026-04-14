@@ -37,15 +37,18 @@ export class OpenAIProvider implements IAIProvider {
       const text = response.choices[0]?.message?.content;
       if (!text) throw new Error('Réponse OpenAI vide.');
       return text;
-    } catch (e: any) {
-      const msg: string = e?.message ?? '';
-      if (e?.status === 429 || msg.includes('429') || msg.includes('quota') || msg.includes('rate limit')) {
+    } catch (e) {
+      const msg: string = e instanceof Error ? e.message : '';
+      // @ts-expect-error - status property is dynamic on SDK errors
+      const status = e?.status;
+
+      if (status === 429 || msg.includes('429') || msg.includes('quota') || msg.includes('rate limit')) {
         throw new Error(
           'Quota OpenAI dépassé. Vérifiez votre plan sur platform.openai.com ' +
           'ou changez de provider IA.'
         );
       }
-      if (e?.status === 401 || msg.includes('401') || msg.includes('Incorrect API key')) {
+      if (status === 401 || msg.includes('401') || msg.includes('Incorrect API key')) {
         throw new Error('Clé API OpenAI invalide. Vérifiez OPENAI_API_KEY dans votre fichier .env.');
       }
       throw e;

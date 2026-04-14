@@ -7,7 +7,7 @@ const steps = [
   { icon: "🧠", label: "Extraction des compétences clés..." },
   { icon: "👤", label: "Analyse approfondie du CV..." },
   { icon: "⚡", label: "Calcul du score de matching..." },
-  { icon: "✍️", label: "Rédaction de l'argumentaire client..." },
+  { icon: "✍️", label: "Rédaction de l&apos;argumentaire client..." },
   { icon: "📊", label: "Finalisation du rapport IA..." },
 ];
 
@@ -79,13 +79,13 @@ export default function MatchingLoader() {
         </h3>
         <p
           key={currentStep}
-          className="font-semibold text-base min-h-[1.75rem] transition-opacity duration-500"
-          style={{ color: 'var(--color-primary)', animation: 'fadeIn 0.4s ease' }}
+          className="font-semibold text-base min-h-[1.75rem]"
+          style={{ color: 'var(--color-primary)' }}
         >
           {step.label}
         </p>
         <p className="text-muted text-xs leading-relaxed px-2">
-          L'IA analyse les convergences entre le profil et le poste pour vous fournir un rapport de précision optimale.
+          L&apos;IA analyse les convergences entre le profil et le poste pour vous fournir un rapport de précision optimale.
         </p>
       </div>
 

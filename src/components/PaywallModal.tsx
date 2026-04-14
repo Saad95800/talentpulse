@@ -45,7 +45,7 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
           <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-300 border border-slate-300 text-center">
             <h2 className="text-3xl font-black text-main mb-3 tracking-tight">Oups ! Crédits épuisés.</h2>
             <p className="text-slate-600 font-bold mb-8 leading-relaxed">
-              Vous avez utilisé vos 3 analyses gratuites. Pour continuer à transformer votre recrutement avec l'IA, passez au niveau supérieur.
+              Vous avez utilisé vos 3 analyses gratuites. Pour continuer à transformer votre recrutement avec l&apos;IA, passez au niveau supérieur.
             </p>
 
             <div className="space-y-4 mb-8 text-left max-w-xs mx-auto">

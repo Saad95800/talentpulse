@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { 
-  FileSearch, 
   Zap, 
   ShieldCheck, 
   ArrowRight,
@@ -13,13 +12,14 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
-import LeadCaptureForm from '@/components/LeadCaptureForm';
+import RegisterForm from '@/components/RegisterForm';
+import LoginForm from '@/components/LoginForm';
 import { X } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
   const { isLoggedIn } = useSelector((state: RootState) => state.user);
-  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
+  const [authMode, setAuthMode] = React.useState<'none' | 'login' | 'register'>('none');
 
   // Redirection automatique vers le dashboard si déjà connecté
   React.useEffect(() => {
@@ -32,9 +32,11 @@ export default function Home() {
     if (isLoggedIn) {
       router.push('/dashboard');
     } else {
-      setIsRegisterOpen(true);
+      setAuthMode('register');
     }
   };
+
+  const closeModal = () => setAuthMode('none');
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
@@ -46,14 +48,17 @@ export default function Home() {
               <div className="group bg-primary p-2 rounded-xl">
                 <BrainCircuit className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
               </div>
-              <span className="text-xl font-bold text-main tracking-tight">
+              <span className="text-xl font-bold text-main tracking-tight cursor-default">
                 Talent<span className="text-primary">Matcher</span>
               </span>
             </div>
             <div className="flex items-center gap-4">
-              {/* <button className="text-sm font-medium text-muted hover:text-main transition-colors mr-4 hidden md:block">
-                Comment ça marche ?
-              </button> */}
+              <button 
+                onClick={() => setAuthMode('login')}
+                className="text-sm font-bold text-muted hover:text-primary transition-colors px-3 py-2"
+              >
+                Connexion
+              </button>
               <button 
                 onClick={handleStart}
                 className="bg-main text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm"
@@ -74,61 +79,53 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6 animate-bounce">
-            <Zap className="w-3 h-3 fill-current" />
-            Nouveau : Propulsé par Claude 3.5 Sonnet
-          </div> */}
-          
           <h1 className="text-5xl md:text-7xl font-extrabold text-main mb-8 tracking-tight leading-[1.1]">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
               Matchez vos talents
             </span> <br />
-            à la vitesse de l'IA.
+            à la vitesse de l&apos;IA.
           </h1>
           
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted mb-10 leading-relaxed">
-            Évaluez instantanément la pertinence de n'importe quel candidat. 
+          <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted mb-10 leading-relaxed font-medium">
+            Évaluez instantanément la pertinence de n&apos;importe quel candidat. 
             Économisez 80% de votre temps de sourcing grâce à notre algorithme de matching intelligent.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 
               onClick={handleStart}
-              className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-2xl text-lg font-bold hover:bg-primary-hover transition-all flex items-center justify-center gap-2 group shadow-lg shadow-primary/25"
+              className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-3xl text-xl font-black hover:bg-primary-hover transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/25"
             >
               Analyser un CV gratuitement
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
-            {/* <button 
-              onClick={handleStart}
-              className="w-full sm:w-auto bg-white text-main border border-slate-300 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-slate-100 transition-all shadow-sm"
-            >
-              Voir une démo
-            </button> */}
           </div>
-
-          {/* Social Proof Placeholder */}
-          {/* <div className="mt-16 pt-8 border-t border-slate-300 italic text-muted font-medium text-sm">
-            Déjà +1,000 recrutements facilités par l'IA
-          </div> */}
         </div>
       </section>
 
-      {/* Modale d'Inscription */}
-      {isRegisterOpen && (
+      {/* Modale d'Authentification Unique */}
+      {authMode !== 'none' && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
-            className="absolute inset-0 bg-main/40 backdrop-blur-sm"
-            onClick={() => setIsRegisterOpen(false)}
+            className="absolute inset-0 bg-main/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={closeModal}
           />
-          <div className="relative w-full max-w-md animate-in zoom-in-95 duration-300">
+          <div className="relative w-full max-w-md animate-in zoom-in-95 duration-500">
             <button 
-              onClick={() => setIsRegisterOpen(false)}
-              className="absolute -top-12 right-0 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+              onClick={closeModal}
+              className="absolute -top-12 right-0 p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden md:block"
             >
               <X className="w-8 h-8" />
             </button>
-            <LeadCaptureForm onSuccess={() => router.push('/dashboard')} />
+            
+            {authMode === 'register' ? (
+              <RegisterForm onSwitchToLogin={() => setAuthMode('login')} />
+            ) : (
+              <LoginForm 
+                onSuccess={() => router.push('/dashboard')} 
+                onSwitchToRegister={() => setAuthMode('register')} 
+              />
+            )}
           </div>
         </div>
       )}

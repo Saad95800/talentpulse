@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function VivierChat() {
-  const userId = useSelector((state: RootState) => state.user.id);
+  const userId = useSelector((state: RootState) => state.user.user?.id);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +46,7 @@ export default function VivierChat() {
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: "Désolé, j'ai rencontré une erreur technique." }]);
       }
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: "Erreur de connexion avec l'IA." }]);
     } finally {
       setIsLoading(false);
@@ -135,7 +135,7 @@ export default function VivierChat() {
             </div>
             <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-200 flex items-center gap-3">
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              <span className="text-xs font-black text-slate-700 animate-pulse">L'IA analyse votre vivier...</span>
+              <span className="text-xs font-black text-slate-700 animate-pulse">L&apos;IA analyse votre vivier...</span>
             </div>
           </div>
         )}
