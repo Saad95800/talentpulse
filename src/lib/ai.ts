@@ -252,7 +252,3 @@ function extractJSON<T>(text: string): T {
     }
   }
 }
-gth}. Erreur: ${finalErr.message}`);
-    }
-  }
-}
