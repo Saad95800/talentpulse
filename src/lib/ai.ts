@@ -101,6 +101,7 @@ const conformitySchema = {
   },
   required: ["isConform", "reason"]
 };
+/**
  * ÉTAPE 1 : Extraction pure du profil candidat
  */
 export async function extractCandidateInfo(
