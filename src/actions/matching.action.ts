@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { deductCredit, checkCredits } from "./credits.action";
 import { extractTextFromFile } from "@/lib/document";
-import { generateMatchingScore, extractCandidateInfo } from "@/lib/ai";
+import { generateMatchingScore, extractCandidateInfo, validateDocumentConformity } from "@/lib/ai";
 import { logError, logInfo, logWarn } from "./logger.action";
 
 /**
@@ -74,6 +74,13 @@ export async function processMatchingWorkflow(formData: FormData) {
       jobText = jobTextRaw.substring(0, 30000);
     }
 
+    // Validation de conformité de la fiche de poste
+    console.log("[Workflow] Validation conformité Job...");
+    const jobValidation = await validateDocumentConformity(jobText, 'job');
+    if (!jobValidation.isConform) {
+      return { success: false, error: `La fiche de poste ne semble pas valide : ${jobValidation.reason}` };
+    }
+
     let cvText = "";
     let candidateName = "Candidat Anonyme (Fichier)";
     let cvFileData: { buffer: Buffer, mimeType: string, isScanned: boolean } | undefined;
@@ -98,6 +105,13 @@ export async function processMatchingWorkflow(formData: FormData) {
       }
     } else if (cvTextRaw) {
       cvText = cvTextRaw.substring(0, 30000);
+    }
+
+    // Validation de conformité du CV
+    console.log("[Workflow] Validation conformité CV...");
+    const cvValidation = await validateDocumentConformity(cvText, 'cv');
+    if (!cvValidation.isConform) {
+      return { success: false, error: `Le document du candidat ne semble pas être un CV valide : ${cvValidation.reason}` };
     }
 
     // Étape E : Le Cerveau IA - Workflow Multi-Modèle Optimisé

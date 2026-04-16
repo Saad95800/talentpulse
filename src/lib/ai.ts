@@ -91,7 +91,16 @@ const matchResultSchema = {
     argumentaire_client: { type: "string" }
   },
   required: ["score", "competences_validees", "competences_manquantes", "argumentaire_client"]
-}/**
+};
+
+const conformitySchema = {
+  type: "object",
+  properties: {
+    isConform: { type: "boolean" },
+    reason: { type: "string" }
+  },
+  required: ["isConform", "reason"]
+};
  * ÉTAPE 1 : Extraction pure du profil candidat
  */
 export async function extractCandidateInfo(
@@ -179,6 +188,49 @@ IMPORTANT: Le champ "score" doit être entre 0 et 100.`;
   console.log(`[AI:Matching] Step 2 réussi en ${duration}ms`);
 
   return extractJSON<MatchResult>(rawText);
+}
+
+/**
+ * ÉTAPE 0 : Validation de la conformité du document
+ * Vérifie si le texte correspond bien à un CV ou à une Fiche de Poste.
+ */
+export async function validateDocumentConformity(
+  text: string, 
+  type: 'cv' | 'job'
+): Promise<{ isConform: boolean; reason: string }> {
+  const systemPrompt = `Tu es un expert en analyse de documents RH. 
+Ton rôle est de vérifier si le texte fourni est BIEN un(e) ${type === 'cv' ? 'Curriculum Vitae (CV)' : 'Fiche de Poste (Offre d\'emploi)'}.
+
+Critères pour un CV : Présence de nom/prénom, expériences professionnelles, formations ou compétences.
+Critères pour une Fiche de Poste : Présence d'un titre de poste, missions, profil recherché ou présentation d'entreprise.
+
+RETOURNE UN OBJET JSON STRICT :
+{
+  "isConform": boolean,
+  "reason": "Une explication courte et professionnelle en français si isConform est false, sinon null"
+}`;
+
+  const userPrompt = `Analyse ce texte et détermine s'il s'agit d'un ${type === 'cv' ? 'CV' : 'Offre d\'emploi'} valide :\n\n${text.substring(0, 5000)}`;
+
+  const provider = createProvider('gemini', 'matching'); // On utilise Gemini Flash pour la rapidité
+  const options = { 
+    system: systemPrompt, 
+    maxTokens: 1000, 
+    temperature: 0, 
+    json: true,
+    schema: conformitySchema
+  };
+
+  try {
+    const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+    if (!rawText) throw new Error("Réponse de validation vide.");
+    
+    return extractJSON<{ isConform: boolean; reason: string }>(rawText);
+  } catch (error: any) {
+    console.error(`[AI:Validation] Échec de conformité ${type}:`, error.message);
+    // En cas d'échec technique de l'IA, on laisse passer par défaut pour ne pas bloquer l'utilisateur
+    return { isConform: true, reason: "" };
+  }
 }
 
 function extractJSON<T>(text: string): T {
