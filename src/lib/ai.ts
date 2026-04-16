@@ -122,8 +122,8 @@ RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
   const extractionStartTime = Date.now();
   let rawText: string;
   try {
-    if (cvFileData?.isScanned) {
-      rawText = await provider.completeWithDocument(cvText, cvFileData.buffer, cvFileData.mimeType, options);
+    if (cvFileData?.isScanned && (provider as any).completeWithDocument) {
+      rawText = await (provider as any).completeWithDocument(cvText, cvFileData.buffer, cvFileData.mimeType, options);
     } else {
       rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
     }
