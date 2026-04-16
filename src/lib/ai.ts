@@ -36,88 +36,145 @@ export interface MatchResult {
 }
 
 /**
- * ÉTAPE 1 : Extraction pure du profil candidat (Utilise Gemini Flash par défaut pour la vitesse/coût)
- * Sert d'OCR intelligent et de constructeur de profil.
+ * SCHÉMAS JSON POUR LE CONSTRAINED OUTPUT (Gemini Schema Enforcement)
+ */
+const candidateInfoSchema = {
+  type: "object",
+  properties: {
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+    email: { type: "string" },
+    phone: { type: "string" },
+    address: { type: "string" },
+    linkedin: { type: "string" },
+    website: { type: "string" },
+    summary: { type: "string" },
+    languages: { type: "array", items: { type: "string" } },
+    skills: { type: "array", items: { type: "string" } },
+    experiences: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          company: { type: "string" },
+          position: { type: "string" },
+          period: { type: "string" },
+          description: { type: "string" }
+        },
+        required: ["company", "position", "period", "description"]
+      }
+    },
+    educations: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          school: { type: "string" },
+          degree: { type: "string" },
+          year: { type: "string" }
+        },
+        required: ["school", "degree", "year"]
+      }
+    }
+  },
+  required: ["firstName", "lastName"]
+};
+
+const matchResultSchema = {
+  type: "object",
+  properties: {
+    score: { type: "number" },
+    competences_validees: { type: "array", items: { type: "string" } },
+    competences_manquantes: { type: "array", items: { type: "string" } },
+    argumentaire_client: { type: "string" }
+  },
+  required: ["score", "competences_validees", "competences_manquantes", "argumentaire_client"]
+};
+
+/**
+ * ÉTAPE 1 : Extraction pure du profil candidat
  */
 export async function extractCandidateInfo(
   cvText: string,
   cvFileData?: { buffer: Buffer, mimeType: string, isScanned: boolean }
 ): Promise<CandidateInfo> {
-  const systemPrompt = `Tu es un expert en extraction de données RH. Ton rôle est d'extraire le profil COMPLET d'un candidat à partir d'un CV.
-${cvFileData?.isScanned ? "ATTENTION: Le document est un SCAN/IMAGE. Utilise tes capacités de vision pour extraire les données." : ""}
+  const systemPrompt = `Tu es un expert en extraction de données RH. Ton rôle est d'extraire le profil COMPLET d'un candidat.
+SOIS CONCIS dans les descriptions d'expériences (synthèse des missions).
+${cvFileData?.isScanned ? "ATTENTION: Utilisez vos capacités de vision pour compléter les données manquantes." : ""}
 
-TU DOIS RETOURNER UN JSON STRICT :
-{
-  "firstName": string,
-  "lastName": string,
-  "email": string,
-  "phone": string,
-  "address": string,
-  "linkedin": string,
-  "website": string,
-  "summary": string,
-  "languages": string[],
-  "skills": string[],
-  "experiences": [{ "company": string, "position": string, "period": string, "description": string }],
-  "educations": [{ "school": string, "degree": string, "year": string }]
-}`;
+RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
 
   const userPrompt = cvFileData?.isScanned 
     ? "Extrais le profil depuis ce document joint." 
     : `Extrais le profil depuis ce texte :\n${cvText}`;
 
-  // On force Gemini pour cette étape d'OCR car il est imbattable en rapport Vitesse/Coût/Vision
   const provider = createProvider('gemini', 'matching');
-  const options = { system: systemPrompt, maxTokens: 2000, temperature: 0 };
+  const options = { 
+    system: systemPrompt, 
+    maxTokens: 16000, // Large marge pour les CV denses
+    temperature: 0, 
+    json: true,
+    schema: candidateInfoSchema // Forçage du schéma natif
+  };
   
   let rawText: string;
-  if (cvFileData) {
-    rawText = await provider.completeWithDocument(cvText, cvFileData.buffer, cvFileData.mimeType, options);
-  } else {
-    rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
-  }
+  try {
+    if (cvFileData?.isScanned) {
+      rawText = await provider.completeWithDocument(cvText, cvFileData.buffer, cvFileData.mimeType, options);
+    } else {
+      rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+    }
 
-  return extractJSON<CandidateInfo>(rawText);
+    if (!rawText) throw new Error("Réponse de l'IA vide.");
+    
+    return extractJSON<CandidateInfo>(rawText);
+  } catch (error: any) {
+    console.error("[AI:Extraction] Échec Step 1:", error.message);
+    if (typeof rawText! !== 'undefined') {
+      console.log("[AI:Extraction] RÉPONSE BRUTE (TRONQUÉE ?) :");
+      console.log("------------------------------------------");
+      console.log(rawText.slice(0, 1000) + "...");
+      console.log("------------------------------------------");
+    }
+    throw error;
+  }
 }
 
 /**
- * ÉTAPE 2 : Analyse de Matching (Peut utiliser un modèle plus "réflexif" comme Claude)
+ * ÉTAPE 2 : Analyse de Matching
  */
 export async function generateMatchingScore(
   jobText: string, 
   cvText: string,
   existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
-  const systemPrompt = `Tu es un expert en recrutement Senior. Ton rôle est d'analyser le matching entre un poste et un candidat.
-Sois précis, critique et objectif. Ton argumentaire doit aider un recruteur à décider.
+  const systemPrompt = `Tu es un expert en recrutement Senior. Analyser le matching poste/candidat.
+SOIS PRÉCIS ET CRITIQUE.
 
-RETOURNE UN JSON :
-{
-  "score": number (0-100),
-  "competences_validees": string[],
-  "competences_manquantes": string[],
-  "argumentaire_client": string
-}`;
+RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.
+IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 100 (ex: 85.5 pour 85.5%).`;
 
   const userPrompt = `FICHE DE POSTE :\n${jobText}\n\nCANDIDAT :\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nAnalyse le matching.`;
 
   const provider = await getAIProvider('matching');
-  const options = { system: systemPrompt, maxTokens: 2000, temperature: 0 };
-  const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
-  
-  const matchParts = extractJSON<{score: number, competences_validees: string[], competences_manquantes: string[], argumentaire_client: string}>(rawText);
-  
-  return {
-    ...matchParts,
-    candidateInfo: existingInfo || { firstName: "Inconnu", lastName: "Inconnu" } // Fallback si pas d'info
+  const options = { 
+    system: systemPrompt, 
+    maxTokens: 4000, 
+    temperature: 0, 
+    json: true,
+    schema: matchResultSchema // Forçage du schéma natif
   };
+  
+  const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+  return extractJSON<MatchResult>(rawText);
 }
 
 function extractJSON<T>(text: string): T {
+  let jsonString = text.trim();
+  
   try {
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    let jsonString = match ? match[1].trim() : text.trim();
-    
+    // Avec le mode JSON natif, le texte devrait déjà être du JSON pur
+    // Mais on garde un nettoyage de sécurité pour les accolades
     const firstBrace = jsonString.indexOf('{');
     const lastBrace  = jsonString.lastIndexOf('}');
     
@@ -127,7 +184,12 @@ function extractJSON<T>(text: string): T {
 
     return JSON.parse(jsonString) as T;
   } catch (err) {
-    console.error("[AI] Échec extraction JSON:", text);
-    throw new Error("Erreur de format IA (JSON attendu).");
+    console.error("[AI] Échec parsing JSON:", text.slice(0, 500) + "...");
+    try {
+      const cleaned = jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+      return JSON.parse(cleaned) as T;
+    } catch (finalErr) {
+      throw new Error("Erreur de format IA (JSON attendu).");
+    }
   }
 }

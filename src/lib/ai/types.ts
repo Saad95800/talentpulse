@@ -13,6 +13,8 @@ export interface AICompletionOptions {
   maxTokens?:   number;
   temperature?: number;
   system?:      string;
+  json?:        boolean; // Indique si on veut un retour JSON pur
+  schema?:      any;     // Optionnel : schéma JSON pour forcer la structure
 }
 
 export interface AIProviderConfig {
@@ -52,9 +54,9 @@ export const AI_PROVIDERS_CONFIG: Record<AIProviderName, AIProviderConfig> = {
     label:       'Google Gemini',
     description: 'Modèle de Google. Excellent rapport qualité/prix, idéal pour une utilisation intensive.',
     models: {
-      fast:     'gemini-2.0-flash',
-      main:     'gemini-2.0-flash',
-      matching: 'gemini-2.0-flash',
+      fast:     'gemini-2.5-flash',
+      main:     'gemini-2.5-flash',
+      matching: 'gemini-2.5-flash',
     },
     envKey:  'GEMINI_API_KEY',
     website: 'https://aistudio.google.com',
@@ -66,9 +68,9 @@ export const AI_PROVIDERS_CONFIG: Record<AIProviderName, AIProviderConfig> = {
     label:       'Anthropic Claude',
     description: 'Modèle Claude d\'Anthropic. Excellent pour le raisonnement et les tâches structurées.',
     models: {
-      fast:     'claude-sonnet-4-20250514',
-      main:     'claude-sonnet-4-20250514',
-      matching: 'claude-sonnet-4-20250514',
+      fast:     'claude-sonnet-4-6',
+      main:     'claude-sonnet-4-6',
+      matching: 'claude-sonnet-4-6',
     },
     envKey:  'ANTHROPIC_API_KEY',
     website: 'https://console.anthropic.com',

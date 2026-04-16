@@ -32,6 +32,7 @@ export default function DashboardPage() {
   useAuth();
 
   const handleLogout = () => {
+    localStorage.removeItem('tm_token');
     dispatch(logout());
     router.push('/');
   };

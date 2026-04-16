@@ -10,7 +10,7 @@ export const MatchVerdict = ({ verdict }: MatchVerdictProps) => (
   <View style={pdfStyles.sectionWrapper}>
     <Text style={pdfStyles.sectionTitle}>Analyse Globale</Text>
     <View style={pdfStyles.verdictContainer}>
-      <Text style={pdfStyles.verdictHeader}>Synthèse & Recommandation de l&apos;Expert AI</Text>
+      <Text style={pdfStyles.verdictHeader}>Synthèse et Recommandation de l'Expert AI</Text>
       <Text style={pdfStyles.verdictText}>
         {verdict}
       </Text>

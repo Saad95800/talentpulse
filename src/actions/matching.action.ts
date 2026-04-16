@@ -186,7 +186,7 @@ export async function processMatchingWorkflow(formData: FormData) {
     
     return { 
       success: false, 
-      error: message 
+      error: `Détails de l'erreur : ${message}` 
     };
   }
 }
