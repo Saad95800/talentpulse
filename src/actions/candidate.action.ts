@@ -31,7 +31,7 @@ export async function updateCandidateAction(candidateId: string, userId: string,
     });
 
     revalidatePath('/vivier');
-    return { success: true, candidate: updated };
+    return JSON.parse(JSON.stringify({ success: true, candidate: updated }));
   } catch (error) {
     console.error("Erreur updateCandidateAction:", error);
     return { success: false, error: "Erreur lors de la mise à jour des données." };

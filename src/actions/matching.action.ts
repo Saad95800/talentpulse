@@ -162,7 +162,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       candidateId: candidate.id 
     });
     
-    return { 
+    return JSON.parse(JSON.stringify({ 
       success: true, 
       data: {
         ...resultIA,
@@ -171,7 +171,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       }, 
       recordId: newRecord.id,
       creditsRemaining: deductResult.success ? (deductResult.creditsRemaining ?? 0) : (creditCheck.currentCredits ?? 0) 
-    };
+    }));
 
   } catch (error) {
     const userId = formData.get('userId') as string;

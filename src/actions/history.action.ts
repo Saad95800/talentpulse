@@ -23,7 +23,7 @@ export async function getUserHistoryAction(userId: string, token: string) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return { success: true, records };
+    return JSON.parse(JSON.stringify({ success: true, records }));
   } catch (error) {
     console.error("Erreur historique utilisateur:", error);
     return { success: false, error: "Impossible de récupérer l'historique." };
