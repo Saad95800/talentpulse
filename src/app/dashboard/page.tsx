@@ -214,6 +214,7 @@ export default function DashboardPage() {
         isOpen={isPaywallOpen} 
         onClose={() => setIsPaywallOpen(false)} 
       />
+      </main>
     </div>
   );
 }
