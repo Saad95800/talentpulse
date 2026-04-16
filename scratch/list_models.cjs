@@ -1,22 +1,18 @@
-const fs = require('fs');
-const path = require('path');
-const dotenv = require('dotenv');
-
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const dotenv = require("dotenv");
+dotenv.config();
 
 async function listModels() {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-  
-  const res = await fetch(url);
-  const data = await res.json();
-  
-  if (!res.ok) {
-    console.error("Error listing models:", data);
-    process.exit(1);
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  try {
+    const models = await genAI.listModels();
+    console.log("Modèles disponibles :");
+    models.models.forEach(m => {
+      console.log(`- ${m.name} (${m.displayName}) - Input: ${m.inputTokenLimit}, Output: ${m.outputTokenLimit}`);
+    });
+  } catch (error) {
+    console.error("Erreur lors du listage des modèles :", error.message);
   }
-  
-  console.log(JSON.stringify(data.models, null, 2));
 }
 
 listModels();

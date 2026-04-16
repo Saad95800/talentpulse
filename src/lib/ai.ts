@@ -159,7 +159,7 @@ IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 1
   const provider = await getAIProvider('matching');
   const options = { 
     system: systemPrompt, 
-    maxTokens: 4000, 
+    maxTokens: 16000, // Débridage total pour les analyses complexes
     temperature: 0, 
     json: true,
     schema: matchResultSchema // Forçage du schéma natif
@@ -183,13 +183,17 @@ function extractJSON<T>(text: string): T {
     }
 
     return JSON.parse(jsonString) as T;
-  } catch (err) {
-    console.error("[AI] Échec parsing JSON:", text.slice(0, 500) + "...");
+  } catch (err: any) {
+    const errorMsg = err.message || "Unknown error";
+    console.error(`[AI] Échec parsing JSON (${errorMsg})`);
+    console.log(`[AI] Longueur texte : ${text.length} caractères`);
+    console.log(`[AI] Fin du texte : "...${text.slice(-200)}"`);
+    
     try {
       const cleaned = jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
       return JSON.parse(cleaned) as T;
     } catch (finalErr) {
-      throw new Error("Erreur de format IA (JSON attendu).");
+      throw new Error(`Erreur de format IA (JSON invalide ou tronqué). Longueur: ${text.length}`);
     }
   }
 }

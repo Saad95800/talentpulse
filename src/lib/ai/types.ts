@@ -54,9 +54,9 @@ export const AI_PROVIDERS_CONFIG: Record<AIProviderName, AIProviderConfig> = {
     label:       'Google Gemini',
     description: 'Modèle de Google. Excellent rapport qualité/prix, idéal pour une utilisation intensive.',
     models: {
-      fast:     'gemini-2.5-flash',
-      main:     'gemini-2.5-flash',
-      matching: 'gemini-2.5-flash',
+      fast:     'gemini-1.5-flash-latest',
+      main:     'gemini-1.5-flash-latest',
+      matching: 'gemini-1.5-flash-latest',
     },
     envKey:  'GEMINI_API_KEY',
     website: 'https://aistudio.google.com',
