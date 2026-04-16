@@ -321,7 +321,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode, text: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="p-6 bg-slate-100 rounded-full mb-4 text-slate-400">
-        {React.cloneElement(icon as React.ReactElement, { className: 'w-10 h-10' })}
+        {React.cloneElement(icon as React.ReactElement, { className: 'w-10 h-10' } as any)}
       </div>
       <p className="text-sm font-bold text-main mb-1">{text}</p>
       <p className="text-[10px] text-muted uppercase font-black tracking-widest">Lancez une analyse pour commencer</p>
