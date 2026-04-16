@@ -155,7 +155,10 @@ export async function processMatchingWorkflow(formData: FormData) {
     });
 
     // Étape G : L'analyse a réussi, on déduit le crédit (sauf si mode batch/skip)
-    let deductResult = { success: true, creditsRemaining: creditCheck.currentCredits };
+    let deductResult: { success: boolean; creditsRemaining?: number; error?: string } = { 
+      success: true, 
+      creditsRemaining: creditCheck.currentCredits as number 
+    };
     if (!skipDeduction) {
       deductResult = await deductCredit(userId);
     }
