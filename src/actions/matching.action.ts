@@ -44,10 +44,17 @@ export async function processMatchingWorkflow(formData: FormData) {
     let jobText = "";
     let jobTitle = "Texte Saisi";
     
-    // Validation de sécurité sur la taille cumulée (Max 10MB total pour éviter timeout serveur)
+    // Validation de sécurité sur la taille (Max 10MB par fichier)
+    if (jobFile && jobFile.size > 10 * 1024 * 1024) {
+      return { success: false, error: `La fiche de poste "${jobFile.name}" dépasse la limite de 10 Mo.` };
+    }
+    if (cvFile && cvFile.size > 10 * 1024 * 1024) {
+      return { success: false, error: `Le CV "${cvFile.name}" dépasse la limite de 10 Mo.` };
+    }
+    
     const totalSize = (jobFile?.size || 0) + (cvFile?.size || 0);
-    if (totalSize > 10 * 1024 * 1024) {
-      return { success: false, error: "La taille cumulée des fichiers dépasse 10 Mo. Veuillez compresser vos documents." };
+    if (totalSize > 15 * 1024 * 1024) { // On est un peu plus souple sur le cumul (15MB)
+      return { success: false, error: "La taille cumulée des documents est trop importante (max 15 Mo au total)." };
     }
 
     if (jobFile && jobFile.size > 0) {

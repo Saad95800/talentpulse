@@ -187,48 +187,7 @@ export default function DashboardPage() {
           </div>
         ) : activeTab === 'vivier' ? (
           <div className="space-y-8">
-            {/* Sous-navigation Vivier */}
-            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 w-fit shadow-sm">
-              <button 
-                onClick={() => setVivierMode('list')}
-                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${vivierMode === 'list' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-main'}`}
-              >
-                Liste du Vivier
-              </button>
-              <button 
-                onClick={() => setVivierMode('chat')}
-                className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${vivierMode === 'chat' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-main'}`}
-              >
-                Assistant IA
-              </button>
-            </div>
-
-            {vivierMode === 'list' ? (
-              <VivierManager />
-            ) : (
-              <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                  <VivierChat />
-                </div>
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 h-fit sticky top-28">
-                  <h4 className="font-black text-main uppercase tracking-widest text-xs mb-6 px-1">Assistant Vivier</h4>
-                  <ul className="space-y-4">
-                    <Tip 
-                      title="Analyse comparative" 
-                      desc="Demandez l&apos;IA de comparer deux candidats de votre vivier sur une mission précise." 
-                    />
-                    <Tip 
-                      title="Recherche sémantique" 
-                      desc="Trouvez l&apos;expert React même s'il ne l&apos;a pas écrit explicitement." 
-                    />
-                    <Tip 
-                      title="Synthèse IA" 
-                      desc="Obtenez un résumé des points forts et faibles de vos recrues potentielles." 
-                    />
-                  </ul>
-                </div>
-              </div>
-            )}
+            <VivierManager />
           </div>
         ) : (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 overflow-hidden min-h-[500px]">

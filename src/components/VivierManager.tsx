@@ -20,8 +20,15 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 import CandidateModal from './CandidateModal';
+import InfoModal from './InfoModal';
+import ConfirmModal from './ConfirmModal';
 
-// Types locaux pour le vivier
+interface User {
+  id: string;
+  name?: string | null;
+  credits: number;
+}
+
 interface Candidate {
   id: string;
   name: string;
@@ -43,6 +50,7 @@ interface Candidate {
 interface Mission {
   id: string;
   title: string;
+  description: string;
   createdAt: string;
 }
 
@@ -53,63 +61,99 @@ export default function VivierManager() {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // États pour les Modals
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
+  
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
 
-  // Chargement des données au montage ou changement d'onglet
+  // État pour la confirmation de suppression
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    id: string;
+    type: 'candidate' | 'mission';
+    title: string;
+  }>({
+    isOpen: false,
+    id: '',
+    type: 'candidate',
+    title: ''
+  });
+
+  // Chargement initial de toutes les données du vivier (Candidats + Missions)
   useEffect(() => {
-    const loadData = async () => {
+    const loadAllData = async () => {
       if (!user?.id) return;
       setLoading(true);
       try {
-        if (activeSubTab === 'candidates') {
-          const res = await getCandidatesAction(user.id);
-          if (res.success && res.candidates) {
-            setCandidates(res.candidates as any);
-          }
-        } else {
-          const res = await getMissionsAction(user.id);
-          if (res.success && res.missions) {
-            setMissions(res.missions as unknown as Mission[]);
-          }
+        // Chargement parallèle pour optimiser le temps et avoir les compteurs à jour immédiatement
+        const [candRes, missRes] = await Promise.all([
+          getCandidatesAction(user.id),
+          getMissionsAction(user.id)
+        ]);
+
+        if (candRes.success && candRes.candidates) {
+          setCandidates(candRes.candidates as any);
+        }
+        
+        if (missRes.success && missRes.missions) {
+          setMissions(missRes.missions as unknown as Mission[]);
         }
       } catch (err) {
-        console.error("Erreur chargement vivier:", err);
+        console.error("Erreur chargement global vivier:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, [activeSubTab, user?.id]);
+    loadAllData();
+  }, [user?.id]); // On ne dépend plus de activeSubTab pour le chargement, on charge tout d'un coup
 
   const handleCandidateClick = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
-    setIsModalOpen(true);
+    setIsCandidateModalOpen(true);
   };
 
-  // Actions de suppression
-  const handleDeleteCandidate = async (id: string) => {
-    if (!user?.id || !confirm("Supprimer ce candidat et ses analyses associées ?")) return;
-    setActionLoading(id);
-    try {
-      const res = await deleteCandidateAction(id, user.id);
-      if (res.success) {
-        setCandidates(prev => prev.filter(c => c.id !== id));
-      }
-    } finally {
-      setActionLoading(null);
-    }
+  const handleMissionClick = (mission: Mission) => {
+    setSelectedMission(mission);
+    setIsMissionModalOpen(true);
   };
 
-  const handleDeleteMission = async (id: string) => {
-    if (!user?.id || !confirm("Supprimer cette mission et ses analyses associées ?")) return;
+  /**
+   * Initialise la procédure de suppression avec modal de confirmation
+   */
+  const requestDelete = (id: string, type: 'candidate' | 'mission', title: string) => {
+    setConfirmDelete({
+      isOpen: true,
+      id,
+      type,
+      title
+    });
+  };
+
+  const executeDelete = async () => {
+    if (!user?.id || !confirmDelete.id) return;
+    
+    const { id, type } = confirmDelete;
     setActionLoading(id);
+    setConfirmDelete(prev => ({ ...prev, isOpen: false })); // Ferme la modal immédiatement
+    
     try {
-      const res = await deleteMissionAction(id, user.id);
-      if (res.success) {
-        setMissions(prev => prev.filter(m => m.id !== id));
+      if (type === 'candidate') {
+        const res = await deleteCandidateAction(id, user.id);
+        if (res.success) {
+          setCandidates(prev => prev.filter(c => c.id !== id));
+        }
+      } else {
+        const res = await deleteMissionAction(id, user.id);
+        if (res.success) {
+          setMissions(prev => prev.filter(m => m.id !== id));
+        }
       }
+    } catch (err) {
+      console.error("Erreur suppression:", err);
     } finally {
       setActionLoading(null);
     }
@@ -162,7 +206,7 @@ export default function VivierManager() {
                     <VivierItem 
                       title={candidate.name}
                       date={candidate.createdAt}
-                      onDelete={() => handleDeleteCandidate(candidate.id)}
+                      onDelete={() => requestDelete(candidate.id, 'candidate', candidate.name)}
                       isLoading={actionLoading === candidate.id}
                       icon={<UserIcon className="w-5 h-5" />}
                     />
@@ -174,14 +218,15 @@ export default function VivierManager() {
             ) : (
               missions.length > 0 ? (
                 missions.map(mission => (
-                  <VivierItem 
-                    key={mission.id}
-                    title={mission.title}
-                    date={mission.createdAt}
-                    onDelete={() => handleDeleteMission(mission.id)}
-                    isLoading={actionLoading === mission.id}
-                    icon={<Briefcase className="w-5 h-5" />}
-                  />
+                  <div key={mission.id} onClick={() => handleMissionClick(mission)} className="cursor-pointer">
+                    <VivierItem 
+                      title={mission.title}
+                      date={mission.createdAt}
+                      onDelete={() => requestDelete(mission.id, 'mission', mission.title)}
+                      isLoading={actionLoading === mission.id}
+                      icon={<Briefcase className="w-5 h-5" />}
+                    />
+                  </div>
                 ))
               ) : (
                 <EmptyState icon={<Briefcase />} text="Aucune mission enregistrée." />
@@ -191,19 +236,40 @@ export default function VivierManager() {
         )}
       </div>
 
-      {/* Popin de détails */}
+      {/* Modal Candidat */}
       <CandidateModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        isOpen={isCandidateModalOpen} 
+        onClose={() => setIsCandidateModalOpen(false)} 
         candidate={selectedCandidate} 
         onUpdate={(updated) => {
           setCandidates(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated, name: `${updated.firstName || ''} ${updated.lastName || ''}`.trim() || c.name } : c));
           setSelectedCandidate(updated as any);
         }}
       />
+
+      {/* Modal Mission (Utilisation de InfoModal pour le formattage riche) */}
+      <InfoModal 
+        isOpen={isMissionModalOpen}
+        onClose={() => setIsMissionModalOpen(false)}
+        title={selectedMission?.title || "Détails de l'offre"}
+        type="job"
+        data={selectedMission?.description || ""}
+      />
+
+      {/* Modal de Confirmation Premium */}
+      <ConfirmModal 
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={executeDelete}
+        title={`Supprimer ${confirmDelete.type === 'candidate' ? 'le candidat' : 'la mission'}`}
+        message={`Êtes-vous sûr de vouloir supprimer "${confirmDelete.title}" ? Cette action supprimera également toutes les analyses associées et est irréversible.`}
+        confirmText="Supprimer définitivement"
+        variant="danger"
+      />
     </div>
   );
 }
+
 
 function VivierItem({ 
   title, 
@@ -240,7 +306,7 @@ function VivierItem({
             onDelete();
           }}
           disabled={isLoading}
-          className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50"
+          className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
           title="Supprimer du vivier"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -261,3 +327,4 @@ function EmptyState({ icon, text }: { icon: React.ReactNode, text: string }) {
     </div>
   );
 }
+

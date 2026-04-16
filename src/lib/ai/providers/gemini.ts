@@ -26,7 +26,7 @@ export class GeminiProvider implements IAIProvider {
    */
   private async executeWithRetry<T>(
     operation: () => Promise<T>, 
-    options: RetryOptions = { maxRetries: 3, initialDelayMs: 1000 }
+    options: RetryOptions = { maxRetries: 3, initialDelayMs: 1500 }
   ): Promise<T> {
     let lastError: any;
     
@@ -35,13 +35,19 @@ export class GeminiProvider implements IAIProvider {
         return await operation();
       } catch (err: any) {
         lastError = err;
-        const isNetworkError = err.message?.includes('fetch failed') || err.message?.includes('network');
-        const isRateLimit = err.message?.includes('429') || err.message?.includes('quota');
-        const isServerSide = err.message?.includes('500') || err.message?.includes('503');
+        const msg = (err.message || "").toLowerCase();
+        
+        // Détection des erreurs éligibles au Retry
+        const isNetworkError = msg.includes('fetch failed') || msg.includes('network') || msg.includes('econnreset');
+        const isTimeout = msg.includes('aborted') || msg.includes('timeout') || msg.includes('deadline exceeded') || err.name === 'AbortError';
+        const isRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('limit');
+        const isServerSide = msg.includes('500') || msg.includes('503') || msg.includes('504') || msg.includes('bad gateway');
 
-        if (i < options.maxRetries && (isNetworkError || isRateLimit || isServerSide)) {
+        if (i < options.maxRetries && (isNetworkError || isTimeout || isRateLimit || isServerSide)) {
           const delay = options.initialDelayMs * Math.pow(2, i);
-          console.warn(`[Gemini:Retry] Tentative ${i + 1} échouée (${err.message}). Nouvel essai dans ${delay}ms...`);
+          const type = isTimeout ? "TIMEOUT" : isRateLimit ? "QUOTA" : "RÉSEAU/SERVEUR";
+          
+          console.warn(`[Gemini:Retry] Tentative ${i + 1} échouée [${type}] : ${err.message}. Nouvel essai dans ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -59,7 +65,7 @@ export class GeminiProvider implements IAIProvider {
       const model = this.genAI.getGenerativeModel({
         model: this.modelName,
         generationConfig: {
-          maxOutputTokens: options.maxTokens ?? 16384, // Capacité augmentée pour les extractions longues
+          maxOutputTokens: options.maxTokens ?? 32000,
           temperature: options.temperature ?? 0,
           responseMimeType: options.json ? 'application/json' : 'text/plain',
           responseSchema: options.schema,
@@ -77,7 +83,7 @@ export class GeminiProvider implements IAIProvider {
 
       const result = await model.generateContent({
         contents: chatMessages,
-      }, { timeout: 120000 }); // 120s timeout standard
+      }, { timeout: 300000 }); // Augmenté à 300s (5min) pour supporter les gros flux de matching
 
       const response = await result.response;
       const text = response.text();
@@ -103,7 +109,7 @@ export class GeminiProvider implements IAIProvider {
       const model = this.genAI.getGenerativeModel({
         model: this.modelName,
         generationConfig: {
-          maxOutputTokens: options.maxTokens ?? 16384,
+          maxOutputTokens: options.maxTokens ?? 32000,
           temperature: options.temperature ?? 0,
           responseMimeType: options.json ? 'application/json' : 'text/plain',
           responseSchema: options.schema,
@@ -128,13 +134,14 @@ export class GeminiProvider implements IAIProvider {
 
       const result = await model.generateContent({
         contents: [{ role: 'user', parts: promptParts }],
-      }, { timeout: 120000 }); // 120s timeout pour les documents (OCR/Large payloads)
+      }, { timeout: 300000 }); // Augmenté à 300s (5min) pour l'OCR et les PDF lourds
 
       const response = await result.response;
       const resultText = response.text();
 
       if (!resultText) throw new Error('Réponse Gemini Multimodale SDK vide.');
       return resultText;
-    }, { maxRetries: 3, initialDelayMs: 2000 }); // Retry plus espacé et plus nombreux
+    }, { maxRetries: 3, initialDelayMs: 2000 });
   }
 }
+

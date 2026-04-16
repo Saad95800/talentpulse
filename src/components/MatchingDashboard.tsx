@@ -45,10 +45,18 @@ function DocumentInput({
   } 
 }: DocumentInputProps) {
   
+  const dispatch = useDispatch();
+  
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       let fileToSet = acceptedFiles[0];
       
+      // Limite de 10 Mo (10 * 1024 * 1024 octets)
+      if (fileToSet.size > 10 * 1024 * 1024) {
+        dispatch(setError(`Le fichier "${fileToSet.name}" est trop volumineux (max 10 Mo).`));
+        return;
+      }
+
       // Compression si c'est une image
       if (fileToSet.type.startsWith('image/')) {
         try {
@@ -59,8 +67,9 @@ function DocumentInput({
       }
       
       setFile(fileToSet);
+      dispatch(setError("")); // Reset l'erreur si l'upload est valide
     }
-  }, [setFile]);
+  }, [setFile, dispatch]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -121,7 +130,7 @@ function DocumentInput({
               <FileUp className="w-7 h-7" />
             </div>
             <p className="text-slate-500 font-medium text-xs px-4 text-center leading-relaxed">
-              {description} <br/> <span className="font-bold text-slate-400 mt-2 block">(PDF, DOCX, JPG, PNG)</span>
+              {description} <br/> <span className="font-bold text-slate-400 mt-2 block">(PDF, DOCX, JPG, PNG • Max 10 Mo)</span>
             </p>
             
             {isDragActive && (
@@ -288,18 +297,18 @@ export default function MatchingDashboard() {
     <div className="w-full max-w-5xl mx-auto py-10 px-4">
       <div className="grid md:grid-cols-2 gap-10 mb-12">
         <DocumentInput 
-          label="Fiche de Poste"
-          description="Glissez votre descriptif pour définir la mission"
-          file={jobFile} setFile={setJobFile}
-          text={jobText} setText={setJobText}
-          inputType={jobInputType} setInputType={setJobInputType}
-        />
-        <DocumentInput 
           label="Profil du Candidat"
           description="Glissez le profil à évaluer par rapport à la mission"
           file={cvFile} setFile={setCvFile}
           text={cvText} setText={setCvText}
           inputType={cvInputType} setInputType={setCvInputType}
+        />
+        <DocumentInput 
+          label="Fiche de Poste"
+          description="Glissez votre descriptif pour définir la mission"
+          file={jobFile} setFile={setJobFile}
+          text={jobText} setText={setJobText}
+          inputType={jobInputType} setInputType={setJobInputType}
         />
       </div>
 

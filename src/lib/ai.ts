@@ -113,12 +113,13 @@ RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
   const provider = createProvider('gemini', 'matching');
   const options = { 
     system: systemPrompt, 
-    maxTokens: 16000, // Large marge pour les CV denses
+    maxTokens: 32000, // Large marge pour les CV extrêmement denses (ex: Seniors avec bcp de texte)
     temperature: 0, 
     json: true,
     schema: candidateInfoSchema // Forçage du schéma natif
   };
   
+  const extractionStartTime = Date.now();
   let rawText: string;
   try {
     if (cvFileData?.isScanned) {
@@ -127,11 +128,15 @@ RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
       rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
     }
 
+    const duration = Date.now() - extractionStartTime;
+    console.log(`[AI:Extraction] Step 1 réussi en ${duration}ms${duration > 60000 ? " (Traitement Lourd)" : ""}`);
+
     if (!rawText) throw new Error("Réponse de l'IA vide.");
     
     return extractJSON<CandidateInfo>(rawText);
   } catch (error: any) {
-    console.error("[AI:Extraction] Échec Step 1:", error.message);
+    const duration = Date.now() - extractionStartTime;
+    console.error(`[AI:Extraction] Échec Step 1 après ${duration}ms:`, error.message);
     if (typeof rawText! !== 'undefined') {
       console.log("[AI:Extraction] RÉPONSE BRUTE (TRONQUÉE ?) :");
       console.log("------------------------------------------");
@@ -170,13 +175,17 @@ IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 1
   const provider = await getAIProvider('matching');
   const options = { 
     system: systemPrompt, 
-    maxTokens: 16000, // Débridage total pour les analyses complexes
+    maxTokens: 32000, // Aucun compromis sur la longueur de l'analyse pour les cas complexes
     temperature: 0, 
     json: true,
     schema: matchResultSchema // Forçage du schéma natif
   };
   
+  const matchingStartTime = Date.now();
   const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+  const duration = Date.now() - matchingStartTime;
+  console.log(`[AI:Matching] Step 2 réussi en ${duration}ms`);
+
   return extractJSON<MatchResult>(rawText);
 }
 
@@ -195,16 +204,31 @@ function extractJSON<T>(text: string): T {
 
     return JSON.parse(jsonString) as T;
   } catch (err: any) {
-    const errorMsg = err.message || "Unknown error";
-    console.error(`[AI] Échec parsing JSON (${errorMsg})`);
-    console.log(`[AI] Longueur texte : ${text.length} caractères`);
-    console.log(`[AI] Fin du texte : "...${text.slice(-200)}"`);
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[AI:JSON_PARSE_ERROR] ${errorMsg}`);
+    console.log(`[AI:DEBUG] Taille brute: ${text.length} chars. Fin du flux: "...${text.slice(-100)}"`);
     
+    // TENTATIVE DE RÉPARATION 1 : Nettoyage des caractères de contrôle
     try {
       const cleaned = jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
       return JSON.parse(cleaned) as T;
-    } catch (finalErr) {
-      throw new Error(`Erreur de format IA (JSON invalide ou tronqué). Longueur: ${text.length}`);
+    } catch (retryErr) {
+      // TENTATIVE DE RÉPARATION 2 : Correction de truncation basique (balancement des accolades)
+      try {
+        let repaired = jsonString.trim();
+        const openBraces = (repaired.match(/\{/g) || []).length;
+        const closeBraces = (repaired.match(/\}/g) || []).length;
+        
+        if (openBraces > closeBraces) {
+          console.warn(`[AI:REPAIR] Détection de JSON tronqué (${openBraces} { vs ${closeBraces} }). Tentative de fermeture forcée.`);
+          repaired += "}".repeat(openBraces - closeBraces);
+          return JSON.parse(repaired) as T;
+        }
+      } catch (failingRepair) {
+        // Si tout échoue
+      }
+
+      throw new Error(`Échec critique du formatage IA. Longueur: ${text.length}. Erreur: ${errorMsg}`);
     }
   }
 }
