@@ -43,23 +43,27 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
 
         <div className="p-10 -mt-10">
           <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-300 border border-slate-300 text-center">
-            <h2 className="text-3xl font-black text-main mb-3 tracking-tight">Oups ! Crédits épuisés.</h2>
-            <p className="text-slate-600 font-bold mb-8 leading-relaxed">
-              Vous avez utilisé vos 3 analyses gratuites. Pour continuer à transformer votre recrutement avec l&apos;IA, passez au niveau supérieur.
+            <h2 className="text-3xl font-black text-main mb-3 tracking-tight">Passez à la vitesse supérieure !</h2>
+            <p className="text-slate-600 font-bold mb-6 leading-relaxed">
+              Pour seulement <span className="text-primary text-2xl">19,99€ HT / mois</span>, libérez toute la puissance de TalentPulse.
             </p>
 
-            <div className="space-y-4 mb-8 text-left max-w-xs mx-auto">
+            <div className="space-y-4 mb-8 text-left max-w-xs mx-auto bg-slate-50 p-6 rounded-2xl border border-slate-200">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Analyses illimitées</span>
+                <span className="text-sm font-bold text-main">Matchings illimités <span className="text-[10px] text-slate-400">(max 30/jour)</span></span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Export PDF illimité</span>
+                <span className="text-sm font-bold text-main">Batch jusqu'à 5 CV par demande</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                <span className="text-sm font-bold text-main">Export PDF de l'analyse</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span className="text-sm font-black text-main">Support prioritaire</span>
+                <span className="text-sm font-black text-main">Support prioritaire 24/7</span>
               </div>
             </div>
 

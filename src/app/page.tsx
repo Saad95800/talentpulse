@@ -49,7 +49,7 @@ export default function Home() {
                 <BrainCircuit className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
               </div>
               <span className="text-xl font-bold text-main tracking-tight cursor-default">
-                Talent<span className="text-primary">Matcher</span>
+                Talent<span className="text-primary">Pulse</span>
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -134,7 +134,7 @@ export default function Home() {
       <section className="py-24 bg-white border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-main mb-4">Pourquoi choisir TalentMatcher ?</h2>
+            <h2 className="text-3xl font-bold text-main mb-4">Pourquoi choisir TalentPulse ?</h2>
             <p className="text-muted text-lg max-w-2xl mx-auto">
               Nous combinons la puissance du NLP et du Deep Learning pour une analyse objective et sans biais.
             </p>
@@ -163,7 +163,7 @@ export default function Home() {
       {/* Footer Simple */}
       <footer className="py-12 bg-background border-t border-slate-200 text-center">
         <p className="text-muted text-sm px-4">
-          © 2026 TalentMatcher. Produit micro-SaaS pour recruteurs autonomes.
+          © 2026 TalentPulse. Produit micro-SaaS pour recruteurs autonomes.
         </p>
       </footer>
     </div>

@@ -9,24 +9,22 @@ import MatchResultView from '@/components/MatchResultView';
 import MatchingLoader from '@/components/MatchingLoader';
 import PaywallModal from '@/components/PaywallModal';
 import { resetResult, setResult } from '@/store/matchingSlice';
-import VivierChat from '@/components/VivierChat';
 import VivierManager from '@/components/VivierManager';
 import HistoryList from '@/components/HistoryList';
 import { MatchResult } from '@/lib/ai';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/store/userSlice';
 import { LogOut, LayoutDashboard, RefreshCcw, History, Zap } from 'lucide-react';
-
+import MultiMatchResultView from '@/components/MultiMatchResultView';
 
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isLoggedIn } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
-  const { currentResult, loading } = useSelector((state: RootState) => state.matching);
+  const { currentResult, results, loading } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique'>('analyse');
-  const [vivierMode, setVivierMode] = useState<'list' | 'chat'>('list');
 
   // Gestion de la session via le hook useAuth
   useAuth();
@@ -167,7 +165,7 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         {activeTab === 'analyse' ? (
           <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300 border border-slate-200 overflow-hidden">
-            {currentResult ? (
+            {results.length > 0 ? (
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-200">
                   <h2 className="text-2xl font-bold text-main">Résultat de l&apos;analyse</h2>
@@ -179,10 +177,16 @@ export default function DashboardPage() {
                     Nouvelle analyse
                   </button>
                 </div>
-                <MatchResultView result={currentResult} candidateName="Candidat" />
+                {results.length > 1 ? (
+                   <MultiMatchResultView results={results} />
+                ) : currentResult ? (
+                   <MatchResultView result={currentResult} candidateName="Candidat" />
+                ) : (
+                   <div className="text-center py-20 text-slate-400 font-bold uppercase tracking-widest">Initialisation...</div>
+                )}
               </div>
             ) : (
-              <MatchingDashboard />
+              <MatchingDashboard onPaywallOpen={() => setIsPaywallOpen(true)} />
             )}
           </div>
         ) : activeTab === 'vivier' ? (
@@ -210,7 +214,7 @@ export default function DashboardPage() {
               <span>Historique Sauvegardé</span>
             </div>
           </div>
-          <p>© 2026 Talent Matcher - Advanced AI Suite</p>
+          <p>© 2026 TalentPulse - Advanced AI Suite</p>
         </div>
       </div>
 

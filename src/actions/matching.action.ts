@@ -15,7 +15,8 @@ export async function processMatchingWorkflow(formData: FormData) {
   const startTime = Date.now();
   try {
     const userId = formData.get('userId') as string;
-    console.log(`[Workflow] Début Matching pour ${userId} à ${new Date().toISOString()}`);
+    const skipDeduction = formData.get('skipDeduction') === 'true';
+    console.log(`[Workflow] Début Matching pour ${userId} à ${new Date().toISOString()} (skipDeduction: ${skipDeduction})`);
     const jobFile = formData.get('jobFile') as File | null;
     const cvFile = formData.get('cvFile') as File | null;
     const jobTextRaw = formData.get('jobTextRaw') as string | null;
@@ -153,8 +154,11 @@ export async function processMatchingWorkflow(formData: FormData) {
       },
     });
 
-    // Étape G : L'analyse a réussi, on déduit le crédit !
-    const deductResult = await deductCredit(userId);
+    // Étape G : L'analyse a réussi, on déduit le crédit (sauf si mode batch/skip)
+    let deductResult = { success: true, creditsRemaining: creditCheck.currentCredits };
+    if (!skipDeduction) {
+      deductResult = await deductCredit(userId);
+    }
 
     // UX : On s'assure que le loader est resté visible au moins 1500ms pour ne pas "clignoter"
     const duration = Date.now() - startTime;

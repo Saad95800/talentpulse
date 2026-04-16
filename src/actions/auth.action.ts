@@ -58,8 +58,9 @@ export async function registerAction(data: any) {
         password: hashedPassword,
         verificationToken,
         isVerified: false,
-        credits: 3, // 3 crédits offerts à l'inscription
-        role: "USER"
+        // VIP logic: contact@reactivedigital.fr is admin with unlimited credits
+        credits: email.toLowerCase() === 'contact@reactivedigital.fr' ? 999999 : 3,
+        role: email.toLowerCase() === 'contact@reactivedigital.fr' ? "ADMIN" : "USER"
       },
     });
 

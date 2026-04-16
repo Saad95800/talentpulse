@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 const steps = [
   { icon: "📄", label: "Lecture de la fiche de poste..." },
@@ -12,8 +14,17 @@ const steps = [
 ];
 
 export default function MatchingLoader() {
+  const { loadingStep } = useSelector((state: RootState) => state.matching);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  // Réinitialisation du simulateur à chaque changement de CV (batch)
+  useEffect(() => {
+    if (loadingStep) {
+      setCurrentStep(0);
+      setProgress(0);
+    }
+  }, [loadingStep]);
 
   useEffect(() => {
     const stepInterval = setInterval(() => {
@@ -35,7 +46,7 @@ export default function MatchingLoader() {
       clearInterval(stepInterval);
       clearInterval(progressInterval);
     };
-  }, []);
+  }, [loadingStep]); // Dépendance sur loadingStep pour relancer les timers
 
   const step = steps[currentStep];
 
@@ -74,6 +85,13 @@ export default function MatchingLoader() {
 
       {/* Texte central */}
       <div className="text-center space-y-3 max-w-xs">
+        {loadingStep && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 mb-2">
+            <span className="px-4 py-1.5 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-primary/20">
+              {loadingStep}
+            </span>
+          </div>
+        )}
         <h3 className="text-2xl font-black text-main tracking-tight">
           Analyse en cours…
         </h3>
