@@ -37,14 +37,14 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
   const loadUsers = async () => {
     setLoading(true);
     const res = await getAllUsersAdminAction(token);
-    if (res.success) setUsers(res.users);
+    if (res.success && res.users) setUsers(res.users);
     setLoading(false);
   };
 
   const loadUserDetails = async (userId: string) => {
     setLoadingDetails(true);
     const res = await getUserDetailedActivityAdminAction(token, userId);
-    if (res.success) setSelectedUser(res.user);
+    if (res.success && res.user) setSelectedUser(res.user);
     setLoadingDetails(false);
   };
 
