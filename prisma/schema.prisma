@@ -25,6 +25,7 @@ model User {
   matches           MatchRecord[]
   missions          Mission[]     // Relation vers les offres de missions
   candidates        Candidate[]   // Relation vers les candidats
+  activities        UserActivity[] // Historique d'activité
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 }
@@ -104,5 +105,21 @@ model AppLog {
   createdAt DateTime @default(now())
 
   @@index([level])
+  @@index([createdAt])
+}
+
+model UserActivity {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String   // "PAGE_VIEW", "CLICK", "POPUP_OPEN", "MATCHING_START", etc.
+  description String?  @db.Text
+  path        String?  @db.Text
+  target      String?  @db.Text
+  metadata    Json?    // Données contextuelles additionnelles
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
   @@index([createdAt])
 }

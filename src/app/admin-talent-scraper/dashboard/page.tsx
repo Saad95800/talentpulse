@@ -14,8 +14,10 @@ import {
   BarChart3, 
   Clock,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Activity
 } from "lucide-react";
+import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
 
 interface AdminHistoryRecord {
   id: string;
@@ -35,6 +37,7 @@ export default function AdminDashboard() {
   const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"history" | "users">("history");
   const router = useRouter();
 
   useEffect(() => {
@@ -136,24 +139,41 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Search and Table */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-500" />
-              Journal des Matchings
-            </h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input 
-                type="text" 
-                placeholder="Rechercher (email, candidat, offre)..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
-              />
+        {/* Tab Switcher */}
+        <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-xl w-fit">
+          <button 
+            onClick={() => setActiveTab("history")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <Clock className="w-4 h-4" /> Matchings
+          </button>
+          <button 
+            onClick={() => setActiveTab("users")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <Activity className="w-4 h-4" /> Utilisateurs & Activité
+          </button>
+        </div>
+
+        {activeTab === "history" ? (
+          /* Search and Table */
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-500" />
+                Journal des Matchings
+              </h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input 
+                  type="text" 
+                  placeholder="Rechercher (email, candidat, offre)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
+                />
+              </div>
             </div>
-          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -215,7 +235,11 @@ export default function AdminDashboard() {
               Aucune donnée correspondant à votre recherche.
             </div>
           )}
+          )}
         </div>
+        ) : (
+           <UserActivityExplorer token={token || ""} />
+        )}
       </main>
     </div>
   );
