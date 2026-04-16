@@ -280,6 +280,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
        return;
     }
 
+    const activeUserId = userId || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('tm_user') || '{}').id : null);
     if (!activeUserId) {
       console.error("[MatchingDashboard] Erreur: Pas d'ID utilisateur trouvé.");
       dispatch(setError("Session expirée."));
