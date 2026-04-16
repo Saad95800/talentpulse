@@ -22,7 +22,9 @@ interface HistoryRecord {
   jobTitle: string;
   score: number;
   aiResponse: MatchResult;
-  createdAt: Date;
+  createdAt: string;
+  mission?: { description: string };
+  candidate?: any;
 }
 
 interface HistoryListProps {
@@ -120,7 +122,11 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
         {filteredRecords.map((record) => (
           <div 
             key={record.id}
-            onClick={() => onSelectAnalysis(record.aiResponse)}
+            onClick={() => onSelectAnalysis({
+              ...record.aiResponse,
+              jobDescription: record.mission?.description,
+              fullCandidate: record.candidate
+            })}
             className="group relative bg-white border border-slate-200 p-5 rounded-2xl cursor-pointer hover:border-primary hover:shadow-xl hover:shadow-primary/5 transition-all"
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -164,7 +164,11 @@ export async function processMatchingWorkflow(formData: FormData) {
     
     return { 
       success: true, 
-      data: resultIA, 
+      data: {
+        ...resultIA,
+        jobDescription: mission.description,
+        fullCandidate: candidate
+      }, 
       recordId: newRecord.id,
       creditsRemaining: deductResult.success ? (deductResult.creditsRemaining ?? 0) : (creditCheck.currentCredits ?? 0) 
     };

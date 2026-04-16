@@ -18,6 +18,10 @@
   html, body {
     @apply antialiased text-main bg-background scroll-smooth;
   }
+  
+  button, .cursor-pointer {
+    cursor: pointer !important;
+  }
 }
 
 @layer utilities {

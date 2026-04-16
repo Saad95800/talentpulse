@@ -9,8 +9,11 @@ import {
   MessageSquareQuote,
   TrendingUp,
   Award,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  UserSearch
 } from 'lucide-react';
+import InfoModal from './InfoModal';
 
 // Import dynamique du bouton d'export PDF avec SSR désactivé
 // Cela isole totalement @react-pdf/renderer et évite les erreurs de hooks/contexte
@@ -33,6 +36,8 @@ interface MatchResultViewProps {
 
 export default function MatchResultView({ result, candidateName }: MatchResultViewProps) {
   const [isClient, setIsClient] = React.useState(false);
+  const [isJobModalOpen, setIsJobModalOpen] = React.useState(false);
+  const [isCandidateModalOpen, setIsCandidateModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -104,6 +109,24 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
                 {result.competences_manquantes.length} Écarts
               </div>
             </div>
+            
+            {/* Nouvelles actions de consultation */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-8 pt-6 border-t border-slate-100">
+               <button 
+                 onClick={() => setIsJobModalOpen(true)}
+                 className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all border border-slate-200 cursor-pointer group"
+               >
+                 <FileText className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                 Voir l'offre
+               </button>
+               <button 
+                 onClick={() => setIsCandidateModalOpen(true)}
+                 className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all border border-slate-200 cursor-pointer group"
+               >
+                 <UserSearch className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                 Voir candidat
+               </button>
+            </div>
           </div>
         </div>
       </div>
@@ -173,6 +196,23 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
           />
         )}
       </div>
+
+      {/* Modals de consultation détaillée */}
+      <InfoModal 
+        isOpen={isJobModalOpen} 
+        onClose={() => setIsJobModalOpen(false)} 
+        title={`Offre : ${result.candidateInfo?.lastName || 'Détails'}`} // On pourrait utiliser jobTitle si dispo
+        type="job"
+        data={result.jobDescription || "Contenu de l'offre non disponible pour cette analyse."}
+      />
+
+      <InfoModal 
+        isOpen={isCandidateModalOpen} 
+        onClose={() => setIsCandidateModalOpen(false)} 
+        title={`Profil : ${displayCandidateName}`}
+        type="candidate"
+        data={result.fullCandidate || result.candidateInfo}
+      />
     </div>
   );
 }

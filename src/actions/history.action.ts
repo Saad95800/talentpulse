@@ -16,6 +16,10 @@ export async function getUserHistoryAction(userId: string, token: string) {
 
     const records = await prisma.matchRecord.findMany({
       where: { userId },
+      include: {
+        mission: true,
+        candidate: true
+      },
       orderBy: { createdAt: 'desc' },
     });
 

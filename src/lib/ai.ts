@@ -33,6 +33,8 @@ export interface MatchResult {
   competences_manquantes: string[];
   argumentaire_client: string;
   candidateInfo: CandidateInfo;
+  jobDescription?: string;
+  fullCandidate?: any; // Objet Candidate complet de la DB
 }
 
 /**
