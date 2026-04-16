@@ -96,10 +96,11 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
               <TrendingUp className="w-3 h-3" />
               Analyse prédictive IA
             </div>
-            <h2 className="text-3xl md:text-4xl font-black text-main mb-3 tracking-tight">
-              Analyse pour <span className="text-primary">{displayCandidateName}</span>
+            <h2 className="text-4xl md:text-5xl font-black text-main mb-4 tracking-tighter leading-none">
+              <span className="text-primary block mb-2 text-sm uppercase tracking-[0.3em] opacity-70">Rapport de Matching</span>
+              {displayCandidateName}
             </h2>
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-6">
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-8">
               <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-5 py-2.5 rounded-xl text-sm font-black">
                 <CheckCircle2 className="w-4 h-4" />
                 {result.competences_validees.length} Points forts

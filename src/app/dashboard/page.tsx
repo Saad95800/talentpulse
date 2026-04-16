@@ -59,25 +59,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background pb-20">
-      {/* Global Matching Loader Overlay - EMERGENCY VISIBILITY MODE */}
-      <div 
-        style={{ 
-          display: loading ? 'flex' : 'none', 
-          zIndex: 999999,
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.8)', // Slate-900 opaque
-          backdropFilter: 'blur(16px)',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <div className="w-full max-w-lg p-10 bg-white rounded-[3rem] shadow-[0_0_100px_rgba(37,99,235,0.6)] border border-white/20 transform scale-100">
-           <MatchingLoader />
+    <div className="relative min-h-screen">
+      {/* Global Matching Loader Overlay - PRIORITY OVERLAY */}
+      {loading && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
+           <div className="w-full max-w-lg p-10 bg-white rounded-[3rem] shadow-[0_0_100px_rgba(37,99,235,0.4)] border border-white/20">
+              <MatchingLoader />
+           </div>
         </div>
-      </div>
+      )}
+
+      <main className="min-h-screen bg-background pb-20">
 
       {/* Header du Dashboard */}
       <header className="bg-white border-b border-slate-300 py-4 px-6 sticky top-0 z-30 shadow-md">
@@ -222,7 +214,7 @@ export default function DashboardPage() {
         isOpen={isPaywallOpen} 
         onClose={() => setIsPaywallOpen(false)} 
       />
-    </main>
+    </div>
   );
 }
 

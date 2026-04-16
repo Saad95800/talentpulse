@@ -91,9 +91,7 @@ const matchResultSchema = {
     argumentaire_client: { type: "string" }
   },
   required: ["score", "competences_validees", "competences_manquantes", "argumentaire_client"]
-};
-
-/**
+}/**
  * ÉTAPE 1 : Extraction pure du profil candidat
  */
 export async function extractCandidateInfo(
@@ -101,8 +99,10 @@ export async function extractCandidateInfo(
   cvFileData?: { buffer: Buffer, mimeType: string, isScanned: boolean }
 ): Promise<CandidateInfo> {
   const systemPrompt = `Tu es un expert en extraction de données RH. Ton rôle est d'extraire le profil COMPLET d'un candidat.
-SOIS EXTRÊMEMENT CONCIS (Synthèse des missions en 1 ou 2 phrases maximum par expérience). 
-NE RÉPÈTE PAS tout le contenu du CV. Va droit à l'essentiel.
+SOIS EXTRÊMEMENT CONCIS. 
+- Pour chaque expérience : 1 seule phrase de synthèse maximum.
+- Ne répète pas les détails inutiles.
+- Garde uniquement les compétences et mots-clés essentiels.
 ${cvFileData?.isScanned ? "ATTENTION: Utilisez vos capacités de vision pour compléter les données manquantes." : ""}
 
 RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
@@ -114,7 +114,7 @@ RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
   const provider = createProvider('gemini', 'matching');
   const options = { 
     system: systemPrompt, 
-    maxTokens: 32000, // Large marge pour les CV extrêmement denses (ex: Seniors avec bcp de texte)
+    maxTokens: 20000, // Réduit pour forcer la concision
     temperature: 0, 
     json: true,
     schema: candidateInfoSchema // Forçage du schéma natif
@@ -130,7 +130,7 @@ RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
     }
 
     const duration = Date.now() - extractionStartTime;
-    console.log(`[AI:Extraction] Step 1 réussi en ${duration}ms${duration > 60000 ? " (Traitement Lourd)" : ""}`);
+    console.log(`[AI:Extraction] Step 1 réussi en ${duration}ms`);
 
     if (!rawText) throw new Error("Réponse de l'IA vide.");
     
@@ -138,12 +138,6 @@ RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
   } catch (error: any) {
     const duration = Date.now() - extractionStartTime;
     console.error(`[AI:Extraction] Échec Step 1 après ${duration}ms:`, error.message);
-    if (typeof rawText! !== 'undefined') {
-      console.log("[AI:Extraction] RÉPONSE BRUTE (TRONQUÉE ?) :");
-      console.log("------------------------------------------");
-      console.log(rawText.slice(0, 1000) + "...");
-      console.log("------------------------------------------");
-    }
     throw error;
   }
 }
@@ -157,14 +151,14 @@ export async function generateMatchingScore(
   existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
   const systemPrompt = `Tu es une IA experte en recrutement. Analyse le matching poste/candidat.
-SOIS TRÈS CONCIS. Ne dépasse pas 1000 mots au total pour l'argumentaire.
+SOIS EXTRÊMEMENT CONCIS. Ne dépasse pas 800 mots au total.
 RETOURNE UN OBJET JSON STRICT.
 
 Structure "argumentaire_client" (Titres en MAJUSCULES) :
-1. ANALYSE GLOBALE (Synthèse rapide)
-2. POINTS DE FORCE (Tirets "- ")
-3. POINTS DE VIGILANCE (Tirets "- ")
-4. VERDICT (Recommandation finale)
+1. ANALYSE GLOBALE (Synthèse en 2 phrases)
+2. POINTS DE FORCE (3 à 5 tirets "- ")
+3. POINTS DE VIGILANCE (2 à 3 tirets "- ")
+4. VERDICT (1 phrase de recommandation)
 
 IMPORTANT: Le champ "score" doit être entre 0 et 100.`;
 
@@ -173,7 +167,7 @@ IMPORTANT: Le champ "score" doit être entre 0 et 100.`;
   const provider = await getAIProvider('matching');
   const options = { 
     system: systemPrompt, 
-    maxTokens: 16000, // Réduit pour encourager la concision et éviter les truncations
+    maxTokens: 12000, // Réduit pour forcer la concision
     temperature: 0, 
     json: true,
     schema: matchResultSchema
@@ -202,7 +196,6 @@ function extractJSON<T>(text: string): T {
   const firstBrace = jsonString.indexOf('{');
   if (firstBrace === -1) throw new Error("Aucune structure JSON détectée.");
   
-  // On ne cherche PAS le lastBrace car s'il est tronqué, il n'y en a pas
   jsonString = jsonString.substring(firstBrace);
 
   try {
@@ -214,7 +207,20 @@ function extractJSON<T>(text: string): T {
     // TENTATIVE DE RÉPARATION AVANCÉE
     let repaired = jsonString.trim();
 
-    // 1. Fermeture des chaînes de caractères (Guillemets impairs)
+    // 0. Si l'erreur est "Unterminated string", on ajoute une quote de fin
+    // Souvent, la truncation arrive au milieu d'une valeur de string
+    if (errorMsg.toLowerCase().includes('unterminated string')) {
+      // On cherche si le dernier guillemet est ouvert
+      const lastQuote = repaired.lastIndexOf('"');
+      const lastEscape = repaired.lastIndexOf('\\');
+      
+      // Si le dernier guillemet n'est pas échappé et qu'il semble être le début d'une valeur
+      if (lastQuote !== -1 && lastQuote !== lastEscape + 1) {
+        repaired += '"';
+      }
+    }
+
+    // 1. Équilibrage global des guillemets (si pas déjà fait par le check spécifique au-dessus)
     const quoteCount = (repaired.match(/"/g) || []).length;
     if (quoteCount % 2 !== 0) {
       repaired += '"';
@@ -233,15 +239,20 @@ function extractJSON<T>(text: string): T {
       repaired += "]".repeat(openBrackets - closeBrackets);
     }
 
-    // 3. Suppression des virgules traînantes invalides causées par la truncation
-    repaired = repaired.replace(/,\s*[}\]]$/, (match) => match.replace(',', ''));
+    // 3. Suppression des virgules traînantes invalides causées par la truncation ou l'ajout de fermetures
+    // On nettoie les ,} ou ,] qui sont fréquents après réparation
+    repaired = repaired.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
 
     try {
       return JSON.parse(repaired) as T;
     } catch (finalErr: any) {
       console.error(`[AI:REPAIR_FAILED] Échec final. Longueur: ${text.length}.`);
-      console.log(`[AI:DEBUG] Fin du flux: "...${repaired.slice(-100)}"`);
+      console.log(`[AI:DEBUG] Fin du flux après réparation: "...${repaired.slice(-100)}"`);
       throw new Error(`Échec critique du formatage IA. Longueur: ${text.length}. Erreur: ${finalErr.message}`);
+    }
+  }
+}
+gth}. Erreur: ${finalErr.message}`);
     }
   }
 }

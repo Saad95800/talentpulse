@@ -63,7 +63,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       const jobBuffer = Buffer.from(await jobFile.arrayBuffer());
       try {
         const jobDoc = await extractTextFromFile(jobBuffer, jobFile.name);
-        jobText = jobDoc.text;
+        jobText = jobDoc.text.substring(0, 30000); // TRUNCATION DE SÉCURITÉ
         jobTitle = jobFile.name.replace(/\.[^/.]+$/, "");
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erreur inconnue";
@@ -71,7 +71,7 @@ export async function processMatchingWorkflow(formData: FormData) {
         return { success: false, error: `Erreur sur la fiche de poste : ${message}` };
       }
     } else if (jobTextRaw) {
-      jobText = jobTextRaw;
+      jobText = jobTextRaw.substring(0, 30000);
     }
 
     let cvText = "";
@@ -83,7 +83,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       const cvBuffer = Buffer.from(await cvFile.arrayBuffer());
       try {
         const cvDoc = await extractTextFromFile(cvBuffer, cvFile.name);
-        cvText = cvDoc.text;
+        cvText = cvDoc.text.substring(0, 30000); // TRUNCATION DE SÉCURITÉ
         candidateName = cvFile.name.replace(/\.[^/.]+$/, "");
         
         cvFileData = {
@@ -97,7 +97,7 @@ export async function processMatchingWorkflow(formData: FormData) {
         return { success: false, error: `Erreur sur le CV : ${message}` };
       }
     } else if (cvTextRaw) {
-      cvText = cvTextRaw;
+      cvText = cvTextRaw.substring(0, 30000);
     }
 
     // Étape E : Le Cerveau IA - Workflow Multi-Modèle Optimisé
@@ -114,6 +114,8 @@ export async function processMatchingWorkflow(formData: FormData) {
       throw new Error("Base de données indisponible.");
     }
 
+    const finalCandidateName = `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || candidateName;
+
     const mission = await prisma.mission.create({
       data: {
         userId,
@@ -125,7 +127,7 @@ export async function processMatchingWorkflow(formData: FormData) {
     const candidate = await prisma.candidate.create({
       data: {
         userId,
-        name: `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || candidateName,
+        name: finalCandidateName,
         firstName: candidateInfo.firstName,
         lastName: candidateInfo.lastName,
         email: candidateInfo.email,
