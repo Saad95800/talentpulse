@@ -235,7 +235,6 @@ export default function AdminDashboard() {
               Aucune donnée correspondant à votre recherche.
             </div>
           )}
-          )}
         </div>
         ) : (
            <UserActivityExplorer token={token || ""} />
