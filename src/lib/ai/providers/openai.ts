@@ -58,6 +58,7 @@ export class OpenAIProvider implements IAIProvider {
   async completeWithDocument(
     text:      string,
     _pdfBuffer: Buffer,
+    mimeType:   string,
     options:   AICompletionOptions = {}
   ): Promise<string> {
     const prompt = options.system
