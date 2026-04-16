@@ -101,7 +101,8 @@ export async function extractCandidateInfo(
   cvFileData?: { buffer: Buffer, mimeType: string, isScanned: boolean }
 ): Promise<CandidateInfo> {
   const systemPrompt = `Tu es un expert en extraction de données RH. Ton rôle est d'extraire le profil COMPLET d'un candidat.
-SOIS CONCIS dans les descriptions d'expériences (synthèse des missions).
+SOIS EXTRÊMEMENT CONCIS (Synthèse des missions en 1 ou 2 phrases maximum par expérience). 
+NE RÉPÈTE PAS tout le contenu du CV. Va droit à l'essentiel.
 ${cvFileData?.isScanned ? "ATTENTION: Utilisez vos capacités de vision pour compléter les données manquantes." : ""}
 
 RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
@@ -155,30 +156,27 @@ export async function generateMatchingScore(
   cvText: string,
   existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
-  const systemPrompt = `Tu es une IA experte en recrutement de haut niveau. Ton rôle est d'analyser le matching entre un poste et un candidat.
-SOIS PRÉCIS, CRITIQUE ET CONSTRUCTIF.
+  const systemPrompt = `Tu es une IA experte en recrutement. Analyse le matching poste/candidat.
+SOIS TRÈS CONCIS. Ne dépasse pas 1000 mots au total pour l'argumentaire.
+RETOURNE UN OBJET JSON STRICT.
 
-RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.
+Structure "argumentaire_client" (Titres en MAJUSCULES) :
+1. ANALYSE GLOBALE (Synthèse rapide)
+2. POINTS DE FORCE (Tirets "- ")
+3. POINTS DE VIGILANCE (Tirets "- ")
+4. VERDICT (Recommandation finale)
 
-CONSIGNES POUR "argumentaire_client" :
-Structure obligatoirement ta réponse avec ces sections (utilise des titres en MAJUSCULES) :
-1. ANALYSE GLOBALE : Une synthèse du profil.
-2. POINTS DE FORCE : Ce qui fait du candidat un match idéal (utilise des tirets "- ").
-3. POINTS DE VIGILANCE : Les manques ou risques potentiels (utilise des tirets "- ").
-4. VERDICT : Ta recommandation finale justifiée.
-
-Utilise des doubles retours à la ligne (\\n\\n) entre chaque section pour la lisibilité.
-IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 100.`;
+IMPORTANT: Le champ "score" doit être entre 0 et 100.`;
 
   const userPrompt = `FICHE DE POSTE :\n${jobText}\n\nCANDIDAT :\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nAnalyse le matching.`;
 
   const provider = await getAIProvider('matching');
   const options = { 
     system: systemPrompt, 
-    maxTokens: 32000, // Aucun compromis sur la longueur de l'analyse pour les cas complexes
+    maxTokens: 16000, // Réduit pour encourager la concision et éviter les truncations
     temperature: 0, 
     json: true,
-    schema: matchResultSchema // Forçage du schéma natif
+    schema: matchResultSchema
   };
   
   const matchingStartTime = Date.now();
@@ -192,43 +190,58 @@ IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 1
 function extractJSON<T>(text: string): T {
   let jsonString = text.trim();
   
-  try {
-    // Avec le mode JSON natif, le texte devrait déjà être du JSON pur
-    // Mais on garde un nettoyage de sécurité pour les accolades
-    const firstBrace = jsonString.indexOf('{');
-    const lastBrace  = jsonString.lastIndexOf('}');
-    
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      jsonString = jsonString.substring(firstBrace, lastBrace + 1);
-    }
+  // Étape 1 : Nettoyage de base (Markdown blocks)
+  if (jsonString.startsWith('```')) {
+    const lines = jsonString.split('\n');
+    if (lines[0].startsWith('```json')) lines.shift();
+    if (lines[lines.length-1].startsWith('```')) lines.pop();
+    jsonString = lines.join('\n').trim();
+  }
 
+  // Étape 2 : Extraction de la première structure JSON valide (accolades)
+  const firstBrace = jsonString.indexOf('{');
+  if (firstBrace === -1) throw new Error("Aucune structure JSON détectée.");
+  
+  // On ne cherche PAS le lastBrace car s'il est tronqué, il n'y en a pas
+  jsonString = jsonString.substring(firstBrace);
+
+  try {
     return JSON.parse(jsonString) as T;
   } catch (err: any) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    console.error(`[AI:JSON_PARSE_ERROR] ${errorMsg}`);
-    console.log(`[AI:DEBUG] Taille brute: ${text.length} chars. Fin du flux: "...${text.slice(-100)}"`);
+    console.warn(`[AI:JSON_PARSE_ERROR] Tentative de réparation... Erreur initiale: ${errorMsg}`);
     
-    // TENTATIVE DE RÉPARATION 1 : Nettoyage des caractères de contrôle
-    try {
-      const cleaned = jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
-      return JSON.parse(cleaned) as T;
-    } catch (retryErr) {
-      // TENTATIVE DE RÉPARATION 2 : Correction de truncation basique (balancement des accolades)
-      try {
-        let repaired = jsonString.trim();
-        const openBraces = (repaired.match(/\{/g) || []).length;
-        const closeBraces = (repaired.match(/\}/g) || []).length;
-        
-        if (openBraces > closeBraces) {
-          console.warn(`[AI:REPAIR] Détection de JSON tronqué (${openBraces} { vs ${closeBraces} }). Tentative de fermeture forcée.`);
-          repaired += "}".repeat(openBraces - closeBraces);
-          return JSON.parse(repaired) as T;
-        }
-      } catch (failingRepair) {
-        // Si tout échoue
-      }
+    // TENTATIVE DE RÉPARATION AVANCÉE
+    let repaired = jsonString.trim();
 
-      throw new Error(`Échec critique du formatage IA. Longueur: ${text.length}. Erreur: ${errorMsg}`);
+    // 1. Fermeture des chaînes de caractères (Guillemets impairs)
+    const quoteCount = (repaired.match(/"/g) || []).length;
+    if (quoteCount % 2 !== 0) {
+      repaired += '"';
+    }
+
+    // 2. Équilibrage des Accolades et Crochets
+    const openBraces = (repaired.match(/\{/g) || []).length;
+    const closeBraces = (repaired.match(/\}/g) || []).length;
+    if (openBraces > closeBraces) {
+      repaired += "}".repeat(openBraces - closeBraces);
+    }
+
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/\]/g) || []).length;
+    if (openBrackets > closeBrackets) {
+      repaired += "]".repeat(openBrackets - closeBrackets);
+    }
+
+    // 3. Suppression des virgules traînantes invalides causées par la truncation
+    repaired = repaired.replace(/,\s*[}\]]$/, (match) => match.replace(',', ''));
+
+    try {
+      return JSON.parse(repaired) as T;
+    } catch (finalErr: any) {
+      console.error(`[AI:REPAIR_FAILED] Échec final. Longueur: ${text.length}.`);
+      console.log(`[AI:DEBUG] Fin du flux: "...${repaired.slice(-100)}"`);
+      throw new Error(`Échec critique du formatage IA. Longueur: ${text.length}. Erreur: ${finalErr.message}`);
     }
   }
 }
