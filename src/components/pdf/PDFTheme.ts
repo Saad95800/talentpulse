@@ -147,7 +147,6 @@ export const pdfStyles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.main,
     lineHeight: 1.6,
-    fontStyle: 'italic',
   },
   // Footer
   footer: {

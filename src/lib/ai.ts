@@ -148,11 +148,20 @@ export async function generateMatchingScore(
   cvText: string,
   existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
-  const systemPrompt = `Tu es un expert en recrutement Senior. Analyser le matching poste/candidat.
-SOIS PRÉCIS ET CRITIQUE.
+  const systemPrompt = `Tu es une IA experte en recrutement de haut niveau. Ton rôle est d'analyser le matching entre un poste et un candidat.
+SOIS PRÉCIS, CRITIQUE ET CONSTRUCTIF.
 
 RETOURNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.
-IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 100 (ex: 85.5 pour 85.5%).`;
+
+CONSIGNES POUR "argumentaire_client" :
+Structure obligatoirement ta réponse avec ces sections (utilise des titres en MAJUSCULES) :
+1. ANALYSE GLOBALE : Une synthèse du profil.
+2. POINTS DE FORCE : Ce qui fait du candidat un match idéal (utilise des tirets "- ").
+3. POINTS DE VIGILANCE : Les manques ou risques potentiels (utilise des tirets "- ").
+4. VERDICT : Ta recommandation finale justifiée.
+
+Utilise des doubles retours à la ligne (\\n\\n) entre chaque section pour la lisibilité.
+IMPORTANT: Le champ "score" doit être un nombre entier ou décimal entre 0 et 100.`;
 
   const userPrompt = `FICHE DE POSTE :\n${jobText}\n\nCANDIDAT :\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nAnalyse le matching.`;
 

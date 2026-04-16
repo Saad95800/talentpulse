@@ -158,9 +158,9 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
           <h3 className="text-2xl font-black mb-6 flex items-center gap-4 uppercase tracking-wider text-primary">
             Verdict du Chasseur de Têtes
           </h3>
-          <p className="text-lg md:text-xl font-medium leading-relaxed text-slate-300 italic">
-            &quot;{result.argumentaire_client}&quot;
-          </p>
+          <div className="text-lg md:text-xl font-medium leading-relaxed text-slate-300 whitespace-pre-line">
+            {result.argumentaire_client}
+          </div>
         </div>
       </section>
 
