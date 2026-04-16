@@ -62,8 +62,11 @@ export default function DashboardPage() {
     <div className="relative min-h-screen">
       {/* Global Matching Loader Overlay - PRIORITY OVERLAY */}
       {loading && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
-           <div className="w-full max-w-lg p-10 bg-white rounded-[3rem] shadow-[0_0_100px_rgba(37,99,235,0.4)] border border-white/20">
+        <div 
+          className="fixed inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-md" 
+          style={{ zIndex: 999999, display: 'flex', opacity: 1, visibility: 'visible' }}
+        >
+           <div className="w-full max-w-lg p-10 bg-white rounded-[3rem] shadow-[0_0_100px_rgba(37,99,235,0.5)] border border-white/20 relative">
               <MatchingLoader />
            </div>
         </div>

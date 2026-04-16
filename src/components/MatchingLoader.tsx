@@ -56,11 +56,11 @@ export default function MatchingLoader() {
       <div className="relative mb-10">
         <div
           className="absolute inset-0 rounded-full blur-3xl opacity-40 animate-pulse"
-          style={{ background: 'var(--color-primary)', transform: 'scale(1.4)' }}
+          style={{ background: '#2563EB', backgroundColor: 'var(--color-primary, #2563EB)', transform: 'scale(1.4)' }}
         />
         <div
           className="relative w-28 h-28 rounded-full flex items-center justify-center shadow-2xl border-4"
-          style={{ background: 'white', borderColor: 'var(--color-primary)' }}
+          style={{ background: 'white', borderColor: 'var(--color-primary, #2563EB)' }}
         >
           {/* Anneau tournant */}
           <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: '2s' }}>
@@ -98,7 +98,7 @@ export default function MatchingLoader() {
         <p
           key={currentStep}
           className="font-semibold text-base min-h-[1.75rem]"
-          style={{ color: 'var(--color-primary)' }}
+          style={{ color: 'var(--color-primary, #2563EB)' }}
         >
           {step.label}
         </p>
@@ -111,14 +111,15 @@ export default function MatchingLoader() {
       <div className="mt-10 w-full max-w-xs">
         <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted mb-2">
           <span>Progression</span>
-          <span style={{ color: 'var(--color-primary)' }}>{progress}%</span>
+          <span style={{ color: 'var(--color-primary, #2563EB)' }}>{progress}%</span>
         </div>
         <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
           <div
             className="h-full rounded-full transition-all duration-200"
             style={{
               width: `${progress}%`,
-              background: 'linear-gradient(to right, var(--color-primary), #818cf8)',
+              background: 'linear-gradient(to right, #2563EB, #818cf8)',
+              backgroundColor: 'var(--color-primary, #2563EB)'
             }}
           />
         </div>
@@ -134,7 +135,8 @@ export default function MatchingLoader() {
             style={{
               width:      i === currentStep ? '28px' : '8px',
               height:     '8px',
-              background: i <= currentStep ? 'var(--color-primary)' : '#e2e8f0',
+              background: i <= currentStep ? '#2563EB' : '#e2e8f0',
+              backgroundColor: i <= currentStep ? 'var(--color-primary, #2563EB)' : '#e2e8f0',
               opacity:    i > currentStep ? 0.5 : 1,
             }}
           />

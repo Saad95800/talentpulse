@@ -247,6 +247,7 @@ async function compressImage(file: File): Promise<File> {
 export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardProps) {
   const dispatch = useDispatch();
   const { loading, loadingStep, error } = useSelector((state: RootState) => state.matching);
+  const [isLoadingInternal, setIsLoadingInternal] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
   const role = user?.role || 'USER';
@@ -264,6 +265,8 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
   const userId = useSelector((state: RootState) => state.user.user?.id);
 
   const handleMatch = async () => {
+    console.log("[MatchingDashboard] Bouton cliqué. Démarrage du workflow.");
+    setIsLoadingInternal(true);
     dispatch(setLoading(true));
     dispatch(setError(""));
     
@@ -277,17 +280,20 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
        return;
     }
 
-    const activeUserId = userId || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('tm_user') || '{}').id : null);
     if (!activeUserId) {
+      console.error("[MatchingDashboard] Erreur: Pas d'ID utilisateur trouvé.");
       dispatch(setError("Session expirée."));
+      setIsLoadingInternal(false);
       dispatch(setLoading(false));
       return;
     }
 
     // Vérification des crédits (Option A : 1 matching = 1 crédit)
     if (role !== 'ADMIN' && credits <= 0) {
+      console.warn("[MatchingDashboard] Crédits insuffisants.");
       if (onPaywallOpen) onPaywallOpen();
       dispatch(setError("Vous n'avez plus de crédits. Veuillez souscrire à l'offre illimitée."));
+      setIsLoadingInternal(false);
       dispatch(setLoading(false));
       return;
     }
@@ -301,8 +307,10 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
         const { deductCredit } = await import('@/actions/credits.action');
         const deductResult = await deductCredit(activeUserId);
         if (!deductResult.success) {
+          console.error("[MatchingDashboard] Échec déduction crédit:", deductResult.error);
           if (onPaywallOpen) onPaywallOpen();
           dispatch(setError(deductResult.error || "Impossible de déduire vos crédits."));
+          setIsLoadingInternal(false);
           dispatch(setLoading(false));
           return;
         }
@@ -339,6 +347,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
       } catch (e) {
         dispatch(setError("Erreur technique."));
       } finally {
+        setIsLoadingInternal(false);
         dispatch(setLoading(false));
       }
     } else {
@@ -390,12 +399,15 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
       import('@/store/matchingSlice').then(({ setMultiResults }) => {
         dispatch(setMultiResults(finalResults));
       });
+      setIsLoadingInternal(false);
       dispatch(setLoading(false));
       dispatch(setLoadingStep(""));
     }
   };
 
-  const isButtonDisabled = loading || 
+  const isLoaderActive = loading || isLoadingInternal;
+
+  const isButtonDisabled = isLoaderActive || 
     (!(jobInputType === 'file' ? jobFiles.length > 0 : jobText.length > 10)) || 
     (!(cvInputType === 'file' ? cvFiles.length > 0 : cvText.length > 10));
 
@@ -441,7 +453,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
               : 'bg-main text-white hover:bg-primary hover:-translate-y-1 hover:shadow-primary/40 active:scale-95'}
           `}
         >
-          {loading ? (
+          {isLoaderActive ? (
             <>
               <Loader2 className="w-6 h-6 animate-spin text-white" />
               <div className="flex flex-col items-start leading-tight">
@@ -457,7 +469,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
             </>
           )}
 
-          {!isButtonDisabled && !loading && (
+          {!isButtonDisabled && !isLoaderActive && (
             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
           )}
         </button>
