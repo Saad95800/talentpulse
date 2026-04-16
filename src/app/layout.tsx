@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "TalentPulse | Algorithme de Matching IA Pro",
   description: "Évaluez instantanément la pertinence d'un CV par rapport à une fiche de poste grâce à l'IA.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
