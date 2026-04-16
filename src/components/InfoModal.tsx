@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, FileText, User, Briefcase, GraduationCap, Globe, Mail, Phone, Linkedin } from 'lucide-react';
+import { X, FileText, User, Briefcase, GraduationCap, Globe, Mail, Phone, Link } from 'lucide-react';
 
 interface InfoModalProps {
   isOpen: boolean;
@@ -63,7 +63,7 @@ export default function InfoModal({ isOpen, onClose, title, type, data }: InfoMo
                   <div className="space-y-3">
                     {data.email && <div className="flex items-center gap-3 text-slate-600"><Mail className="w-4 h-4" /> <span className="font-bold">{data.email}</span></div>}
                     {data.phone && <div className="flex items-center gap-3 text-slate-600"><Phone className="w-4 h-4" /> <span className="font-bold">{data.phone}</span></div>}
-                    {data.linkedin && <a href={data.linkedin} target="_blank" className="flex items-center gap-3 text-primary hover:underline font-bold transition-all"><Linkedin className="w-4 h-4" /> Profil LinkedIn</a>}
+                    {data.linkedin && <a href={data.linkedin} target="_blank" className="flex items-center gap-3 text-primary hover:underline font-bold transition-all"><Link className="w-4 h-4" /> Profil LinkedIn</a>}
                     {data.website && <a href={data.website} target="_blank" className="flex items-center gap-3 text-primary hover:underline font-bold transition-all"><Globe className="w-4 h-4" /> Portfolio / Site</a>}
                   </div>
                 </div>
