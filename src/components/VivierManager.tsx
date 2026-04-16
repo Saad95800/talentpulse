@@ -31,6 +31,7 @@ interface User {
 
 interface Candidate {
   id: string;
+  userId: string;
   name: string;
   firstName?: string | null;
   lastName?: string | null;
