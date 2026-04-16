@@ -25,7 +25,6 @@ export default function ExportPDFButton({ result, candidateName }: ExportPDFButt
       fileName={fileName}
       className="flex items-center gap-3 bg-primary text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:-translate-y-1 active:scale-95"
     >
-      {/* @ts-expect-error - PDFDownloadLink child type can be a function */}
       {({ loading, error }) => (
         <>
           <Download className={`w-5 h-5 ${loading ? 'animate-bounce' : ''}`} />
