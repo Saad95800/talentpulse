@@ -4,10 +4,8 @@ import React, { useState } from 'react';
 import { MatchResult } from '@/lib/ai';
 import { 
   Users, 
-  ChevronRight, 
   Trophy, 
   AlertCircle,
-  Clock,
   ArrowRight,
   TrendingUp,
   X
@@ -59,7 +57,7 @@ export default function MultiMatchResultView({ results }: MultiMatchResultViewPr
         {results.map((result, index) => {
           const isError = result.status === 'error';
           const name = result.candidateInfo 
-            ? `${result.candidateInfo.firstName} ${result.candidateInfo.lastName}`.trim() 
+            ? `Candidat ${index + 1} - ${result.candidateInfo.firstName} ${result.candidateInfo.lastName}`.trim() 
             : `Candidat ${index + 1}`;
 
           return (
@@ -140,7 +138,9 @@ export default function MultiMatchResultView({ results }: MultiMatchResultViewPr
                         <TrendingUp className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black text-main">Détails du Matching</h3>
+                        <h3 className="text-xl font-black text-main">
+                          Candidat {selectedResult.candidateInfo ? `${selectedResult.candidateInfo.firstName} ${selectedResult.candidateInfo.lastName}` : (results.indexOf(selectedResult) + 1)}
+                        </h3>
                         <p className="text-xs font-bold text-muted uppercase tracking-widest italic">Analyse IA Temps Réel</p>
                     </div>
                 </div>

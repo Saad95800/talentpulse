@@ -24,7 +24,7 @@ interface HistoryRecord {
   aiResponse: MatchResult;
   createdAt: string;
   mission?: { description: string };
-  candidate?: any;
+  candidate?: Record<string, unknown>;
 }
 
 interface HistoryListProps {

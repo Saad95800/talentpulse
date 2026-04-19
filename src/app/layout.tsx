@@ -4,6 +4,7 @@ import "./globals.css";
 
 import ReduxProvider from "@/store/ReduxProvider";
 import ActivityTracker from "@/components/providers/ActivityTracker";
+import GlobalMatchingLoader from "@/components/GlobalMatchingLoader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ReduxProvider>
           <ActivityTracker />
+          <GlobalMatchingLoader />
           {children}
         </ReduxProvider>
       </body>

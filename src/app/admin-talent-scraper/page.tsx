@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
     try {
       const res = await loginAction({ email, password });
       if (res.success) {
-        const { token: resToken, user: resUser } = res as { token: string; user: import('@/store/userSlice').User };
+        const { token: resToken, user: resUser } = res as any;
         if (resUser.role !== 'ADMIN') {
           setError("Accès refusé. Vous n'êtes pas administrateur.");
           setLoading(false);

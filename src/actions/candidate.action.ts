@@ -3,7 +3,18 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function updateCandidateAction(candidateId: string, userId: string, data: any) {
+interface UpdateCandidateData {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  linkedin?: string | null;
+  website?: string | null;
+  summary?: string | null;
+}
+
+export async function updateCandidateAction(candidateId: string, userId: string, data: UpdateCandidateData) {
   try {
     // Vérification de propriété
     const candidate = await prisma.candidate.findUnique({

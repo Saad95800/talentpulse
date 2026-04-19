@@ -1,49 +1,64 @@
-import userReducer, { setUser, updateCredits, clearUser } from '../userSlice';
+import userReducer, { setUser, updateCredits, logout, User } from '../userSlice';
 
 describe('userSlice', () => {
   const initialState = {
+    user: null,
+    token: null,
     isLoggedIn: false,
-    id: null,
-    name: null,
-    email: null,
-    phone: null,
-    credits: 0,
+    isVerified: false,
   };
 
   it('should return the initial state', () => {
     expect(userReducer(undefined, { type: 'unknown' })).toEqual(initialState);
   });
 
-  it('should handle setUser', () => {
-    const userPayload = {
+  it('should handle setUser with token', () => {
+    const userPayload: User & { token?: string } = {
       id: '123',
       name: 'Test Name',
       email: 'test@example.com',
-      phone: '0612345678',
+      phone: '0102030405',
       credits: 3,
+      role: 'USER',
+      token: 'jwt-token',
     };
     const actual = userReducer(initialState, setUser(userPayload));
     expect(actual.isLoggedIn).toBe(true);
-    expect(actual.id).toBe('123');
-    expect(actual.name).toBe('Test Name');
-    expect(actual.credits).toBe(3);
+    expect(actual.isVerified).toBe(true);
+    expect(actual.token).toBe('jwt-token');
+    expect(actual.user?.id).toBe('123');
   });
 
   it('should handle updateCredits', () => {
-    const actual = userReducer({ ...initialState, credits: 3 }, updateCredits(2));
-    expect(actual.credits).toBe(2);
+    const mockUser: User = { 
+      id: '1', 
+      credits: 3,
+      name: 'Test',
+      email: 'test@test.com',
+      phone: '123',
+      role: 'USER'
+    };
+    const state = { ...initialState, user: mockUser };
+    const actual = userReducer(state, updateCredits(2));
+    expect(actual.user?.credits).toBe(2);
   });
 
-  it('should handle clearUser', () => {
-    const loggedInState = {
-      isLoggedIn: true,
-      id: '123',
-      name: 'Test Name',
-      email: 'test@example.com',
-      phone: '0612345678',
+  it('should handle logout', () => {
+    const mockUser: User = { 
+      id: '123', 
       credits: 3,
+      name: 'Test',
+      email: 'test@test.com',
+      phone: '123',
+      role: 'USER'
     };
-    const actual = userReducer(loggedInState, clearUser());
+    const loggedInState = {
+      user: mockUser,
+      token: 'token',
+      isLoggedIn: true,
+      isVerified: true
+    };
+    const actual = userReducer(loggedInState, logout());
     expect(actual).toEqual(initialState);
   });
 });

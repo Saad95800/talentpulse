@@ -1,0 +1,64 @@
+import { createMollieClient } from '@mollie/api-client';
+
+/**
+ * Client Mollie initialisé avec la clé API test/live.
+ * Nous utilisons le SDK officiel pour gérer les abonnements natifs.
+ */
+export const mollieClient = createMollieClient({
+  apiKey: process.env.MOLLIE_API_KEY as string,
+});
+
+/**
+ * Crée un client Mollie pour un utilisateur donné s'il n'en a pas déjà un.
+ * Nécessaire avant d'initier un premier paiement d'abonnement.
+ */
+export async function getOrCreateMollieCustomer(userId: string, name: string, email: string) {
+  const prisma = (await import('@/lib/prisma')).default;
+  
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { mollieCustomerId: true }
+  });
+
+  if (user?.mollieCustomerId) {
+    return user.mollieCustomerId;
+  }
+
+  const customer = await mollieClient.customers.create({
+    name,
+    email,
+    metadata: { userId },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { mollieCustomerId: customer.id }
+  });
+
+  return customer.id;
+}
+
+/**
+ * Initie un premier paiement (mandat) pour l'abonnement Premium.
+ * Une fois payé, Mollie nous renverra un webhook pour créer la Subscription réelle.
+ */
+export async function createFirstSubscriptionPayment(customerId: string, userId: string, email: string) {
+  const checkout = await mollieClient.payments.create({
+    amount: {
+      currency: 'EUR',
+      value: '39.90', // Prix de l'abonnement Premium
+    },
+    description: 'Abonnement TalentPulse Premium (1er mois)',
+    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
+    webhookUrl: process.env.MOLLIE_WEBHOOK_URL as string,
+    metadata: {
+      userId,
+      email,
+      type: 'FIRST_PAYMENT'
+    },
+    customerId,
+    sequenceType: 'first' as any, // Indique que c'est le paiement de mandat
+  });
+
+  return checkout.getCheckoutUrl();
+}

@@ -54,15 +54,23 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
         result.text = cleanExtractedText(data.text || '');
         result.mimeType = 'application/pdf';
         
-        if (result.text.length < 100) {
-          console.log(`[Document] PDF semble être un scan (${result.text.length} chars).`);
+        const lowerText = result.text.toLowerCase();
+        const isImageOnlyMessage = 
+          lowerText.includes('forme d\'images') || 
+          lowerText.includes('image-only') || 
+          lowerText.includes('no text') || 
+          lowerText.includes('conversion');
+
+        if (result.text.length < 150 || isImageOnlyMessage) {
+          console.log(`[Document] PDF semble être un scan ou contient un message d'erreur d'extraction (${result.text.length} chars).`);
           result.isScanned = true;
         } else {
           console.log(`[Document] Extraction PDF locale réussie (${result.text.length} chars).`);
         }
         return result;
-      } catch (pdfError: any) {
-        console.warn(`[Document] Échec PDFParse (${filename}), basculement OCR Gemini:`, pdfError.message);
+      } catch (pdfError: unknown) {
+        const errorMsg = pdfError instanceof Error ? pdfError.message : String(pdfError);
+        console.warn(`[Document] Échec PDFParse (${filename}), basculement OCR Gemini:`, errorMsg);
         result.isScanned = true;
         result.text = ""; 
         return result;
@@ -77,8 +85,9 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
         const docxResult = await mammoth.extractRawText({ buffer });
         result.text = cleanExtractedText(docxResult.value);
         return result;
-      } catch (docError: any) {
-        console.warn(`[Document] Échec lecture Word (${filename}): ${docError.message}.`);
+      } catch (docError: unknown) {
+        const errorMsg = docError instanceof Error ? docError.message : String(docError);
+        console.warn(`[Document] Échec lecture Word (${filename}): ${errorMsg}.`);
         throw new Error(`Le fichier Word est illisible ou corrompu.`);
       }
     } 
@@ -94,18 +103,6 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
       console.error(`[Document] Erreur d'extraction (${filename}):`, error.message);
     }
     throw error;
-  }
-}
-
-function getMimeType(ext: string): string {
-  switch (ext) {
-    case 'pdf': return 'application/pdf';
-    case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'png': return 'image/png';
-    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    case 'doc': return 'application/msword';
-    default: return 'text/plain';
   }
 }
 

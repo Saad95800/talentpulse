@@ -7,7 +7,6 @@ import {
   Phone, 
   MapPin, 
   Link,
-  Globe, 
   Briefcase, 
   GraduationCap, 
   Globe2, 
@@ -38,23 +37,7 @@ interface Education {
   year: string;
 }
 
-interface Candidate {
-  id: string;
-  userId: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  linkedin?: string | null;
-  website?: string | null;
-  summary?: string | null;
-  languages?: any;
-  skills?: any;
-  experiences?: any;
-  educations?: any;
-  createdAt: string;
-}
+import { Candidate } from '@/types/candidate';
 
 interface CandidateModalProps {
   candidate: Candidate | null;
@@ -79,8 +62,8 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
   if (!isOpen || !initialCandidate) return null;
 
   const currentCandidate = isEditing ? formData : (initialCandidate || {});
-  const experiences = (currentCandidate.experiences || []) as Experience[];
-  const educations = (currentCandidate.educations || []) as Education[];
+  const experiences = (currentCandidate.experiences || []) as unknown as Experience[];
+  const educations = (currentCandidate.educations || []) as unknown as Education[];
   const skills = (currentCandidate.skills || []) as string[];
   const languages = (currentCandidate.languages || []) as string[];
 
@@ -96,7 +79,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
       } else {
         toast.error(result.error || "Erreur lors de la sauvegarde.");
       }
-    } catch (e) {
+    } catch {
       toast.error("Erreur de connexion au serveur.");
     } finally {
       setIsSaving(false);

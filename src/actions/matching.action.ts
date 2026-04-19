@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { deductCredit, checkCredits } from "./credits.action";
 import { extractTextFromFile } from "@/lib/document";
 import { generateMatchingScore, extractCandidateInfo, validateDocumentConformity } from "@/lib/ai";
-import { logError, logInfo, logWarn } from "./logger.action";
+import { logError, logInfo } from "./logger.action";
 
 /**
  * Chef d'Orchestre : Vérification crédit -> Extraction texte -> IA -> Sauvegarde DB -> Déduction crédit.
@@ -76,7 +76,13 @@ export async function processMatchingWorkflow(formData: FormData) {
 
     // Validation de conformité de la fiche de poste
     console.log("[Workflow] Validation conformité Job...");
-    const jobValidation = await validateDocumentConformity(jobText, 'job');
+    const jobFileData = jobFile ? {
+       buffer: Buffer.from(await jobFile.arrayBuffer()),
+       mimeType: jobFile.type || 'application/pdf',
+       isScanned: false // On suppose que la JD n'est pas un scan par défaut, mais au besoin on peut affiner
+    } : undefined;
+
+    const jobValidation = await validateDocumentConformity(jobText, 'job', jobFileData);
     if (!jobValidation.isConform) {
       return { success: false, error: `La fiche de poste ne semble pas valide : ${jobValidation.reason}` };
     }
@@ -109,7 +115,7 @@ export async function processMatchingWorkflow(formData: FormData) {
 
     // Validation de conformité du CV
     console.log("[Workflow] Validation conformité CV...");
-    const cvValidation = await validateDocumentConformity(cvText, 'cv');
+    const cvValidation = await validateDocumentConformity(cvText, 'cv', cvFileData);
     if (!cvValidation.isConform) {
       return { success: false, error: `Le document du candidat ne semble pas être un CV valide : ${cvValidation.reason}` };
     }
@@ -130,10 +136,14 @@ export async function processMatchingWorkflow(formData: FormData) {
 
     const finalCandidateName = `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || candidateName;
 
+    // Helper de troncation pour éviter les erreurs "too long" même après passage en TEXT (64kb)
+    const truncate = (str: string | undefined | null, max: number) => 
+      str ? str.substring(0, max) : str;
+
     const mission = await prisma.mission.create({
       data: {
         userId,
-        title: jobTitle,
+        title: truncate(jobTitle, 1000) || "Sans titre",
         description: jobText,
       }
     });
@@ -141,19 +151,19 @@ export async function processMatchingWorkflow(formData: FormData) {
     const candidate = await prisma.candidate.create({
       data: {
         userId,
-        name: finalCandidateName,
-        firstName: candidateInfo.firstName,
-        lastName: candidateInfo.lastName,
-        email: candidateInfo.email,
-        phone: candidateInfo.phone,
-        address: candidateInfo.address,
-        linkedin: candidateInfo.linkedin,
-        website: candidateInfo.website,
-        summary: candidateInfo.summary,
-        languages: (candidateInfo.languages || []) as any,
-        skills: (candidateInfo.skills || []) as any,
-        experiences: (candidateInfo.experiences || []) as any,
-        educations: (candidateInfo.educations || []) as any,
+        name: truncate(finalCandidateName, 500) || "Candidat",
+        firstName: truncate(candidateInfo.firstName, 200),
+        lastName: truncate(candidateInfo.lastName, 200),
+        email: truncate(candidateInfo.email, 200),
+        phone: truncate(candidateInfo.phone, 200),
+        address: truncate(candidateInfo.address, 500),
+        linkedin: truncate(candidateInfo.linkedin, 500),
+        website: truncate(candidateInfo.website, 500),
+        summary: candidateInfo.summary, // Déjà LongText
+        languages: (candidateInfo.languages || []) as Prisma.InputJsonValue,
+        skills: (candidateInfo.skills || []) as Prisma.InputJsonValue,
+        experiences: (candidateInfo.experiences || []) as Prisma.InputJsonValue,
+        educations: (candidateInfo.educations || []) as Prisma.InputJsonValue,
         cvText,
       }
     });
@@ -196,6 +206,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       success: true, 
       data: {
         ...resultIA,
+        candidateInfo,
         jobDescription: mission.description,
         fullCandidate: candidate
       }, 

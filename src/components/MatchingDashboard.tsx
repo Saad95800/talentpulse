@@ -4,21 +4,20 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { setLoading, setLoadingStep, setResult, setError } from '@/store/matchingSlice';
+import { setLoading, setLoadingStep, setBatchProgress, setResult, setError } from '@/store/matchingSlice';
 import { updateCredits } from '@/store/userSlice';
 import { processMatchingWorkflow } from '@/actions/matching.action';
-import { useAuth } from '@/hooks/useAuth';
-import { logError, logWarn } from '@/actions/logger.action';
+import { MatchResult } from '@/lib/ai';
 import { 
   FileUp, 
   FileText, 
   X, 
   CheckCircle2, 
   AlertCircle,
-  Zap,
+  Type,
   Loader2,
-  Sparkles,
-  Type
+  Zap,
+  Sparkles
 } from 'lucide-react';
 
 interface MatchingDashboardProps {
@@ -28,13 +27,13 @@ interface MatchingDashboardProps {
 interface DocumentInputProps {
   label: string;
   description: string;
-  files: File[]; // Remplacé single file par tableau
+  files: File[];
   setFiles: (files: File[]) => void;
   text: string;
   setText: (text: string) => void;
   inputType: 'file' | 'text';
   setInputType: (type: 'file' | 'text') => void;
-  isMulti?: boolean; // Nouveau prop
+  isMulti?: boolean;
   accept?: Record<string, string[]>;
 }
 
@@ -58,13 +57,11 @@ function DocumentInput({
       const newFiles = [...files];
       
       for (const file of acceptedFiles) {
-        // Limite de 10 Mo
         if (file.size > 10 * 1024 * 1024) {
           dispatch(setError(`Le fichier "${file.name}" est trop volumineux (max 10 Mo).`));
           continue;
         }
 
-        // Limite du nombre de fichiers par batch (5 max pour tous, sauf ADMIN si besoin, mais restons sur 5 comme consigne)
         const limit = 5;
         if (newFiles.length >= limit) {
           dispatch(setError(`Limite de ${limit} CV maximum par demande atteinte.`));
@@ -72,7 +69,6 @@ function DocumentInput({
         }
 
         let processedFile = file;
-        // Compression image
         if (file.type.startsWith('image/')) {
           try {
             processedFile = await compressImage(file);
@@ -84,7 +80,6 @@ function DocumentInput({
         if (isMulti) {
           newFiles.push(processedFile);
         } else {
-          // Si pas multi (ex: fiche de poste), on remplace
           setFiles([processedFile]);
           dispatch(setError(""));
           return;
@@ -130,7 +125,6 @@ function DocumentInput({
 
       {inputType === 'file' ? (
         <div className="space-y-3">
-          {/* Liste des fichiers sélectionnés */}
           {files.map((file, idx) => (
             <div key={idx} className="relative p-7 rounded-[2rem] border-2 border-emerald-500 bg-emerald-50/30 flex items-center gap-4 transition-all animate-in fade-in zoom-in duration-300">
               <div className="p-3.5 bg-emerald-500 rounded-2xl text-white shadow-lg shadow-emerald-500/20">
@@ -246,7 +240,7 @@ async function compressImage(file: File): Promise<File> {
 
 export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardProps) {
   const dispatch = useDispatch();
-  const { loading, loadingStep, error } = useSelector((state: RootState) => state.matching);
+  const { loading, error, loadingStep } = useSelector((state: RootState) => state.matching);
   const [isLoadingInternal, setIsLoadingInternal] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
@@ -265,10 +259,11 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
   const userId = useSelector((state: RootState) => state.user.user?.id);
 
   const handleMatch = async () => {
-    console.log("[MatchingDashboard] Bouton cliqué. Démarrage du workflow.");
+    console.log("%c[Dashboard] 🚀 Bouton cliqué. Démarrage du workflow.", "color: #10b981; font-weight: bold;");
     setIsLoadingInternal(true);
     dispatch(setLoading(true));
     dispatch(setError(""));
+    console.log("%c[Dashboard] 🔄 setLoading(true) envoyé.", "color: #10b981;");
     
     // Validation
     const hasJob = (jobInputType === 'file' && jobFiles.length > 0) || (jobInputType === 'text' && jobText.trim().length > 0);
@@ -300,7 +295,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
     }
 
     const jobFile = jobFiles[0] || null;
-    const finalResults: any[] = [];
+    const finalResults: (MatchResult & { status?: 'success' | 'error' })[] = [];
 
     // On déduit UN SEUL crédit pour toute l'opération (sauf si ADMIN)
     if (role !== 'ADMIN') {
@@ -345,7 +340,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
         } else {
           dispatch(setError(result.error || "Échec de l'analyse."));
         }
-      } catch (e) {
+      } catch {
         dispatch(setError("Erreur technique."));
       } finally {
         setIsLoadingInternal(false);
@@ -358,6 +353,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
       
       for (let i = 0; i < total; i++) {
         const currentCv = cvFiles[i];
+        dispatch(setBatchProgress({ current: i + 1, total }));
         dispatch(setLoadingStep(`Analyse du candidat ${i + 1}/${total}...`));
         
         const formData = new FormData();
@@ -384,7 +380,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
               competences_validees: []
             });
           }
-        } catch (e) {
+        } catch {
            finalResults.push({ 
              score: 0, 
              candidateInfo: { firstName: currentCv.name, lastName: "(Erreur tech)" },

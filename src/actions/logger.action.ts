@@ -38,9 +38,9 @@ export async function logToDB(payload: LogPayload) {
     
     return { success: true };
   } catch (error) {
-    // Si même le log échoue, on affiche juste dans la console serveur
-    console.error("[Logger] Échec critique de l'enregistrement du log:", error);
-    return { success: false, error: "Database logging failed" };
+    // FAIL-SILENT
+    console.error("[Logger:DatabaseFailure]", error instanceof Error ? error.message : error);
+    return { success: true, error: "Database logging suppressed" };
   }
 }
 

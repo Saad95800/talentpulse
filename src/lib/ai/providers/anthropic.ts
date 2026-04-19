@@ -25,10 +25,10 @@ export class AnthropicProvider implements IAIProvider {
       const block = response.content.find(b => b.type === 'text');
       if (!block || block.type !== 'text') throw new Error('Réponse Anthropic vide.');
       return block.text;
-    } catch (e) {
-      const msg: string = e instanceof Error ? e.message : '';
-      // @ts-expect-error - status property is dynamic on SDK errors
-      const status = e?.status;
+    } catch (e: unknown) {
+      const error = e as { message?: string; status?: number };
+      const msg: string = error.message || '';
+      const status = error.status;
 
       if (status === 404 || msg.includes('not_found')) {
         throw new Error(
@@ -68,7 +68,7 @@ export class AnthropicProvider implements IAIProvider {
         type: 'image',
         source: {
           type: 'base64',
-          media_type: mimeType as any,
+          media_type: mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
           data: buffer.toString('base64'),
         },
       });

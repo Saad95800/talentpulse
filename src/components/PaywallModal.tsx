@@ -45,13 +45,13 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
           <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-300 border border-slate-300 text-center">
             <h2 className="text-3xl font-black text-main mb-3 tracking-tight">Passez à la vitesse supérieure !</h2>
             <p className="text-slate-600 font-bold mb-6 leading-relaxed">
-              Pour seulement <span className="text-primary text-2xl">19,99€ HT / mois</span>, libérez toute la puissance de TalentPulse.
+              Pour seulement <span className="text-primary text-2xl">39,90€ / mois</span>, libérez toute la puissance de TalentPulse.
             </p>
 
             <div className="space-y-4 mb-8 text-left max-w-xs mx-auto bg-slate-50 p-6 rounded-2xl border border-slate-200">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Matchings illimités <span className="text-[10px] text-slate-400">(max 30/jour)</span></span>
+                <span className="text-sm font-bold text-main">100 Crédits de matching / mois</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -59,7 +59,7 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Export PDF de l'analyse</span>
+                <span className="text-sm font-bold text-main">Export PDF de l'analyse illimité</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -68,16 +68,28 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
             </div>
 
             <div className="flex flex-col gap-4">
-              <a 
-                href="https://calendly.com/contact-reactivedigital/30min" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <button 
+                onClick={async () => {
+                  try {
+                    const { getPremiumCheckoutUrlAction } = await import('@/actions/payment.action');
+                    const userId = (window as any).userId || (document as any).cookie.match(/userId=([^;]+)/)?.[1]; 
+                    // Note: En prod, on récupère l'ID via le state global ou le contexte
+                    const res = await getPremiumCheckoutUrlAction(userId);
+                    if (res.success && res.url) {
+                      window.location.href = res.url;
+                    } else {
+                      alert(res.error || "Erreur lors de l'initialisation du paiement.");
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert("Une erreur technique est survenue.");
+                  }
+                }}
                 className="w-full bg-primary text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-primary-hover hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20"
               >
-                <Calendar className="w-5 h-5" />
-                Réserver une démo RH
-                <ExternalLink className="w-4 h-4 opacity-70" />
-              </a>
+                <Zap className="w-5 h-5" />
+                Démarrer l&apos;abonnement Premium
+              </button>
               
               <button 
                 onClick={onClose}
@@ -88,9 +100,9 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
             </div>
           </div>
 
-          <div className="mt-8 flex items-center justify-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 py-3 rounded-2xl animate-pulse border border-primary/20">
+          <div className="mt-8 flex items-center justify-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 py-3 rounded-2xl border border-primary/20">
             <Zap className="w-4 h-4 fill-current" />
-            Offre spéciale : 1 mois offert pour les early adopters
+            Activation instantanée après paiement
           </div>
         </div>
       </div>

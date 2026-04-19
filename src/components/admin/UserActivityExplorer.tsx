@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { 
@@ -14,39 +14,65 @@ import {
   ChevronRight,
   User as UserIcon,
   Zap,
-  ShieldCheck,
   CreditCard
 } from "lucide-react";
 import { getAllUsersAdminAction, getUserDetailedActivityAdminAction } from "@/actions/activity.action";
+
+interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  credits: number;
+}
+
+interface AdminActivity {
+  id: string;
+  type: string;
+  description: string;
+  path: string;
+  target?: string;
+  createdAt: string | Date;
+}
+
+interface SelectedUserDetail extends AdminUser {
+  matches: Record<string, unknown>[];
+  activities: AdminActivity[];
+}
 
 interface UserActivityExplorerProps {
   token: string;
 }
 
 export default function UserActivityExplorer({ token }: UserActivityExplorerProps) {
-  const [users, setUsers] = useState<any[]>([]);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<SelectedUserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadUsers();
-  }, [token]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     const res = await getAllUsersAdminAction(token);
-    if (res.success && res.users) setUsers(res.users);
+    if (res.success && res.users) {
+      setUsers(res.users as AdminUser[]);
+    }
     setLoading(false);
-  };
+  }, [token]);
 
   const loadUserDetails = async (userId: string) => {
     setLoadingDetails(true);
     const res = await getUserDetailedActivityAdminAction(token, userId);
-    if (res.success && res.user) setSelectedUser(res.user);
+    if (res.success && res.user) {
+      setSelectedUser(res.user as SelectedUserDetail);
+    }
     setLoadingDetails(false);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUsers();
+  }, [loadUsers]);
 
   const filteredUsers = users.filter(u => 
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -170,7 +196,7 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-800/50">
-                    {selectedUser.activities.map((act: any) => (
+                    {selectedUser.activities.map((act: AdminActivity) => (
                       <div key={act.id} className="p-4 flex items-start gap-4 hover:bg-slate-800/30 transition-colors group">
                         <div className={`mt-1 p-2 rounded-lg ${
                           act.type === 'PAGE_VIEW' ? "bg-purple-500/10 text-purple-400" :

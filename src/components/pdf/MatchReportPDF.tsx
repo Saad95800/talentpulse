@@ -5,6 +5,7 @@ import { pdfStyles } from './PDFTheme';
 import { MatchHeader } from './sections/MatchHeader';
 import { MatchSkills } from './sections/MatchSkills';
 import { MatchVerdict } from './sections/MatchVerdict';
+import { MatchQuestions } from './sections/MatchQuestions';
 
 interface MatchReportPDFProps {
   result: MatchResult;
@@ -31,11 +32,13 @@ export default function MatchReportPDF({ result, candidateName }: MatchReportPDF
         {/* Verdict qualitatif */}
         <MatchVerdict verdict={result.argumentaire_client} />
 
+        {/* Questions d'entretien */}
+        <MatchQuestions questions={result.questions_candidat} />
+
         {/* Pied de page formel */}
         <View style={pdfStyles.footer} fixed>
           <Text>
-            CONFIDENTIEL • Document généré par TalentMatcher AI • Ce rapport constitue une aide à la décision. 
-            L'évaluation finale et la validation des compétences relèvent de la responsabilité de l'expert métier ou du recruteur.
+            {"CONFIDENTIEL • Document généré par TalentMatcher AI • Ce rapport constitue une aide à la décision. L'évaluation finale et la validation des compétences relèvent de la responsabilité de l'expert métier ou du recruteur."}
           </Text>
           <Text style={{ marginTop: 4, fontWeight: 'bold' }}>
             © {new Date().getFullYear()} TalentMatcher - www.talentmatcher.ai

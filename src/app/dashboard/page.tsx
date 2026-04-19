@@ -6,15 +6,15 @@ import { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
 import MatchingDashboard from '@/components/MatchingDashboard';
 import MatchResultView from '@/components/MatchResultView';
-import MatchingLoader from '@/components/MatchingLoader';
 import PaywallModal from '@/components/PaywallModal';
 import { resetResult, setResult } from '@/store/matchingSlice';
 import VivierManager from '@/components/VivierManager';
 import HistoryList from '@/components/HistoryList';
+import SubscriptionManager from '@/components/SubscriptionManager';
 import { MatchResult } from '@/lib/ai';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/store/userSlice';
-import { LogOut, LayoutDashboard, RefreshCcw, History, Zap } from 'lucide-react';
+import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard } from 'lucide-react';
 import MultiMatchResultView from '@/components/MultiMatchResultView';
 
 export default function DashboardPage() {
@@ -22,9 +22,9 @@ export default function DashboardPage() {
   const dispatch = useDispatch();
   const { user, isLoggedIn } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
-  const { currentResult, results, loading } = useSelector((state: RootState) => state.matching);
+  const { currentResult, results } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique'>('analyse');
+  const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique' | 'abonnement'>('analyse');
 
   // Gestion de la session via le hook useAuth
   useAuth();
@@ -60,18 +60,6 @@ export default function DashboardPage() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Global Matching Loader Overlay - PRIORITY OVERLAY */}
-      {loading && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-md" 
-          style={{ zIndex: 999999, display: 'flex', opacity: 1, visibility: 'visible' }}
-        >
-           <div className="w-full max-w-lg p-10 bg-white rounded-[3rem] shadow-[0_0_100px_rgba(37,99,235,0.5)] border border-white/20 relative">
-              <MatchingLoader />
-           </div>
-        </div>
-      )}
-
       <main className="min-h-screen bg-background pb-20">
 
       {/* Header du Dashboard */}
@@ -107,6 +95,12 @@ export default function DashboardPage() {
               icon={<History className="w-4 h-4" />}
               label="Historique"
             />
+            <TabButton 
+              active={activeTab === 'abonnement'} 
+              onClick={() => setActiveTab('abonnement')}
+              icon={<CreditCard className="w-4 h-4" />}
+              label="Abonnement"
+            />
           </nav>
 
             <div className="flex items-center gap-4">
@@ -134,25 +128,31 @@ export default function DashboardPage() {
       </header>
 
       {/* Navigation Mobile */}
-      <div className="md:hidden sticky top-[73px] z-20 bg-white border-b border-slate-300 p-2">
-        <div className="flex gap-2">
+      <div className="md:hidden sticky top-[73px] z-20 bg-white border-b border-slate-300 p-2 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
           <button 
             onClick={() => setActiveTab('analyse')}
-            className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'analyse' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
+            className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'analyse' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
           >
             Analyse
           </button>
           <button 
             onClick={() => setActiveTab('vivier')}
-            className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'vivier' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
+            className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'vivier' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
           >
             Vivier
           </button>
           <button 
             onClick={() => setActiveTab('historique')}
-            className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'historique' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
+            className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'historique' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
           >
             Historique
+          </button>
+          <button 
+            onClick={() => setActiveTab('abonnement')}
+            className={`px-6 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'abonnement' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 border border-slate-200 text-muted'}`}
+          >
+            Abonnement
           </button>
         </div>
       </div>
@@ -188,13 +188,21 @@ export default function DashboardPage() {
           <div className="space-y-8">
             <VivierManager />
           </div>
-        ) : (
+        ) : activeTab === 'historique' ? (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 overflow-hidden min-h-[500px]">
             <HistoryList onSelectAnalysis={(res: MatchResult) => {
               dispatch(setResult(res));
               setActiveTab('analyse');
             }} />
           </div>
+        ) : (
+          <SubscriptionManager 
+            userId={user.id}
+            userPlan={user.plan || 'FREE'}
+            subStatus={user.subscriptionStatus || 'INACTIVE'}
+            nextBillingDate={user.nextBillingDate}
+            credits={credits}
+          />
         )}
 
         {/* Pied de page du Dashboard */}
@@ -237,15 +245,4 @@ function TabButton({ active, onClick, icon, label }: { active: boolean, onClick:
   );
 }
 
-function Tip({ title, desc }: { title: string, desc: string }) {
-  return (
-    <li className="flex gap-4 group">
-      <div className="w-1.5 h-auto bg-slate-200 rounded-full group-hover:bg-primary transition-colors" />
-      <div>
-        <h5 className="text-sm font-bold text-main mb-1">{title}</h5>
-        <p className="text-xs text-muted leading-relaxed font-medium">{desc}</p>
-      </div>
-    </li>
-  );
-}
 

@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signToken, verifyToken } from "@/lib/auth";
-import { sendVerificationEmail } from "@/lib/mail";
+import { sendVerificationEmail, syncContactToBrevo } from "@/lib/mail";
 import { v4 as uuidv4 } from "uuid";
 
 import { z } from "zod";
@@ -18,7 +18,7 @@ const registerSchema = z.object({
 /**
  * Inscription d'un nouvel utilisateur
  */
-export async function registerAction(data: any) {
+export async function registerAction(data: unknown) {
   try {
     // 0. Gestion du payload : si c'est un tableau (test manuel), on prend le premier élément
     const formData = Array.isArray(data) ? data[0] : data;
@@ -60,9 +60,15 @@ export async function registerAction(data: any) {
         isVerified: false,
         // VIP logic: contact@reactivedigital.fr is admin with unlimited credits
         credits: email.toLowerCase() === 'contact@reactivedigital.fr' ? 999999 : 3,
-        role: email.toLowerCase() === 'contact@reactivedigital.fr' ? "ADMIN" : "USER"
       },
     });
+    
+    // 5.5 Synchronisation Brevo (CRM)
+    try {
+      await syncContactToBrevo(email, name, phone);
+    } catch (brevoError) {
+      console.error("❌ [Brevo] Erreur synchronisation contact:", brevoError);
+    }
 
     // 6. Envoi de l'email de vérification
     try {
@@ -130,6 +136,9 @@ export async function loginAction(formData: { email: string; password: string })
         phone: user.phone,
         credits: user.credits,
         role: user.role,
+        plan: user.plan,
+        subscriptionStatus: user.subscriptionStatus,
+        nextBillingDate: user.nextBillingDate,
       }
     };
 
@@ -188,7 +197,10 @@ export async function validateTokenAction(token: string) {
         phone: true, 
         credits: true, 
         role: true, 
-        isVerified: true 
+        isVerified: true,
+        plan: true,
+        subscriptionStatus: true,
+        nextBillingDate: true
       }
     });
 
@@ -206,6 +218,9 @@ export async function validateTokenAction(token: string) {
         phone: user.phone,
         credits: user.credits,
         role: user.role,
+        plan: user.plan,
+        subscriptionStatus: user.subscriptionStatus,
+        nextBillingDate: user.nextBillingDate,
       }
     };
   } catch {

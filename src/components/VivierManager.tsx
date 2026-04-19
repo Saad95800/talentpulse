@@ -23,37 +23,7 @@ import CandidateModal from './CandidateModal';
 import InfoModal from './InfoModal';
 import ConfirmModal from './ConfirmModal';
 
-interface User {
-  id: string;
-  name?: string | null;
-  credits: number;
-}
-
-interface Candidate {
-  id: string;
-  userId: string;
-  name: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  linkedin?: string | null;
-  website?: string | null;
-  summary?: string | null;
-  languages?: any;
-  skills?: any;
-  experiences?: any;
-  educations?: any;
-  createdAt: string;
-}
-
-interface Mission {
-  id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-}
+import { Candidate, Mission } from '@/types/candidate';
 
 export default function VivierManager() {
   const { user } = useAuth();
@@ -96,7 +66,7 @@ export default function VivierManager() {
         ]);
 
         if (candRes.success && candRes.candidates) {
-          setCandidates(candRes.candidates as any);
+          setCandidates(candRes.candidates as Candidate[]);
         }
         
         if (missRes.success && missRes.missions) {
@@ -244,7 +214,7 @@ export default function VivierManager() {
         candidate={selectedCandidate} 
         onUpdate={(updated) => {
           setCandidates(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated, name: `${updated.firstName || ''} ${updated.lastName || ''}`.trim() || c.name } : c));
-          setSelectedCandidate(updated as any);
+          setSelectedCandidate(updated as Candidate);
         }}
       />
 
@@ -280,7 +250,7 @@ function VivierItem({
   icon 
 }: { 
   title: string, 
-  date: string, 
+  date: Date | string, 
   onDelete: () => void, 
   isLoading: boolean,
   icon: React.ReactNode 
@@ -321,7 +291,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode, text: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="p-6 bg-slate-100 rounded-full mb-4 text-slate-400">
-        {React.cloneElement(icon as React.ReactElement, { className: 'w-10 h-10' } as any)}
+        {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-10 h-10' })}
       </div>
       <p className="text-sm font-bold text-main mb-1">{text}</p>
       <p className="text-[10px] text-muted uppercase font-black tracking-widest">Lancez une analyse pour commencer</p>

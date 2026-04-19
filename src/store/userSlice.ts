@@ -7,6 +7,9 @@ export interface User {
   phone: string;
   credits: number;
   role: 'ADMIN' | 'USER';
+  plan?: string;
+  subscriptionStatus?: string | null;
+  nextBillingDate?: string | Date | null;
 }
 
 interface UserState {

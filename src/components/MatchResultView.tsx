@@ -11,7 +11,8 @@ import {
   Award,
   AlertTriangle,
   FileText,
-  UserSearch
+  UserSearch,
+  HelpCircle
 } from 'lucide-react';
 import InfoModal from './InfoModal';
 
@@ -23,7 +24,7 @@ const ExportPDFButton = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex items-center gap-3 bg-slate-100 text-slate-400 px-10 py-5 rounded-2xl font-black text-lg border border-slate-200 animate-pulse cursor-wait">
-        Initialisation de l'export...
+        {"Initialisation de l'export..."}
       </div>
     )
   }
@@ -113,13 +114,13 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
             
             {/* Nouvelles actions de consultation */}
             <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-8 pt-6 border-t border-slate-100">
-               <button 
-                 onClick={() => setIsJobModalOpen(true)}
-                 className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all border border-slate-200 cursor-pointer group"
-               >
-                 <FileText className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                 Voir l'offre
-               </button>
+                <button 
+                  onClick={() => setIsJobModalOpen(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all border border-slate-200 cursor-pointer group"
+                >
+                  <FileText className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  {"Voir l'offre"}
+                </button>
                <button 
                  onClick={() => setIsCandidateModalOpen(true)}
                  className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all border border-slate-200 cursor-pointer group"
@@ -188,6 +189,33 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
         </div>
       </section>
 
+      {/* Questions à poser au candidat */}
+      {result.questions_candidat && result.questions_candidat.length > 0 && (
+        <section className="mt-8 bg-white rounded-[3rem] p-10 shadow-2xl shadow-slate-200 border border-slate-200">
+          <div className="flex items-center gap-4 mb-8 border-b border-slate-100 pb-6">
+            <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+              <HelpCircle className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-main leading-tight">Questions d'Entretien</h3>
+              <p className="text-sm font-bold text-muted uppercase tracking-wider">Vérification des qualifications critiques</p>
+            </div>
+          </div>
+          <div className="grid gap-4">
+            {result.questions_candidat.map((question, index) => (
+              <div key={index} className="flex gap-5 p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary/30 transition-all">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-black shrink-0">
+                  {index + 1}
+                </span>
+                <p className="text-lg font-bold text-main leading-snug pt-0.5">
+                  {question}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Actions */}
       <div className="mt-12 flex justify-center">
         {isClient && (
@@ -212,7 +240,7 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
         onClose={() => setIsCandidateModalOpen(false)} 
         title={`Profil : ${displayCandidateName}`}
         type="candidate"
-        data={result.fullCandidate || result.candidateInfo}
+        data={(result.fullCandidate || result.candidateInfo || {}) as Record<string, unknown>}
       />
     </div>
   );

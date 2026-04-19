@@ -28,18 +28,19 @@ export class GeminiProvider implements IAIProvider {
     operation: () => Promise<T>, 
     options: RetryOptions = { maxRetries: 3, initialDelayMs: 1500 }
   ): Promise<T> {
-    let lastError: any;
+    let lastError: unknown;
     
     for (let i = 0; i <= options.maxRetries; i++) {
       try {
         return await operation();
-      } catch (err: any) {
+      } catch (err: unknown) {
         lastError = err;
-        const msg = (err.message || "").toLowerCase();
+        const error = err as { message?: string; name?: string; status?: number };
+        const msg = (error.message || "").toLowerCase();
         
         // Détection des erreurs éligibles au Retry
         const isNetworkError = msg.includes('fetch failed') || msg.includes('network') || msg.includes('econnreset');
-        const isTimeout = msg.includes('aborted') || msg.includes('timeout') || msg.includes('deadline exceeded') || err.name === 'AbortError';
+        const isTimeout = msg.includes('aborted') || msg.includes('timeout') || msg.includes('deadline exceeded') || error.name === 'AbortError';
         const isRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('limit');
         const isServerSide = msg.includes('500') || msg.includes('503') || msg.includes('504') || msg.includes('bad gateway');
 
@@ -47,7 +48,7 @@ export class GeminiProvider implements IAIProvider {
           const delay = options.initialDelayMs * Math.pow(2, i);
           const type = isTimeout ? "TIMEOUT" : isRateLimit ? "QUOTA" : "RÉSEAU/SERVEUR";
           
-          console.warn(`[Gemini:Retry] Tentative ${i + 1} échouée [${type}] : ${err.message}. Nouvel essai dans ${delay}ms...`);
+          console.warn(`[Gemini:Retry] Tentative ${i + 1} échouée [${type}] : ${msg}. Nouvel essai dans ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -68,7 +69,7 @@ export class GeminiProvider implements IAIProvider {
           maxOutputTokens: options.maxTokens ?? 32000,
           temperature: options.temperature ?? 0,
           responseMimeType: options.json ? 'application/json' : 'text/plain',
-          responseSchema: options.schema,
+          responseSchema: options.schema as any,
         },
       });
 
@@ -112,11 +113,11 @@ export class GeminiProvider implements IAIProvider {
           maxOutputTokens: options.maxTokens ?? 32000,
           temperature: options.temperature ?? 0,
           responseMimeType: options.json ? 'application/json' : 'text/plain',
-          responseSchema: options.schema,
+          responseSchema: options.schema as any,
         },
       });
 
-      const promptParts: any[] = [];
+      const promptParts: { text?: string; inlineData?: { data: string; mimeType: string } }[] = [];
       const pageLimitInstruction = mimeType === 'application/pdf' 
         ? "\n\nIMPORTANT: Analyse UNIQUEMENT les 10 premières pages si le document est long." 
         : "";
@@ -133,7 +134,8 @@ export class GeminiProvider implements IAIProvider {
       });
 
       const result = await model.generateContent({
-        contents: [{ role: 'user', parts: promptParts }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        contents: [{ role: 'user', parts: promptParts as any }],
       }, { timeout: 300000 }); // Augmenté à 300s (5min) pour l'OCR et les PDF lourds
 
       const response = await result.response;

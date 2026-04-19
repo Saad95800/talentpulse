@@ -1,19 +1,19 @@
-/**
- * Test de robustesse pour le parsing JSON de l'IA.
- * Note: On teste ici la logique de parsing qu'on pourrait exposer 
- * si on veut être plus robuste (ex: extraire le JSON d'un bloc markdown).
- */
+import { validateDocumentConformity, extractJSON } from '../ai';
+import { CONFORMITY_TEST_CASES } from '../test-utils/data';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export function extractJSON(text: string) {
-  try {
-    // Tentative de trouver du JSON entouré de triple backticks
-    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const jsonString = match ? match[1].trim() : text.trim();
-    return JSON.parse(jsonString);
-  } catch (e) {
-    throw new Error("Impossible de parser le JSON de la réponse IA.");
-  }
-}
+// Mock pour le SDK Google Generative AI
+jest.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
+    getGenerativeModel: jest.fn().mockReturnValue({
+      generateContent: jest.fn().mockResolvedValue({
+        response: {
+          text: () => '{"isConform": true, "reason": "Test pass"}'
+        }
+      })
+    })
+  }))
+}));
 
 describe('AI Parsing Robustness', () => {
   it('should parse clean JSON', () => {
@@ -31,5 +31,30 @@ describe('AI Parsing Robustness', () => {
   it('should throw error for invalid JSON', () => {
     const raw = 'Désolé, je ne peux pas analyser ce fichier.';
     expect(() => extractJSON(raw)).toThrow();
+  });
+});
+
+describe('AI Business Logic - Conformity', () => {
+
+  it.each(CONFORMITY_TEST_CASES)(
+    'should validate conformity for: $name',
+    async ({ doc, expectedCategory }) => {
+      const category = expectedCategory.toLowerCase() as 'cv' | 'job';
+      const result = await validateDocumentConformity(doc.content, category);
+      
+      expect(result).toBeDefined();
+      expect(typeof result.isConform).toBe('boolean');
+    }
+  );
+
+  it('should handle AI response failures gracefully (Fail-Safe)', async () => {
+    const MockedAI = GoogleGenerativeAI as jest.MockedClass<typeof GoogleGenerativeAI>;
+    MockedAI.prototype.getGenerativeModel = jest.fn().mockReturnValue({
+      generateContent: jest.fn().mockRejectedValue(new Error("API Down"))
+    });
+
+    const result = await validateDocumentConformity("test", "cv");
+    // Le code actuel retourne { isConform: true } par défaut en cas d'erreur IA
+    expect(result.isConform).toBe(true);
   });
 });

@@ -14,19 +14,29 @@ const steps = [
 ];
 
 export default function MatchingLoader() {
-  const { loadingStep } = useSelector((state: RootState) => state.matching);
+  const { loading, loadingStep, batchCurrent, batchTotal } = useSelector((state: RootState) => state.matching);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
 
   // Réinitialisation du simulateur à chaque changement de CV (batch)
   useEffect(() => {
     if (loadingStep) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setCurrentStep(0);
       setProgress(0);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [loadingStep]);
 
   useEffect(() => {
+    if (!loading) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setCurrentStep(0);
+      setProgress(0);
+      /* eslint-enable react-hooks/set-state-in-effect */
+      return;
+    }
+
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => {
         const next = prev + 1;
@@ -46,12 +56,12 @@ export default function MatchingLoader() {
       clearInterval(stepInterval);
       clearInterval(progressInterval);
     };
-  }, [loadingStep]); // Dépendance sur loadingStep pour relancer les timers
+  }, [loading]); // Basé sur loading pour démarrer instantanément
 
   const step = steps[currentStep];
 
   return (
-    <div className="flex flex-col items-center justify-center p-10 min-h-[480px] select-none">
+    <div className="flex flex-col items-center justify-center p-10 min-h-[480px] select-none bg-white rounded-lg">
       {/* Orb animé */}
       <div className="relative mb-10">
         <div
@@ -85,6 +95,15 @@ export default function MatchingLoader() {
 
       {/* Texte central */}
       <div className="text-center space-y-3 max-w-xs">
+        {batchTotal > 1 && (
+          <div className="flex justify-center mb-6">
+            <div className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3 shadow-xl ring-4 ring-slate-100 animate-bounce">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Analyse du CV {batchCurrent} / {batchTotal}
+            </div>
+          </div>
+        )}
+
         {loadingStep && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 mb-2">
             <span className="px-4 py-1.5 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-primary/20">

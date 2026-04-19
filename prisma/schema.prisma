@@ -28,13 +28,21 @@ model User {
   activities        UserActivity[] // Historique d'activité
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  // ─── Facturation (Mollie) ─────────────────────────────
+  mollieCustomerId       String?    // ID Client Mollie
+  mollieSubscriptionId   String?    // ID Subscription Mollie
+  plan                   String     @default("FREE") // "FREE", "PREMIUM"
+  subscriptionStatus     String?    // "active", "canceled", "suspended"
+  nextBillingDate        DateTime?
+  payments               MolliePayment[]
 }
 
 model Mission {
   id          String        @id @default(uuid())
   userId      String
   user        User          @relation(fields: [userId], references: [id])
-  title       String
+  title       String        @db.Text
   description String        @db.LongText
   matches     MatchRecord[]
   createdAt   DateTime      @default(now())
@@ -47,14 +55,14 @@ model Candidate {
   id          String        @id @default(uuid())
   userId      String
   user        User          @relation(fields: [userId], references: [id])
-  name        String        
-  firstName   String?
-  lastName    String?
-  email       String?
-  phone       String?
-  address     String?
-  linkedin    String?
-  website     String?
+  name        String        @db.Text
+  firstName   String?       @db.Text
+  lastName    String?       @db.Text
+  email       String?       @db.Text
+  phone       String?       @db.Text
+  address     String?       @db.Text
+  linkedin    String?       @db.Text
+  website     String?       @db.Text
   summary     String?       @db.LongText
   languages   Json?
   skills      Json?
@@ -121,5 +129,21 @@ model UserActivity {
 
   @@index([userId])
   @@index([type])
+  @@index([createdAt])
+}
+
+model MolliePayment {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  amount           Float    // Montant total en euros
+  currency         String   @default("EUR")
+  molliePaymentId  String   @unique
+  method           String?  // "card", "ideal", etc.
+  status           String   // "paid", "failed", "expired"
+  receiptNumber    String   @unique // ex: RECU-2026-0001
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
   @@index([createdAt])
 }

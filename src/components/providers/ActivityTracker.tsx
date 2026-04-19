@@ -11,28 +11,27 @@ import { logUserActivityAction } from "@/actions/activity.action";
  */
 export default function ActivityTracker() {
   const { user } = useAuth();
+  const userId = user?.id;
   const pathname = usePathname();
   const lastPathname = useRef(pathname);
 
   // Buffer pour grouper les logs (évite de spammer le serveur)
-  const logBuffer = useRef<any[]>([]);
+  const logBuffer = useRef<Record<string, unknown>[]>([]);
   const flushTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const flushLogs = useCallback(async () => {
-    if (logBuffer.current.length === 0 || !user?.id) return;
+    if (logBuffer.current.length === 0 || !userId) return;
 
     const logsToProcess = [...logBuffer.current];
     logBuffer.current = [];
     
-    // Pour l'instant on les envoie un par un car l'action n'accepte pas de tableau
-    // Mais on pourrait optimiser l'action pour accepter un batch.
     for (const log of logsToProcess) {
-      logUserActivityAction({ ...log, userId: user.id });
+      logUserActivityAction({ ...log, userId });
     }
-  }, [user?.id]);
+  }, [userId]);
 
-  const queueLog = useCallback((type: string, data: any) => {
-    if (!user?.id) return;
+  const queueLog = useCallback((type: string, data: Record<string, unknown>) => {
+    if (!userId) return;
 
     logBuffer.current.push({
       type,
@@ -43,7 +42,7 @@ export default function ActivityTracker() {
 
     if (flushTimeout.current) clearTimeout(flushTimeout.current);
     flushTimeout.current = setTimeout(flushLogs, 2000); // Flush après 2s d'inactivité
-  }, [user?.id, pathname, flushLogs]);
+  }, [userId, pathname, flushLogs]);
 
   // Tracking de Navigation
   useEffect(() => {

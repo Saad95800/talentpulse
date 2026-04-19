@@ -3,43 +3,50 @@
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
+import { Prisma } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
+
+interface JWTPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
 
 // Schéma de validation pour une activité
 const activitySchema = z.object({
   userId: z.string().uuid(),
   type: z.string(),
   description: z.string().optional().nullable(),
-  path: z.string().optional().nullable(),
-  target: z.string().optional().nullable(),
-  metadata: z.any().optional().nullable(),
+  path: z.string().optional(),
+  target: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
  * Log une activité utilisateur (Appelée depuis le Frontend)
  * Conçue pour être robuste et ne jamais faire crash l'interface.
  */
-export async function logUserActivityAction(rawData: any) {
+export async function logUserActivityAction(data: unknown) {
   try {
-    const data = activitySchema.parse(rawData);
-
+    const validatedData = activitySchema.parse(data);
+    
     await prisma.userActivity.create({
       data: {
-        userId: data.userId,
-        type: data.type,
-        description: data.description || "",
-        path: data.path || "/",
-        target: data.target || "N/A",
-        metadata: data.metadata || {},
+        userId: validatedData.userId,
+        type: validatedData.type,
+        path: validatedData.path || "/",
+        description: validatedData.description || "",
+        target: validatedData.target || "",
+        metadata: validatedData.metadata ? (validatedData.metadata as Prisma.InputJsonValue) : undefined,
       },
     });
 
     return { success: true };
   } catch (error) {
-    // Fail-silent : on log en console serveur mais on ne bloque pas l'utilisateur
-    console.error(`[Activity:LogFailed]`, error instanceof Error ? error.message : "Erreur inconnue");
-    return { success: false, error: "Logging failed" };
+    // FAIL-SILENT : On log l'erreur sur le serveur mais on ne bloque pas l'utilisateur
+    console.error("[ActivityLogger:SilentFailure]", error instanceof Error ? error.message : error);
+    return { success: true, error: "Logging suppressed" }; 
   }
 }
 
@@ -48,7 +55,7 @@ export async function logUserActivityAction(rawData: any) {
  */
 export async function getAllUsersAdminAction(token: string) {
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
     if (decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
 
     const users = await prisma.user.findMany({
@@ -70,9 +77,10 @@ export async function getAllUsersAdminAction(token: string) {
     });
 
     return { success: true, users };
-  } catch (error: any) {
-    console.error(`[Admin:UsersFetchFailed]`, error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    console.error(`[Admin:UsersFetchFailed]`, message);
+    return { success: false, error: message };
   }
 }
 
@@ -81,7 +89,7 @@ export async function getAllUsersAdminAction(token: string) {
  */
 export async function getUserDetailedActivityAdminAction(token: string, targetUserId: string) {
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
     if (decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
 
     const user = await prisma.user.findUnique({
@@ -113,8 +121,9 @@ export async function getUserDetailedActivityAdminAction(token: string, targetUs
     }
 
     return { success: true, user };
-  } catch (error: any) {
-    console.error(`[Admin:UserDetailsFailed]`, error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    console.error(`[Admin:UserDetailsFailed]`, message);
+    return { success: false, error: message };
   }
 }

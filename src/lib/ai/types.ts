@@ -14,7 +14,7 @@ export interface AICompletionOptions {
   temperature?: number;
   system?:      string;
   json?:        boolean; // Indique si on veut un retour JSON pur
-  schema?:      any;     // Optionnel : schéma JSON pour forcer la structure
+  schema?:      Record<string, unknown>; // Optionnel : schéma JSON pour forcer la structure
 }
 
 export interface AIProviderConfig {
