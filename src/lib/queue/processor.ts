@@ -54,7 +54,7 @@ export async function matchingProcessor(job: Job<MatchingJobData>) {
     // 3. Lancer le matching
     const result = await processSingleMatch({
       userId,
-      jobTitle: "Analyse Groupée",
+      jobTitle: job.data.jobTitle || "Analyse Groupée",
       jobText,
       candidateName: `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || 'Candidat',
       cvText,

@@ -6,13 +6,16 @@ import { verifyToken } from "@/lib/auth";
 /**
  * Récupère l'historique des analyses pour un utilisateur spécifique
  */
-export async function getUserHistoryAction(userId: string, token: string) {
+export async function getUserHistoryAction(userId: string, token: string, page: number = 1, limit: number = 20) {
   try {
     // Sécurité : Vérifier le token
     const decoded = verifyToken(token) as { userId: string, role: string } | null;
     if (!decoded || decoded.userId !== userId) {
       return { success: false, error: "Non autorisé." };
     }
+
+    const totalCount = await prisma.matchRecord.count({ where: { userId } });
+    const totalPages = Math.ceil(totalCount / limit);
 
     const records = await prisma.matchRecord.findMany({
       where: { userId },
@@ -21,9 +24,17 @@ export async function getUserHistoryAction(userId: string, token: string) {
         candidate: true
       },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return JSON.parse(JSON.stringify({ success: true, records }));
+    return JSON.parse(JSON.stringify({ 
+      success: true, 
+      records, 
+      totalCount, 
+      totalPages,
+      currentPage: page 
+    }));
   } catch (error) {
     console.error("Erreur historique utilisateur:", error);
     return { success: false, error: "Impossible de récupérer l'historique." };

@@ -45,11 +45,13 @@ interface DocumentInputProps {
   setInputType: (type: 'file' | 'text') => void;
   isMulti?: boolean;
   accept?: Record<string, string[]>;
+  limit?: number;
 }
 
 function DocumentInput({ 
   label, description, files, setFiles, text, setText, inputType, setInputType, 
   isMulti = false,
+  limit = 5,
   accept = { 
     'application/pdf': ['.pdf'], 
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'], 
@@ -72,7 +74,6 @@ function DocumentInput({
           continue;
         }
 
-        const limit = 5;
         if (newFiles.length >= limit) {
           dispatch(setError(`Limite de ${limit} CV maximum par demande atteinte.`));
           break;
@@ -254,7 +255,10 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
   const [isLoadingInternal, setIsLoadingInternal] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
+  const plan = user?.plan || 'FREE';
   const role = user?.role || 'USER';
+
+  const cvLimit = plan === 'PREMIUM' ? 10 : 3;
   
   // States pour la Fiche de Poste
   const [jobInputType, setJobInputType] = useState<'file' | 'text'>('file');
@@ -289,9 +293,6 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
 
     checkActiveBatch();
   }, [userId, activeBatchId, dispatch]);
-
-  // --- Hook 2 : Polling du statut du batch ---
-  // --- Hook 2 : Polling supprimé (déplacé dans DashboardPage) ---
 
   const handleMatch = async () => {
     console.log("%c[Dashboard] 🚀 Bouton cliqué. Démarrage du workflow.", "color: #10b981; font-weight: bold;");
@@ -404,9 +405,6 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
 
   const isLoaderActive = loading || isLoadingInternal;
 
-  // Plus aucune UI bloquante
-  const showGlobalLoader = false;
-
   const isButtonDisabled = isLoaderActive || 
     (!(jobInputType === 'file' ? jobFiles.length > 0 : jobText.length > 10)) || 
     (!(cvInputType === 'file' ? cvFiles.length > 0 : cvText.length > 10));
@@ -416,11 +414,12 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
       <div className="grid md:grid-cols-2 gap-10 mb-12">
         <DocumentInput 
           label="Profil du Candidat"
-          description="Analysez jusqu'à 5 CV simultanément par demande"
+          description={`Analysez jusqu'à ${cvLimit} CV simultanément (${plan})`}
           files={cvFiles} setFiles={setCvFiles}
           text={cvText} setText={setCvText}
           inputType={cvInputType} setInputType={setCvInputType}
           isMulti={true}
+          limit={cvLimit}
         />
         <DocumentInput 
           label="Fiche de Poste"

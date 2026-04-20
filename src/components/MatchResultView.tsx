@@ -15,6 +15,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import InfoModal from './InfoModal';
+import CandidateModal from './CandidateModal';
 
 // Import dynamique du bouton d'export PDF avec SSR désactivé
 // Cela isole totalement @react-pdf/renderer et évite les erreurs de hooks/contexte
@@ -230,17 +231,15 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
       <InfoModal 
         isOpen={isJobModalOpen} 
         onClose={() => setIsJobModalOpen(false)} 
-        title={`Offre : ${result.candidateInfo?.lastName || 'Détails'}`} // On pourrait utiliser jobTitle si dispo
+        title={`Offre : ${result.jobTitle || 'Détails'}`}
         type="job"
         data={result.jobDescription || "Contenu de l'offre non disponible pour cette analyse."}
       />
 
-      <InfoModal 
+      <CandidateModal 
         isOpen={isCandidateModalOpen} 
         onClose={() => setIsCandidateModalOpen(false)} 
-        title={`Profil : ${displayCandidateName}`}
-        type="candidate"
-        data={(result.fullCandidate || result.candidateInfo || {}) as Record<string, unknown>}
+        candidate={(result.fullCandidate || result.candidateInfo || {}) as any}
       />
     </div>
   );

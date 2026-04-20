@@ -196,7 +196,7 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
           <View style={styles.colPrice}><Text style={styles.headerText}>Prix Unit.</Text></View>
         </View>
         <View style={styles.tableRow}>
-          <View style={styles.colDesc}><Text style={styles.rowText}>{planName} (100 crédits/mois)</Text></View>
+          <View style={styles.colDesc}><Text style={styles.rowText}>{planName} (300 crédits/mois)</Text></View>
           <View style={styles.colQty}><Text style={styles.rowText}>1</Text></View>
           <View style={styles.colPrice}><Text style={styles.rowText}>{amount.toFixed(2)} €</Text></View>
         </View>

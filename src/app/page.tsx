@@ -16,8 +16,13 @@ import RegisterForm from '@/components/RegisterForm';
 import LoginForm from '@/components/LoginForm';
 import { X } from 'lucide-react';
 
+import PublicNavbar from '@/components/PublicNavbar';
+import PublicFooter from '@/components/PublicFooter';
+import PricingGrid from '@/components/PricingGrid';
+
 export default function Home() {
   const router = useRouter();
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const { isLoggedIn } = useSelector((state: RootState) => state.user);
   const [authMode, setAuthMode] = React.useState<'none' | 'login' | 'register'>('none');
 
@@ -26,7 +31,15 @@ export default function Home() {
     if (isLoggedIn) {
       router.push('/dashboard');
     }
-  }, [isLoggedIn, router]);
+    
+    // Détection du mode via URL
+    if (searchParams) {
+      const mode = searchParams.get('mode');
+      if (mode === 'login' || mode === 'register') {
+        setAuthMode(mode as any);
+      }
+    }
+  }, [isLoggedIn, router, searchParams]);
 
   const handleStart = () => {
     if (isLoggedIn) {
@@ -36,39 +49,20 @@ export default function Home() {
     }
   };
 
-  const closeModal = () => setAuthMode('none');
+  const closeModal = () => {
+    setAuthMode('none');
+    // Nettoyer l'URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('mode');
+    window.history.replaceState({}, '', url);
+  };
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
-      {/* Navbar Minimaliste */}
-      <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <div className="group bg-primary p-2 rounded-xl">
-                <BrainCircuit className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
-              </div>
-              <span className="text-xl font-bold text-main tracking-tight cursor-default">
-                Talent<span className="text-primary">Pulse</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setAuthMode('login')}
-                className="text-sm font-bold text-muted hover:text-primary transition-colors px-3 py-2"
-              >
-                Connexion
-              </button>
-              <button 
-                onClick={handleStart}
-                className="bg-main text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm"
-              >
-                Essayer gratuitement
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar 
+        onLoginClick={() => setAuthMode('login')} 
+        onRegisterClick={() => setAuthMode('register')} 
+      />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
@@ -103,35 +97,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Modale d'Authentification Unique */}
-      {authMode !== 'none' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-main/40 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={closeModal}
-          />
-          <div className="relative w-full max-w-md animate-in zoom-in-95 duration-500">
-            <button 
-              onClick={closeModal}
-              className="absolute -top-12 right-0 p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden md:block"
-            >
-              <X className="w-8 h-8" />
-            </button>
-            
-            {authMode === 'register' ? (
-              <RegisterForm onSwitchToLogin={() => setAuthMode('login')} />
-            ) : (
-              <LoginForm 
-                onSuccess={() => router.push('/dashboard')} 
-                onSwitchToRegister={() => setAuthMode('register')} 
-              />
-            )}
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 bg-slate-50 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-main mb-4">Une offre simple, sans surprise.</h2>
+            <p className="text-muted text-lg max-w-2xl mx-auto">
+              Commencez gratuitement et passez à la vitesse supérieure dès que vous en avez besoin.
+            </p>
           </div>
+          
+          <PricingGrid isPublic={true} />
         </div>
-      )}
+      </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-white border-y border-slate-200">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-main mb-4">Pourquoi choisir TalentPulse ?</h2>
@@ -160,12 +141,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer Simple */}
-      <footer className="py-12 bg-background border-t border-slate-200 text-center">
-        <p className="text-muted text-sm px-4">
-          © 2026 TalentPulse. Produit micro-SaaS pour recruteurs autonomes.
-        </p>
-      </footer>
+      {/* Modale d'Authentification Unique */}
+      {authMode !== 'none' && (
+        <div id="register" className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-main/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={closeModal}
+          />
+          <div className="relative w-full max-w-md animate-in zoom-in-95 duration-500">
+            <button 
+              onClick={closeModal}
+              className="absolute -top-12 right-0 p-2 text-white hover:bg-white/10 rounded-full transition-colors hidden md:block"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            
+            {authMode === 'register' ? (
+              <RegisterForm onSwitchToLogin={() => setAuthMode('login')} />
+            ) : (
+              <LoginForm 
+                onSuccess={() => router.push('/dashboard')} 
+                onSwitchToRegister={() => setAuthMode('register')} 
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      <PublicFooter />
     </div>
   );
 }

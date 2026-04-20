@@ -20,6 +20,7 @@ model User {
   password          String
   role              Role          @default(USER)
   credits           Int           @default(3)
+  lastCreditReset   DateTime?     // Date de la dernière réinitialisation quotidienne
   isVerified        Boolean       @default(false)
   verificationToken String?       @unique
   matches           MatchRecord[]

@@ -15,13 +15,24 @@ export interface ChatMessage {
 /**
  * Récupère tous les candidats du vivier pour un utilisateur
  */
-export async function getCandidatesAction(userId: string) {
+export async function getCandidatesAction(userId: string, page: number = 1, limit: number = 20) {
   try {
+    const totalCount = await prisma.candidate.count({ where: { userId } });
+    const totalPages = Math.ceil(totalCount / limit);
+
     const candidates = await prisma.candidate.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
-    return { success: true, candidates };
+    return { 
+      success: true, 
+      candidates, 
+      totalCount, 
+      totalPages,
+      currentPage: page 
+    };
   } catch (error) {
     console.error("Erreur getCandidatesAction:", error);
     return { success: false, error: "Impossible de récupérer les candidats." };
@@ -31,13 +42,24 @@ export async function getCandidatesAction(userId: string) {
 /**
  * Récupère toutes les missions du vivier pour un utilisateur
  */
-export async function getMissionsAction(userId: string) {
+export async function getMissionsAction(userId: string, page: number = 1, limit: number = 20) {
   try {
+    const totalCount = await prisma.mission.count({ where: { userId } });
+    const totalPages = Math.ceil(totalCount / limit);
+
     const missions = await prisma.mission.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
-    return { success: true, missions };
+    return { 
+      success: true, 
+      missions, 
+      totalCount, 
+      totalPages,
+      currentPage: page 
+    };
   } catch (error) {
     console.error("Erreur getMissionsAction:", error);
     return { success: false, error: "Impossible de récupérer les missions." };

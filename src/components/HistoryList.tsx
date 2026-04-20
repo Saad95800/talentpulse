@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { MatchResult } from '@/lib/ai';
 
+import Pagination from './Pagination';
+
 interface HistoryRecord {
   id: string;
   userId: string;
@@ -36,36 +38,44 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isChangingPage, setIsChangingPage] = useState(false);
+
+  const fetchHistory = async (page: number) => {
+    if (!token || !user?.id) return;
+    
+    setIsChangingPage(true);
+    try {
+      const res = await getUserHistoryAction(user.id, token, page, 20);
+      if (res.success && res.records) {
+        setRecords(res.records as unknown as HistoryRecord[]);
+        setTotalPages(res.totalPages || 1);
+        setCurrentPage(page);
+      }
+    } catch (error) {
+      console.error("Erreur chargement historique:", error);
+    } finally {
+      setLoading(false);
+      setIsChangingPage(false);
+      // Remonter en haut de la liste lors du changement de page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      // DEBUG: Vérification de la dispo des données d'auth
-      console.log("[HistoryList] Tentative de chargement:", { hasToken: !!token, hasUserId: !!user?.id });
-      
-      if (!token || !user?.id) {
-        // On ne coupe pas le loading tout de suite si on attend l'auth au montage,
-        // mais au bout d'un cycle on laisse tomber si vraiment rien ne vient.
-        return;
-      }
-      
-      try {
-        const res = await getUserHistoryAction(user.id, token);
-        if (res.success && res.records) {
-          setRecords(res.records as unknown as HistoryRecord[]);
-        }
-      } catch (error) {
-        console.error("Erreur chargement historique:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHistory();
+    fetchHistory(1);
     
     // Sécurité : Si après 3 secondes on charge toujours, on libère le spinner
     const timer = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timer);
   }, [token, user?.id]);
+
+  const handlePageChange = (newPage: number) => {
+    fetchHistory(newPage);
+  };
 
   const filteredRecords = records.filter(r => 
     r.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,7 +91,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
     );
   }
 
-  if (records.length === 0) {
+  if (records.length === 0 && !searchTerm) {
     return (
       <div className="text-center py-20">
         <div className="inline-flex p-6 bg-slate-100 rounded-full mb-6">
@@ -96,7 +106,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 transition-opacity duration-300 ${isChangingPage ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-main flex items-center gap-3">
@@ -124,6 +134,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
             key={record.id}
             onClick={() => onSelectAnalysis({
               ...record.aiResponse,
+              jobTitle: record.jobTitle,
               jobDescription: record.mission?.description,
               fullCandidate: record.candidate
             })}
@@ -171,13 +182,21 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
           </div>
         ))}
 
-        {filteredRecords.length === 0 && (
+        {filteredRecords.length === 0 && searchTerm && (
           <div className="flex flex-col items-center py-10 text-muted opacity-60">
             <AlertCircle className="w-8 h-8 mb-2" />
             <p className="text-sm font-medium">Aucune analyse ne correspond à votre recherche.</p>
           </div>
         )}
       </div>
+
+      {/* Pagination AJAX */}
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        loading={isChangingPage}
+      />
     </div>
   );
 }

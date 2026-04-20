@@ -19,6 +19,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+import Pagination from './Pagination';
 import CandidateModal from './CandidateModal';
 import InfoModal from './InfoModal';
 import ConfirmModal from './ConfirmModal';
@@ -33,6 +34,71 @@ export default function VivierManager() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   
+  // Pagination State - Candidates
+  const [candPage, setCandPage] = useState(1);
+  const [candTotalPages, setCandTotalPages] = useState(1);
+  const [candCount, setCandCount] = useState(0);
+
+  // Pagination State - Missions
+  const [missPage, setMissPage] = useState(1);
+  const [missTotalPages, setMissTotalPages] = useState(1);
+  const [missCount, setMissCount] = useState(0);
+
+  const [isChangingPage, setIsChangingPage] = useState(false);
+
+  // Chargement des Candidats
+  const loadCandidates = async (page: number) => {
+    if (!user?.id) return;
+    setIsChangingPage(true);
+    try {
+      const res = await getCandidatesAction(user.id, page, 20);
+      if (res.success && res.candidates) {
+        setCandidates(res.candidates as Candidate[]);
+        setCandTotalPages(res.totalPages || 1);
+        setCandCount(res.totalCount || 0);
+        setCandPage(page);
+      }
+    } catch (err) {
+      console.error("Erreur chargement candidats:", err);
+    } finally {
+      setIsChangingPage(false);
+      setLoading(false);
+    }
+  };
+
+  // Chargement des Missions
+  const loadMissions = async (page: number) => {
+    if (!user?.id) return;
+    setIsChangingPage(true);
+    try {
+      const res = await getMissionsAction(user.id, page, 20);
+      if (res.success && res.missions) {
+        setMissions(res.missions as unknown as Mission[]);
+        setMissTotalPages(res.totalPages || 1);
+        setMissCount(res.totalCount || 0);
+        setMissPage(page);
+      }
+    } catch (err) {
+      console.error("Erreur chargement missions:", err);
+    } finally {
+      setIsChangingPage(false);
+      setLoading(false);
+    }
+  };
+
+  // Initialisation : Charger les deux premières pages
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await Promise.all([
+        loadCandidates(1),
+        loadMissions(1)
+      ]);
+      setLoading(false);
+    };
+    init();
+  }, [user?.id]);
+
   // États pour les Modals
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
@@ -52,35 +118,6 @@ export default function VivierManager() {
     type: 'candidate',
     title: ''
   });
-
-  // Chargement initial de toutes les données du vivier (Candidats + Missions)
-  useEffect(() => {
-    const loadAllData = async () => {
-      if (!user?.id) return;
-      setLoading(true);
-      try {
-        // Chargement parallèle pour optimiser le temps et avoir les compteurs à jour immédiatement
-        const [candRes, missRes] = await Promise.all([
-          getCandidatesAction(user.id),
-          getMissionsAction(user.id)
-        ]);
-
-        if (candRes.success && candRes.candidates) {
-          setCandidates(candRes.candidates as Candidate[]);
-        }
-        
-        if (missRes.success && missRes.missions) {
-          setMissions(missRes.missions as unknown as Mission[]);
-        }
-      } catch (err) {
-        console.error("Erreur chargement global vivier:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAllData();
-  }, [user?.id]); // On ne dépend plus de activeSubTab pour le chargement, on charge tout d'un coup
 
   const handleCandidateClick = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
@@ -115,12 +152,14 @@ export default function VivierManager() {
       if (type === 'candidate') {
         const res = await deleteCandidateAction(id, user.id);
         if (res.success) {
-          setCandidates(prev => prev.filter(c => c.id !== id));
+          // Recharger la page actuelle après suppression pour garder la pagination propre
+          await loadCandidates(candPage);
         }
       } else {
         const res = await deleteMissionAction(id, user.id);
         if (res.success) {
-          setMissions(prev => prev.filter(m => m.id !== id));
+          // Recharger la page actuelle après suppression
+          await loadMissions(missPage);
         }
       }
     } catch (err) {
@@ -149,20 +188,20 @@ export default function VivierManager() {
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-black transition-all ${activeSubTab === 'candidates' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-main'}`}
           >
             <UserIcon className="w-3.5 h-3.5" />
-            Candidats ({candidates.length})
+            Candidats ({candCount})
           </button>
           <button 
             onClick={() => setActiveSubTab('missions')}
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-black transition-all ${activeSubTab === 'missions' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-main'}`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            Missions ({missions.length})
+            Missions ({missCount})
           </button>
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+      <div className={`flex-1 overflow-y-auto p-8 custom-scrollbar transition-opacity duration-300 ${isChangingPage ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -171,37 +210,53 @@ export default function VivierManager() {
         ) : (
           <div className="grid gap-4">
             {activeSubTab === 'candidates' ? (
-              candidates.length > 0 ? (
-                candidates.map(candidate => (
-                  <div key={candidate.id} onClick={() => handleCandidateClick(candidate)} className="cursor-pointer">
-                    <VivierItem 
-                      title={candidate.name}
-                      date={candidate.createdAt}
-                      onDelete={() => requestDelete(candidate.id, 'candidate', candidate.name)}
-                      isLoading={actionLoading === candidate.id}
-                      icon={<UserIcon className="w-5 h-5" />}
-                    />
-                  </div>
-                ))
-              ) : (
-                <EmptyState icon={<Users />} text="Aucun candidat dans votre vivier." />
-              )
+              <>
+                {candidates.length > 0 ? (
+                  candidates.map(candidate => (
+                    <div key={candidate.id} onClick={() => handleCandidateClick(candidate)} className="cursor-pointer">
+                      <VivierItem 
+                        title={candidate.name}
+                        date={candidate.createdAt}
+                        onDelete={() => requestDelete(candidate.id, 'candidate', candidate.name)}
+                        isLoading={actionLoading === candidate.id}
+                        icon={<UserIcon className="w-5 h-5" />}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <EmptyState icon={<Users />} text="Aucun candidat dans votre vivier." />
+                )}
+                <Pagination 
+                  currentPage={candPage}
+                  totalPages={candTotalPages}
+                  onPageChange={loadCandidates}
+                  loading={isChangingPage}
+                />
+              </>
             ) : (
-              missions.length > 0 ? (
-                missions.map(mission => (
-                  <div key={mission.id} onClick={() => handleMissionClick(mission)} className="cursor-pointer">
-                    <VivierItem 
-                      title={mission.title}
-                      date={mission.createdAt}
-                      onDelete={() => requestDelete(mission.id, 'mission', mission.title)}
-                      isLoading={actionLoading === mission.id}
-                      icon={<Briefcase className="w-5 h-5" />}
-                    />
-                  </div>
-                ))
-              ) : (
-                <EmptyState icon={<Briefcase />} text="Aucune mission enregistrée." />
-              )
+              <>
+                {missions.length > 0 ? (
+                  missions.map(mission => (
+                    <div key={mission.id} onClick={() => handleMissionClick(mission)} className="cursor-pointer">
+                      <VivierItem 
+                        title={mission.title}
+                        date={mission.createdAt}
+                        onDelete={() => requestDelete(mission.id, 'mission', mission.title)}
+                        isLoading={actionLoading === mission.id}
+                        icon={<Briefcase className="w-5 h-5" />}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <EmptyState icon={<Briefcase />} text="Aucune mission enregistrée." />
+                )}
+                <Pagination 
+                  currentPage={missPage}
+                  totalPages={missTotalPages}
+                  onPageChange={loadMissions}
+                  loading={isChangingPage}
+                />
+              </>
             )}
           </div>
         )}

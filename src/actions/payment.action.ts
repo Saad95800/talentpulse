@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getOrCreateMollieCustomer, createFirstSubscriptionPayment, mollieClient } from "@/lib/mollie";
+import { processPaymentSuccess } from "@/lib/payment-logic";
 
 /**
  * Génère une URL de paiement Mollie Checkout pour s'abonner au plan Premium.
@@ -22,7 +23,7 @@ export async function getPremiumCheckoutUrlAction(userId: string) {
     // 1. S'assurer que le client Mollie existe
     const customerId = await getOrCreateMollieCustomer(userId, user.name || "Client", user.email);
 
-    // 2. Créer le paiement de premier mandat (49.99€)
+    // 2. Créer le paiement de premier mandat
     const checkoutUrl = await createFirstSubscriptionPayment(customerId, userId, user.email);
 
     if (!checkoutUrl) {
@@ -36,10 +37,24 @@ export async function getPremiumCheckoutUrlAction(userId: string) {
 
   } catch (error) {
     console.error("❌ [PaymentAction] Erreur checkout Mollie:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
     return { 
       success: false, 
-      error: "Impossible d'initialiser le paiement. Veuillez réessayer." 
+      error: `Impossible d'initialiser le paiement : ${errorMessage}` 
     };
+  }
+}
+
+/**
+ * Action de synchronisation manuelle déclenchée au retour sur le site (Success Page)
+ */
+export async function syncPaymentStatusAction(paymentId?: string, userId?: string) {
+  try {
+    const result = await processPaymentSuccess({ paymentId, userId });
+    return result;
+  } catch (error) {
+    console.error("❌ [PaymentAction] Erreur sync Mollie:", error);
+    return { success: false, error: "Erreur lors de la synchronisation du paiement." };
   }
 }
 

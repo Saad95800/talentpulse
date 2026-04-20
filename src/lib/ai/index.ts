@@ -41,6 +41,7 @@ export interface MatchResult {
   argumentaire_client: string;
   questions_candidat: string[];
   candidateInfo: CandidateInfo;
+  jobTitle?: string;
   jobDescription?: string;
   fullCandidate?: unknown;
   status?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
@@ -190,6 +191,60 @@ const conformitySchema = {
   },
   required: ["isConform", "reason"]
 };
+
+const jobTitleSchema = {
+  type: "object",
+  properties: {
+    title: { type: "string" }
+  },
+  required: ["title"]
+};
+
+export async function generateJobTitle(jobText: string): Promise<string> {
+  // Sécurité si texte trop court
+  if (!jobText || jobText.trim().length < 15) {
+    return "Mission sans titre";
+  }
+
+  const systemPrompt = `Tu es un expert en recrutement. Ton rôle est d'extraire un titre de poste PROFESSIONNEL et TRÈS CONCIS.
+RÈGLES :
+- MAXIMUM 4-5 MOTS.
+- Pas de ponctuation à la fin.
+- Capitalise chaque mot important.
+- Exemple : "Expert Cybersécurité Senior", "Développeur React Native", "Chef de Projet Marketing".
+- Retourne uniquement le JSON demandé.`;
+
+  const userPrompt = `Analyse cette fiche de poste et génère uniquement le titre :\n\n${jobText.substring(0, 4000)}`;
+
+  try {
+    const provider = await getAIProvider('fast');
+    const options = { 
+      system: systemPrompt, 
+      maxTokens: 50, 
+      temperature: 0.1, 
+      json: true, 
+      schema: jobTitleSchema 
+    };
+
+    const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
+    const data = extractJSON<{ title: string }>(rawText);
+    
+    if (data.title && data.title.length > 2) {
+      return data.title.trim();
+    }
+    
+    throw new Error("Titre vide reçu de l'IA");
+  } catch (error) {
+    console.warn("[generateJobTitle] Échec, repli sur l'extraction manuelle.", error);
+    
+    // Repli : première ligne non vide ou 6 premiers mots
+    const lines = jobText.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+    const fallbackText = lines[0] || jobText.trim();
+    const words = fallbackText.split(/\s+/).slice(0, 6).join(' ');
+    
+    return words || "Nouvelle Mission";
+  }
+}
 
 export async function extractCandidateInfo(
   cvText: string,

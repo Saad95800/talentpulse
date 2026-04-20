@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { getPremiumCheckoutUrlAction, getPaymentHistoryAction, cancelSubscriptionAction } from '@/actions/payment.action';
 
+import PricingGrid from '@/components/PricingGrid';
+
 interface PaymentRecord {
   id: string;
   receiptNumber: string;
@@ -71,83 +73,37 @@ export default function SubscriptionManager({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
-      {/* Plan Overview Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 bg-white rounded-[2.5rem] p-10 shadow-xl shadow-slate-200 border border-slate-200 relative overflow-hidden">
-          {/* Background Decor */}
-          <div className={`absolute top-0 right-0 w-64 h-64 -mr-20 -mt-20 rounded-full opacity-5 blur-3xl ${isPremium ? 'bg-primary' : 'bg-slate-400'}`}></div>
-          
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 inline-block ${isPremium ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
-                  Plan Actuel
-                </span>
-                <h2 className="text-4xl font-black text-main">{isPremium ? 'Premium' : 'Gratuit'}</h2>
-              </div>
-              <div className={`p-4 rounded-3xl ${isPremium ? 'bg-primary/10' : 'bg-slate-100'}`}>
-                {isPremium ? <Zap className="w-8 h-8 text-primary" /> : <CreditCard className="w-8 h-8 text-slate-400" />}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10">
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <TextLabel icon={<Zap className="w-4 h-4 text-primary" />} label="Crédits Restants" />
-                <p className="text-3xl font-black text-main">{credits > 900000 ? 'Illimités' : credits}</p>
-                <p className="text-[10px] font-bold text-muted uppercase mt-2">Réinitialisé le prochain mois</p>
-              </div>
-              
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <TextLabel icon={<Calendar className="w-4 h-4 text-primary" />} label="Prochaine Échéance" />
-                <p className="text-3xl font-black text-main">
-                  {nextBillingDate ? new Date(nextBillingDate).toLocaleDateString('fr-FR') : 'N/A'}
-                </p>
-                <p className="text-[10px] font-bold text-muted uppercase mt-2">
-                  Status: <span className={subStatus === 'active' ? 'text-emerald-500' : 'text-amber-500'}>{subStatus || 'Inactif'}</span>
-                </p>
-              </div>
-            </div>
-
-            {!isPremium ? (
-              <button 
-                onClick={handleUpgrade}
-                disabled={loading}
-                className="w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-primary-hover shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-              >
-                {loading ? 'Redirection...' : 'Passer à Premium   39,90€'}
-              </button>
-            ) : subStatus === 'active' && (
-              <button 
-                onClick={handleCancel}
-                className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors uppercase tracking-widest"
-              >
-                Annuler mon abonnement
-              </button>
-            )}
+      {/* Current Status Banner (Optional, keeping it clean) */}
+      <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm flex items-center justify-between px-10">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 rounded-2xl ${isPremium ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'}`}>
+            {isPremium ? <Zap className="w-6 h-6" /> : <CreditCard className="w-6 h-6" />}
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Statut de votre compte</p>
+            <h2 className="text-xl font-black text-main flex items-center gap-2">
+              {isPremium ? 'Membre Premium' : 'Utilisateur Gratuit'}
+              {subStatus === 'active' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+            </h2>
           </div>
         </div>
-
-        {/* Benefits Card */}
-        <div className="bg-gradient-to-br from-main to-slate-800 rounded-[2.5rem] p-8 text-white shadow-xl shadow-main/20 flex flex-col">
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-            <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-            Avantages Premium
-          </h3>
-          <ul className="space-y-4 flex-1">
-            <BenefitItem text="100 Crédits par mois" />
-            <BenefitItem text="Batch Matching (5 CV max)" />
-            <BenefitItem text="Export PDF Illimité" />
-            <BenefitItem text="Support Réactif 24/7" />
-            <BenefitItem text="Accès aux nouvelles IA" />
-          </ul>
-          <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Paiement Sécurisé par</p>
-            <p className="text-lg font-black tracking-tighter opacity-50 uppercase">MOLLIE</p>
-          </div>
+        <div className="text-right">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Crédits disponibles</p>
+          <p className="text-xl font-black text-primary">{credits > 900000 ? 'Illimités' : credits}</p>
         </div>
       </div>
+
+      {/* Pricing Comparison Grid */}
+      <PricingGrid 
+        isPremium={isPremium}
+        subStatus={subStatus}
+        nextBillingDate={nextBillingDate}
+        onUpgrade={handleUpgrade}
+        onCancel={handleCancel}
+        loading={loading}
+      />
 
       {/* Payment History Table */}
       <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200 border border-slate-200 overflow-hidden">
@@ -206,22 +162,3 @@ export default function SubscriptionManager({
   );
 }
 
-function TextLabel({ icon, label }: { icon: React.ReactNode, label: string }) {
-  return (
-    <div className="flex items-center gap-2 mb-2">
-      {icon}
-      <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{label}</span>
-    </div>
-  );
-}
-
-function BenefitItem({ text }: { text: string }) {
-  return (
-    <li className="flex items-center gap-3">
-      <div className="w-5 h-5 bg-emerald-400/20 rounded-full flex items-center justify-center">
-        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-      </div>
-      <span className="text-sm font-medium text-slate-200">{text}</span>
-    </li>
-  );
-}

@@ -43,14 +43,21 @@ export async function getOrCreateMollieCustomer(userId: string, name: string, em
  * Une fois payé, Mollie nous renverra un webhook pour créer la Subscription réelle.
  */
 export async function createFirstSubscriptionPayment(customerId: string, userId: string, email: string) {
+  const webhookUrl = process.env.MOLLIE_WEBHOOK_URL;
+  const isLocalhost = webhookUrl?.includes('localhost') || webhookUrl?.includes('127.0.0.1');
+
+  if (isLocalhost) {
+    console.warn("⚠️ [Mollie] L'URL de webhook contient 'localhost'. Elle sera ignorée pour permettre l'initialisation du paiement en local.");
+  }
+
   const checkout = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
       value: '39.90', // Prix de l'abonnement Premium
     },
     description: 'Abonnement TalentPulse Premium (1er mois)',
-    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
-    webhookUrl: process.env.MOLLIE_WEBHOOK_URL as string,
+    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/success?paymentId={id}&userId=${userId}`,
+    webhookUrl: isLocalhost ? undefined : webhookUrl,
     metadata: {
       userId,
       email,

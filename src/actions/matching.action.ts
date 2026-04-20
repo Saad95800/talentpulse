@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { deductCredit, checkCredits } from "./credits.action";
 import { extractTextFromFile } from "@/lib/document";
-import { extractCandidateInfo, validateDocumentConformity } from "@/lib/ai";
+import { extractCandidateInfo, validateDocumentConformity, generateJobTitle } from "@/lib/ai";
 import { logError, logInfo } from "./logger.action";
 import { processSingleMatch } from "@/lib/matching/core";
 import { addMatchingJob } from "@/lib/queue/matching-queue";
@@ -65,7 +65,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       try {
         const jobDoc = await extractTextFromFile(jobBuffer, jobFile.name);
         jobText = jobDoc.text.substring(0, 30000); // TRUNCATION DE SÉCURITÉ
-        jobTitle = jobFile.name.replace(/\.[^/.]+$/, "");
+        // jobTitle = jobFile.name.replace(/\.[^/.]+$/, ""); // Ancienne méthode
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erreur inconnue";
         console.error(`[Workflow] Échec extraction Job:`, err);
@@ -74,6 +74,11 @@ export async function processMatchingWorkflow(formData: FormData) {
     } else if (jobTextRaw) {
       jobText = jobTextRaw.substring(0, 30000);
     }
+
+    // Génération d'un titre intelligent par l'IA
+    console.log("[Workflow] Génération du titre de mission via IA...");
+    jobTitle = await generateJobTitle(jobText);
+    console.log(`[Workflow] Titre généré : ${jobTitle}`);
 
     // Validation de conformité de la fiche de poste
     console.log("[Workflow] Validation conformité Job...");
@@ -164,6 +169,7 @@ export async function processMatchingWorkflow(formData: FormData) {
       data: {
         ...resultIA.resultIA,
         candidateInfo,
+        jobTitle: resultIA.mission.title,
         jobDescription: resultIA.mission.description,
         fullCandidate: resultIA.candidate
       }, 
@@ -211,6 +217,22 @@ export async function startBatchMatchingAction(formData: FormData) {
     if (!userId) return { success: false, error: "Utilisateur non identifié." };
     if (cvFiles.length === 0) return { success: false, error: "Aucun CV fourni." };
 
+    // Vérification du plan et des limites de batch
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true }
+    });
+
+    const plan = user?.plan || 'FREE';
+    const limit = plan === 'PREMIUM' ? 10 : 3;
+
+    if (cvFiles.length > limit) {
+      return { 
+        success: false, 
+        error: `Votre forfait (${plan}) limite l'analyse groupée à ${limit} CV par demande. Veuillez passer à Premium pour augmenter cette limite.` 
+      };
+    }
+
     // 1. Extraction du Job Description (JD)
     let jobText = "";
     if (jobFile && jobFile.size > 0) {
@@ -220,6 +242,11 @@ export async function startBatchMatchingAction(formData: FormData) {
     } else if (jobTextRaw) {
       jobText = jobTextRaw.substring(0, 30000);
     }
+
+    // 1.5 Génération d'un titre intelligent pour tout le lot
+    console.log("[BatchAction] Génération du titre de mission via IA...");
+    const aiJobTitle = await generateJobTitle(jobText);
+    console.log(`[BatchAction] Titre généré : ${aiJobTitle}`);
 
     // 2. Création du BatchJob en DB
     const batchJob = await prisma.batchJob.create({
@@ -254,6 +281,7 @@ export async function startBatchMatchingAction(formData: FormData) {
         batchJobId: batchJob.id,
         batchItemId: item.id,
         jobText,
+        jobTitle: aiJobTitle, // On passe le titre généré par l'IA
         cvBufferBase64,
         cvFileName: cvFile.name
       });

@@ -1,7 +1,45 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { startOfDay, differenceInDays } from 'date-fns';
 
+/**
+ * Assure que les crédits de l'utilisateur sont réinitialisés s'il s'agit d'une nouvelle semaine (Forfait FREE)
+ */
+async function ensureWeeklyReset(userId: string) {
+  if (!userId) return;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { 
+        id: true, 
+        plan: true, 
+        credits: true, 
+        lastCreditReset: true 
+      }
+    });
+
+    if (!user || user.plan !== 'FREE') return;
+
+    const now = new Date();
+    const lastReset = user.lastCreditReset ? new Date(user.lastCreditReset) : null;
+
+    // Si on a jamais reset, ou si le dernier reset date de plus de 7 jours
+    if (!lastReset || differenceInDays(now, lastReset) >= 7) {
+      console.log(`[Credits] Réinitialisation hebdomadaire pour ${userId} (Dernier reset: ${lastReset})`);
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: 3, // Réinitialisé à 3 (non cumulable par semaine)
+          lastCreditReset: now
+        }
+      });
+    }
+  } catch (error) {
+    console.error("[Credits] Erreur lors de la réinitialisation hebdomadaire:", error);
+  }
+}
 
 /**
  * Récupère le nombre de crédits restants pour un utilisateur.
@@ -11,6 +49,8 @@ export async function fetchUserCredits(userId: string) {
   if (!userId) return 0;
 
   try {
+    await ensureWeeklyReset(userId);
+    
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { credits: true, role: true },
@@ -30,6 +70,8 @@ export async function checkCredits(userId: string) {
   if (!userId) return { success: false, error: "ID utilisateur manquant." };
 
   try {
+    await ensureWeeklyReset(userId);
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return { success: false, error: "Utilisateur introuvable." };
 
@@ -55,6 +97,8 @@ export async function deductCredit(userId: string) {
   if (!userId) return { success: false, error: "ID utilisateur manquant." };
 
   try {
+    await ensureWeeklyReset(userId);
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return { success: false, error: "Utilisateur introuvable." };
 
