@@ -259,3 +259,47 @@ export async function sendUserChatNotification(email: string, messagePreview: st
   return sendBrevoEmail(email, "Nouvelle réponse sur votre chat TalentPulse 💬", htmlContent);
 }
 
+
+/**
+ * Informe l'utilisateur que son solde de crédits est épuisé
+ */
+export async function sendLowCreditsEmail(email: string, plan: string) {
+  const pricingUrl = `${APP_URL}/dashboard?tab=premium`;
+
+  const isFree = plan === 'FREE';
+  const subject = isFree 
+    ? "🚀 Boostez vos recrutements : Plus de crédits ?" 
+    : "⚠️ Solde de crédits épuisé - Renouvelez votre accès";
+
+  const htmlContent = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f8fafc;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <span style="font-size: 40px;">⚡</span>
+      </div>
+      <h2 style="color: #0f172a; text-align: center;">Vous n'avez plus de crédits TalentPulse</h2>
+      
+      <p style="color: #475569; font-size: 16px; line-height: 1.6; text-align: center;">
+        ${isFree 
+          ? "Vous avez utilisé tous vos crédits gratuits de la semaine. Pour continuer à faire des matchings illimités et accéder aux fonctionnalités Premium, passez à la vitesse supérieure !"
+          : "Votre forfait de crédits mensuel a été entièrement consommé. Ne laissez pas vos recrutements en attente et rechargez vos crédits dès maintenant."
+        }
+      </p>
+
+      <div style="background-color: white; padding: 20px; border-radius: 12px; margin: 30px 0; border: 1px solid #e2e8f0; text-align: center;">
+        <h3 style="margin: 0; color: #1e40af;">Offre Spéciale Premium</h3>
+        <p style="color: #64748b; font-size: 14px;">Accès illimité aux matchings + Support prioritaire</p>
+        <a href="${pricingUrl}" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 15px;">
+          Voir les options de recharge
+        </a>
+      </div>
+
+      <p style="color: #94a3b8; font-size: 12px; text-align: center;">
+        Besoin d'aide ? Répondez simplement à ce mail ou utilisez le chat dans l'application.
+      </p>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+      <p style="color: #64748b; font-size: 14px; text-align: center;">L'équipe TalentPulse</p>
+    </div>
+  `;
+
+  return sendBrevoEmail(email, subject, htmlContent);
+}

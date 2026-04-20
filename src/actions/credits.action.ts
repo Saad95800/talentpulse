@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { startOfDay, differenceInDays } from 'date-fns';
+import { sendLowCreditsEmail } from '@/lib/mail';
 
 /**
  * Assure que les crédits de l'utilisateur sont réinitialisés s'il s'agit d'une nouvelle semaine (Forfait FREE)
@@ -117,6 +118,14 @@ export async function deductCredit(userId: string) {
         totalCreditsUsed: { increment: 1 }
       },
     });
+
+    // Alerte si crédits épuisés
+    if (updatedUser.credits === 0) {
+      // Fire-and-forget pour ne pas bloquer le matching
+      sendLowCreditsEmail(updatedUser.email, updatedUser.plan).catch(err => {
+        console.error("[Credits:EmailAlertFailed]", err);
+      });
+    }
 
     return { success: true, creditsRemaining: updatedUser.credits };
   } catch {
