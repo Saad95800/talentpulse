@@ -16,12 +16,14 @@ import {
   TrendingUp,
   Activity,
   MessageSquare,
-  Users
+  Users,
+  DollarSign
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
 import AdminChatExplorer from "@/components/admin/AdminChatExplorer";
+import FinancialDashboard from "@/components/admin/FinancialDashboard";
 
 interface AdminHistoryRecord {
   id: string;
@@ -41,7 +43,7 @@ export default function AdminDashboard() {
   const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances">("history");
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialChatUserId = searchParams.get("userId") || undefined;
@@ -188,7 +190,15 @@ export default function AdminDashboard() {
           >
             <MessageSquare className="w-4 h-4" /> Messages
           </button>
+          <button 
+            onClick={() => setActiveTab("finances")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'finances' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <DollarSign className="w-4 h-4" /> Finances
+          </button>
         </div>
+
+        {activeTab === "finances" && <FinancialDashboard token={token} />}
 
         {activeTab === "history" ? (
           /* Search and Table */
