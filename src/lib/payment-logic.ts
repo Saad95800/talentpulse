@@ -18,7 +18,7 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user?.mollieCustomerId) {
       try {
-        const payments = await mollieClient.customerPayments.list({ customerId: user.mollieCustomerId });
+        const payments = await mollieClient.customerPayments.page({ customerId: user.mollieCustomerId });
         if (payments && payments.length > 0) {
           paymentId = payments[0].id;
           console.log(`[PaymentLogic] Dernier paiement identifié : ${paymentId}`);

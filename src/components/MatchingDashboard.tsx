@@ -281,9 +281,9 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
 
       try {
         const response = await getActiveBatchAction(activeUserId);
-        if (response.success && response.batchJobId) {
-          console.log("[Dashboard] Batch actif détecté:", response.batchJobId);
-          dispatch(setActiveBatchId(response.batchJobId));
+        if (response.success && response.data?.id) {
+          console.log("[Dashboard] Batch actif détecté:", response.data.id);
+          dispatch(setActiveBatchId(response.data.id));
           // On ne met PAS setLoading(true) ici car on veut que l'interface reste libre
         }
       } catch (err) {

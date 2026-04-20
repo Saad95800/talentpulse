@@ -5,6 +5,7 @@ export interface MatchingJobData {
   batchJobId: string;
   batchItemId: string;
   jobText: string;
+  jobTitle?: string;      // Nouveau: Titre généré par l'IA
   cvText?: string;
   candidateInfo?: CandidateInfo;
   cvBufferBase64?: string; // Pour l'extraction différée

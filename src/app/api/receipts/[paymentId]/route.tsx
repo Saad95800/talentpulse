@@ -66,7 +66,7 @@ export async function GET(
     console.log(`✅ [ReceiptAPI] PDF Generated successfully (${pdfBuffer.length} bytes)`);
 
     // 3. Retourner le flux PDF avec les bons headers
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

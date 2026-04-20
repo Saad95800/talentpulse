@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     console.log(`📡 [MollieWebhook] Notification reçue pour le paiement ${id}`);
 
     // Appel de la logique partagée (Idempotente)
-    const result = await processPaymentSuccess(id);
+    const result = await processPaymentSuccess({ paymentId: id });
 
     if (result.success) {
       return new NextResponse("OK", { status: 200 });
