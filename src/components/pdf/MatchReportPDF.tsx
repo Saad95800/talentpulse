@@ -18,7 +18,7 @@ interface MatchReportPDFProps {
  */
 export default function MatchReportPDF({ result, candidateName }: MatchReportPDFProps) {
   return (
-    <Document title={`Analyse Matching - ${candidateName}`} author="TalentMatcher AI">
+    <Document title={`Analyse Matching - ${candidateName}`} author="TalentPulse AI">
       <Page size="A4" style={pdfStyles.page}>
         {/* En-tête avec score et nom */}
         <MatchHeader candidateName={candidateName} score={result.score} />
@@ -38,10 +38,10 @@ export default function MatchReportPDF({ result, candidateName }: MatchReportPDF
         {/* Pied de page formel */}
         <View style={pdfStyles.footer} fixed>
           <Text>
-            {"CONFIDENTIEL • Document généré par TalentMatcher AI • Ce rapport constitue une aide à la décision. L'évaluation finale et la validation des compétences relèvent de la responsabilité de l'expert métier ou du recruteur."}
+            {"CONFIDENTIEL • Document généré par TalentPulse AI • Ce rapport constitue une aide à la décision. L'évaluation finale et la validation des compétences relèvent de la responsabilité de l'expert métier ou du recruteur."}
           </Text>
           <Text style={{ marginTop: 4, fontWeight: 'bold' }}>
-            © {new Date().getFullYear()} TalentMatcher - www.talentmatcher.ai
+            © {new Date().getFullYear()} TalentPulse
           </Text>
         </View>
       </Page>

@@ -9,7 +9,7 @@ const steps = [
   { icon: "🧠", label: "Extraction des compétences clés..." },
   { icon: "👤", label: "Analyse approfondie du CV..." },
   { icon: "⚡", label: "Calcul du score de matching..." },
-  { icon: "✍️", label: "Rédaction de l&apos;argumentaire client..." },
+  { icon: "✍️", label: "Rédaction de l'argumentaire client..." },
   { icon: "📊", label: "Finalisation du rapport IA..." },
 ];
 

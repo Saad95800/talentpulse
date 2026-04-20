@@ -14,20 +14,141 @@ import SubscriptionManager from '@/components/SubscriptionManager';
 import { MatchResult } from '@/lib/ai';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/store/userSlice';
-import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard } from 'lucide-react';
+import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import MultiMatchResultView from '@/components/MultiMatchResultView';
+import { getBatchStatusAction, getActiveBatchAction, cancelActiveBatchAction } from '@/actions/matching.action';
+import { setActiveBatchId, setBatchProgress, setMultiResults } from '@/store/matchingSlice';
+import { CandidateInfo } from '@/lib/ai';
+import { useRef } from 'react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, isLoggedIn } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
-  const { currentResult, results } = useSelector((state: RootState) => state.matching);
+  const { currentResult, results, activeBatchId } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique' | 'abonnement'>('analyse');
 
   // Gestion de la session via le hook useAuth
   useAuth();
+
+  // Polling du batch (centralisé ici pour persister au changement de vue)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (activeBatchId) {
+      interval = setInterval(async () => {
+        try {
+          const response = await getBatchStatusAction(activeBatchId);
+          if (response.success && response.data) {
+            const batch = response.data;
+            
+            dispatch(setBatchProgress({ 
+              current: batch.processedItems, 
+              total: batch.totalItems 
+            }));
+            
+            const transformedResults = batch.items.map((item: any) => {
+              if (item.status === 'COMPLETED' && item.matchRecord) {
+                const aiData = (item.matchRecord.aiResponse as Record<string, unknown>) || {};
+                return {
+                  score: (aiData.score as number) || 0,
+                  competences_validees: (aiData.competences_validees as string[]) || [],
+                  competences_manquantes: (aiData.competences_manquantes as string[]) || [],
+                  argumentaire_client: (aiData.argumentaire_client as string) || "Analyse terminée.",
+                  questions_candidat: (aiData.questions_candidat as string[]) || [],
+                  candidateInfo: (aiData.candidateInfo as CandidateInfo) || { firstName: item.candidateName || 'Candidat', lastName: '' },
+                  status: item.status
+                };
+              }
+              return { 
+                status: item.status,
+                score: 0,
+                competences_validees: [],
+                competences_manquantes: [],
+                argumentaire_client: item.error || (item.status === 'PROCESSING' ? "L'IA analyse le profil..." : "En attente..."),
+                questions_candidat: [],
+                candidateInfo: { firstName: item.candidateName || 'Candidat', lastName: '' }
+              };
+            });
+
+            dispatch(setMultiResults(transformedResults as MatchResult[]));
+
+            if (batch.status === 'COMPLETED' || batch.status === 'FAILED') {
+              dispatch(setActiveBatchId(null));
+              clearInterval(interval);
+            }
+          } else {
+            clearInterval(interval);
+          }
+        } catch (err) {
+          console.error("Erreur polling DashboardPage:", err);
+          clearInterval(interval);
+        }
+      }, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activeBatchId, dispatch]);
+
+  const initialCheckDone = useRef(false);
+
+  // --- Hook 1 : Détection d'un batch déjà en cours au montage ---
+  useEffect(() => {
+    const checkActiveBatch = async () => {
+      // Éviter de vérifier si on l'a déjà fait ou si un batch est déjà actif dans le store
+      if (initialCheckDone.current || activeBatchId) return;
+      
+      const activeUserId = user?.id || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('tm_user') || '{}').id : null);
+      if (!activeUserId) return;
+
+      try {
+        initialCheckDone.current = true;
+        const response = await getActiveBatchAction(activeUserId);
+        if (response.success && response.data?.id) {
+          const jobId = response.data.id;
+          console.log("[DashboardPage] Reconnexion au batch actif au montage:", jobId);
+          dispatch(setActiveBatchId(jobId));
+          
+          const statusRes = await getBatchStatusAction(jobId);
+          if (statusRes.success && statusRes.data) {
+            const batch = statusRes.data;
+            const transformedResults = batch.items.map((item: any) => {
+              if (item.status === 'COMPLETED' && item.matchRecord) {
+                const aiData = (item.matchRecord.aiResponse as Record<string, unknown>) || {};
+                return {
+                  score: (aiData.score as number) || 0,
+                  competences_validees: (aiData.competences_validees as string[]) || [],
+                  competences_manquantes: (aiData.competences_manquantes as string[]) || [],
+                  argumentaire_client: (aiData.argumentaire_client as string) || "Analyse terminée.",
+                  questions_candidat: (aiData.questions_candidat as string[]) || [],
+                  candidateInfo: (aiData.candidateInfo as CandidateInfo) || { firstName: item.candidateName || 'Candidat', lastName: '' },
+                  status: item.status
+                };
+              }
+              return { 
+                status: item.status,
+                score: 0,
+                competences_validees: [],
+                competences_manquantes: [],
+                argumentaire_client: item.error || (item.status === 'PROCESSING' ? "L'IA analyse le profil..." : "En attente..."),
+                questions_candidat: [],
+                candidateInfo: { firstName: item.candidateName || 'Candidat', lastName: '' }
+              };
+            });
+            dispatch(setMultiResults(transformedResults as MatchResult[]));
+          }
+        }
+      } catch (err) {
+        console.error("Erreur checkActiveBatch:", err);
+      }
+    };
+
+    checkActiveBatch();
+  }, [user?.id, dispatch]); // activeBatchId retiré des dépendances pour éviter la boucle
 
   const handleLogout = () => {
     localStorage.removeItem('tm_token');
@@ -53,7 +174,13 @@ export default function DashboardPage() {
     );
   }
 
-  const handleNewAnalysis = () => {
+  const handleNewAnalysis = async () => {
+    // Si un batch est actif, on l'annule côté serveur pour ne plus être "poursuivi"
+    if (activeBatchId) {
+      console.log("[DashboardPage] Annulation du batch actif:", activeBatchId);
+      await cancelActiveBatchAction(activeBatchId);
+    }
+    
     dispatch(resetResult());
     setActiveTab('analyse');
   };

@@ -1,4 +1,4 @@
-import { createMollieClient } from '@mollie/api-client';
+import { createMollieClient, SequenceType } from '@mollie/api-client';
 
 /**
  * Client Mollie initialisé avec la clé API test/live.
@@ -57,7 +57,7 @@ export async function createFirstSubscriptionPayment(customerId: string, userId:
       type: 'FIRST_PAYMENT'
     },
     customerId,
-    sequenceType: 'first' as any, // Indique que c'est le paiement de mandat
+    sequenceType: SequenceType.first, // Indique que c'est le paiement de mandat
   });
 
   return checkout.getCheckoutUrl();

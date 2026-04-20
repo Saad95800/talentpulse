@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import { pdfStyles } from '../PDFTheme';
 
 interface MatchQuestionsProps {
   questions: string[];
@@ -12,7 +11,7 @@ export const MatchQuestions = ({ questions }: MatchQuestionsProps) => {
   return (
     <View style={[styles.container, { marginTop: 20 }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>QUESTIONS D'ENTRETIEN PRÉCONISÉES</Text>
+        <Text style={styles.title}>QUESTIONS D&apos;ENTRETIEN PRÉCONISÉES</Text>
         <Text style={styles.subtitle}>Pour vérifier la qualification réelle du candidat</Text>
       </View>
 

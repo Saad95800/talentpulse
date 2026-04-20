@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Récupérer le statut du paiement chez Mollie
     const payment = await mollieClient.payments.get(id);
-    const metadata = payment.metadata as any;
+    const metadata = payment.metadata as { userId?: string; type?: string };
     const userId = metadata?.userId;
 
     if (!userId) {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       // CAS A : Premier paiement (Prélèvement de mandat) -> Créer l'abonnement
       if (metadata?.type === "FIRST_PAYMENT") {
         
-        // Créer l'abonnement récurrent de 49.99€ / mois
+        // Créer l'abonnement récurrent de 39.90€ / mois
         const subscription = await mollieClient.customerSubscriptions.create({
           customerId: user.mollieCustomerId as string,
           amount: {

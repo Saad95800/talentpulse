@@ -9,7 +9,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 // Configuration de l'expéditeur (doit être vérifié dans Brevo)
 const SENDER = {
-  name: "TalentMatcher",
+  name: "TalentPulse",
   email: process.env.SMTP_USER || "contact@reactivedigital.fr"
 };
 
@@ -104,7 +104,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-      <h1 style="color: #0f172a; text-align: center;">Bienvenue sur TalentMatcher !</h1>
+      <h1 style="color: #0f172a; text-align: center;">Bienvenue sur TalentPulse !</h1>
       <p style="color: #475569; font-size: 16px; line-height: 1.6;">
         Merci de vous être inscrit. Pour commencer à utiliser notre outil de matching IA et profiter de vos crédits offerts, merci de confirmer votre adresse email en cliquant sur le bouton ci-dessous :
       </p>
@@ -119,12 +119,12 @@ export async function sendVerificationEmail(email: string, token: string) {
       </p>
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
       <p style="color: #64748b; font-size: 14px; text-align: center;">
-        L'équipe TalentMatcher
+        L'équipe TalentPulse
       </p>
     </div>
   `;
 
-  return sendBrevoEmail(email, 'Activez votre compte TalentMatcher 🚀', htmlContent);
+  return sendBrevoEmail(email, 'Activez votre compte TalentPulse 🚀', htmlContent);
 }
 
 /**
@@ -136,7 +136,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h2>Réinitialisation de votre mot de passe</h2>
-      <p>Vous avez demandé la réinitialisation de votre mot de passe TalentMatcher.</p>
+      <p>Vous avez demandé la réinitialisation de votre mot de passe TalentPulse.</p>
       <p>Cliquez sur le lien ci-dessous pour procéder :</p>
       <a href="${resetUrl}">${resetUrl}</a>
     </div>

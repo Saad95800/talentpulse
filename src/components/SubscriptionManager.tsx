@@ -4,14 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   CheckCircle2, 
-  AlertCircle, 
   Calendar, 
   Download, 
   Zap, 
-  Clock,
-  ChevronRight
+  Clock
 } from 'lucide-react';
 import { getPremiumCheckoutUrlAction, getPaymentHistoryAction, cancelSubscriptionAction } from '@/actions/payment.action';
+
+interface PaymentRecord {
+  id: string;
+  receiptNumber: string;
+  createdAt: string | Date;
+  amount: number;
+  status: string;
+}
 
 interface SubscriptionManagerProps {
   userId: string;
@@ -28,7 +34,7 @@ export default function SubscriptionManager({
   nextBillingDate, 
   credits 
 }: SubscriptionManagerProps) {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const isPremium = userPlan === 'PREMIUM';
 
@@ -47,7 +53,7 @@ export default function SubscriptionManager({
       } else {
         alert(res.error || "Erreur lors de l'accès au paiement.");
       }
-    } catch (err) {
+    } catch {
       alert("Une erreur technique est survenue.");
     } finally {
       setLoading(false);
@@ -110,7 +116,7 @@ export default function SubscriptionManager({
                 disabled={loading}
                 className="w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-primary-hover shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
               >
-                {loading ? 'Redirection...' : 'Passer à Premium — 39,90€'}
+                {loading ? 'Redirection...' : 'Passer à Premium   39,90€'}
               </button>
             ) : subStatus === 'active' && (
               <button 

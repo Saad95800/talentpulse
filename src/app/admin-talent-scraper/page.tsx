@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/actions/auth.action";
 import { useAuth } from "@/hooks/useAuth";
+import { User } from "@/store/userSlice";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -21,7 +22,7 @@ export default function AdminLoginPage() {
     try {
       const res = await loginAction({ email, password });
       if (res.success) {
-        const { token: resToken, user: resUser } = res as any;
+        const { token: resToken, user: resUser } = res as { token: string; user: User };
         if (resUser.role !== 'ADMIN') {
           setError("Accès refusé. Vous n'êtes pas administrateur.");
           setLoading(false);

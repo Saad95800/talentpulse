@@ -4,21 +4,31 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { setLoading, setLoadingStep, setBatchProgress, setResult, setError } from '@/store/matchingSlice';
+import { 
+  setLoading, 
+  setLoadingStep, 
+  setBatchProgress, 
+  setError,
+  setActiveBatchId, 
+  setMultiResults 
+} from '@/store/matchingSlice';
 import { updateCredits } from '@/store/userSlice';
-import { processMatchingWorkflow } from '@/actions/matching.action';
-import { MatchResult } from '@/lib/ai';
 import { 
   FileUp, 
   FileText, 
   X, 
   CheckCircle2, 
-  AlertCircle,
   Type,
+  AlertCircle,
   Loader2,
   Zap,
   Sparkles
 } from 'lucide-react';
+import { 
+  startBatchMatchingAction, 
+  getActiveBatchAction 
+} from '@/actions/matching.action';
+import { MatchResult, CandidateInfo } from '@/lib/ai';
 
 interface MatchingDashboardProps {
   onPaywallOpen?: () => void;
@@ -257,13 +267,37 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
   const [cvText, setCvText] = useState("");
 
   const userId = useSelector((state: RootState) => state.user.user?.id);
+  const activeBatchId = useSelector((state: RootState) => state.matching.activeBatchId);
+
+  // --- Hook 1 : Détection d'un batch déjà en cours au montage ---
+  React.useEffect(() => {
+    const checkActiveBatch = async () => {
+      const activeUserId = userId || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('tm_user') || '{}').id : null);
+      if (!activeUserId || activeBatchId) return;
+
+      try {
+        const response = await getActiveBatchAction(activeUserId);
+        if (response.success && response.batchJobId) {
+          console.log("[Dashboard] Batch actif détecté:", response.batchJobId);
+          dispatch(setActiveBatchId(response.batchJobId));
+          // On ne met PAS setLoading(true) ici car on veut que l'interface reste libre
+        }
+      } catch (err) {
+        console.error("Erreur checkActiveBatch:", err);
+      }
+    };
+
+    checkActiveBatch();
+  }, [userId, activeBatchId, dispatch]);
+
+  // --- Hook 2 : Polling du statut du batch ---
+  // --- Hook 2 : Polling supprimé (déplacé dans DashboardPage) ---
 
   const handleMatch = async () => {
     console.log("%c[Dashboard] 🚀 Bouton cliqué. Démarrage du workflow.", "color: #10b981; font-weight: bold;");
     setIsLoadingInternal(true);
     dispatch(setLoading(true));
     dispatch(setError(""));
-    console.log("%c[Dashboard] 🔄 setLoading(true) envoyé.", "color: #10b981;");
     
     // Validation
     const hasJob = (jobInputType === 'file' && jobFiles.length > 0) || (jobInputType === 'text' && jobText.trim().length > 0);
@@ -277,16 +311,14 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
 
     const activeUserId = userId || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('tm_user') || '{}').id : null);
     if (!activeUserId) {
-      console.error("[MatchingDashboard] Erreur: Pas d'ID utilisateur trouvé.");
       dispatch(setError("Session expirée."));
       setIsLoadingInternal(false);
       dispatch(setLoading(false));
       return;
     }
 
-    // Vérification des crédits (Option A : 1 matching = 1 crédit)
+    // Crédits
     if (role !== 'ADMIN' && credits <= 0) {
-      console.warn("[MatchingDashboard] Crédits insuffisants.");
       if (onPaywallOpen) onPaywallOpen();
       dispatch(setError("Vous n'avez plus de crédits. Veuillez souscrire à l'offre illimitée."));
       setIsLoadingInternal(false);
@@ -295,15 +327,12 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
     }
 
     const jobFile = jobFiles[0] || null;
-    const finalResults: (MatchResult & { status?: 'success' | 'error' })[] = [];
 
-    // On déduit UN SEUL crédit pour toute l'opération (sauf si ADMIN)
     if (role !== 'ADMIN') {
       try {
         const { deductCredit } = await import('@/actions/credits.action');
         const deductResult = await deductCredit(activeUserId);
         if (!deductResult.success) {
-          console.error("[MatchingDashboard] Échec déduction crédit:", deductResult.error);
           if (onPaywallOpen) onPaywallOpen();
           dispatch(setError(deductResult.error || "Impossible de déduire vos crédits."));
           setIsLoadingInternal(false);
@@ -316,93 +345,67 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
       }
     }
     
-    // Mode texte ou fichier unique
-    if (cvInputType === 'text' || (cvInputType === 'file' && cvFiles.length === 1)) {
-      dispatch(setLoadingStep("Analyse en cours..."));
-      const formData = new FormData();
-      formData.append('userId', activeUserId);
-      if (jobFile) formData.append('jobFile', jobFile);
-      if (jobText) formData.append('jobTextRaw', jobText);
-      
-      formData.append('skipDeduction', 'true');
-      
-      if (cvInputType === 'file') {
-        formData.append('cvFile', cvFiles[0]);
-      } else {
-        formData.append('cvTextRaw', cvText);
-      }
+    const formData = new FormData();
+    formData.append('userId', activeUserId);
+    if (jobFile) formData.append('jobFile', jobFile);
+    if (jobText) formData.append('jobTextRaw', jobText);
+    cvFiles.forEach(file => formData.append('cvFiles', file));
+    
+    if (cvInputType === 'text') {
+      const blob = new Blob([cvText], { type: 'text/plain' });
+      const virtualFile = new File([blob], "CV_Saisi.txt", { type: 'text/plain' });
+      formData.append('cvFiles', virtualFile);
+    }
 
-      try {
-        const result = await processMatchingWorkflow(formData);
-        if (result.success && result.data) {
-          if (result.creditsRemaining !== undefined) dispatch(updateCredits(result.creditsRemaining));
-          dispatch(setResult(result.data));
-        } else {
-          dispatch(setError(result.error || "Échec de l'analyse."));
+    try {
+      dispatch(setLoadingStep("Lancement du traitement groupé..."));
+      const result = await startBatchMatchingAction(formData);
+      
+      if (result.success && result.batchJobId) {
+        // 1. Peupler immédiatement des résultats "fantômes" (Ghost items) pour l'UI
+        const ghostResults: MatchResult[] = cvFiles.map((file) => ({
+          score: 0,
+          competences_validees: [],
+          competences_manquantes: [],
+          argumentaire_client: "Analyse en attente...",
+          questions_candidat: [],
+          candidateInfo: { firstName: file.name, lastName: '' },
+          status: 'PENDING'
+        }));
+        
+        if (cvInputType === 'text') {
+          // Le fichier virtuel créé s'appelle "CV_Saisi.txt" dans le formData
+          ghostResults.push({
+            score: 0,
+            competences_validees: [],
+            competences_manquantes: [],
+            argumentaire_client: "Analyse en attente...",
+            questions_candidat: [],
+            candidateInfo: { firstName: "CV_Saisi.txt", lastName: '' },
+            status: 'PENDING'
+          });
         }
-      } catch {
-        dispatch(setError("Erreur technique."));
-      } finally {
-        setIsLoadingInternal(false);
+
+        dispatch(setMultiResults(ghostResults));
+        dispatch(setActiveBatchId(result.batchJobId));
+        dispatch(setLoading(false));     // Libérer l'interface immédiatement
+      } else {
+        dispatch(setError(result.error || "Échec du lancement de l'analyse."));
         dispatch(setLoading(false));
       }
-    } else {
-      // MODE MULTI-CV (Uniquement en mode fichier)
-      const total = cvFiles.length;
-      console.log(`[MultiMatch] Lancement de ${total} analyses séquentiellement.`);
-      
-      for (let i = 0; i < total; i++) {
-        const currentCv = cvFiles[i];
-        dispatch(setBatchProgress({ current: i + 1, total }));
-        dispatch(setLoadingStep(`Analyse du candidat ${i + 1}/${total}...`));
-        
-        const formData = new FormData();
-        formData.append('userId', activeUserId);
-        if (jobFile) formData.append('jobFile', jobFile);
-        if (jobText) formData.append('jobTextRaw', jobText);
-        formData.append('cvFile', currentCv);
-        formData.append('skipDeduction', 'true');
-
-        try {
-          const result = await processMatchingWorkflow(formData);
-          if (result.success && result.data) {
-            if (result.creditsRemaining !== undefined) dispatch(updateCredits(result.creditsRemaining));
-            // Ajout du résultat (succès)
-            finalResults.push({ ...result.data, status: 'success' });
-          } else {
-            // Ajout d'un placeholder en cas d'échec (silencieux selon consigne)
-            finalResults.push({ 
-              score: 0, 
-              argumentaire_client: "Échec de l'analyse.", 
-              candidateInfo: { firstName: currentCv.name, lastName: "(Erreur)" },
-              status: 'error',
-              competences_manquantes: [],
-              competences_validees: []
-            });
-          }
-        } catch {
-           finalResults.push({ 
-             score: 0, 
-             candidateInfo: { firstName: currentCv.name, lastName: "(Erreur tech)" },
-             status: 'error',
-             argumentaire_client: "Erreur lors du traitement.",
-             competences_manquantes: [],
-             competences_validees: []
-           });
-        }
-      }
-
-      // Finalisation multi-résultats
-      import('@/store/matchingSlice').then(({ setMultiResults }) => {
-        dispatch(setMultiResults(finalResults));
-      });
-      setIsLoadingInternal(false);
+    } catch (err) {
+      console.error("Erreur startBatch:", err);
+      dispatch(setError("Erreur lors de la communication avec le serveur."));
       dispatch(setLoading(false));
-      dispatch(setLoadingStep(""));
+    } finally {
+      setIsLoadingInternal(false);
     }
   };
 
   const isLoaderActive = loading || isLoadingInternal;
+
+  // Plus aucune UI bloquante
+  const showGlobalLoader = false;
 
   const isButtonDisabled = isLoaderActive || 
     (!(jobInputType === 'file' ? jobFiles.length > 0 : jobText.length > 10)) || 
@@ -450,11 +453,11 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
               : 'bg-main text-white hover:bg-primary hover:-translate-y-1 hover:shadow-primary/40 active:scale-95'}
           `}
         >
-          {isLoaderActive ? (
+          {isLoadingInternal && !activeBatchId ? (
             <>
               <Loader2 className="w-6 h-6 animate-spin text-white" />
               <div className="flex flex-col items-start leading-tight">
-                <span className="animate-pulse">Analyse en cours...</span>
+                <span className="animate-pulse">Envoi en cours...</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 italic">{loadingStep}</span>
               </div>
             </>
@@ -477,6 +480,8 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
           </p>
         )}
       </div>
+
+      {/* PLUS DE POPINS NI DE LOADER GLOBAL ICI */}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

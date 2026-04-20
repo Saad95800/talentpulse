@@ -197,7 +197,7 @@ export default function MatchResultView({ result, candidateName }: MatchResultVi
               <HelpCircle className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-2xl font-black text-main leading-tight">Questions d'Entretien</h3>
+              <h3 className="text-2xl font-black text-main leading-tight">Questions d&apos;Entretien</h3>
               <p className="text-sm font-bold text-muted uppercase tracking-wider">Vérification des qualifications critiques</p>
             </div>
           </div>

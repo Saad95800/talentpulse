@@ -1,13 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Lock, 
   X, 
-  Calendar, 
   Zap, 
-  CheckCircle2,
-  ExternalLink
+  CheckCircle2
 } from 'lucide-react';
 
 interface PaywallModalProps {
@@ -16,6 +14,7 @@ interface PaywallModalProps {
 }
 
 export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
+  const [loading, setLoading] = useState(false);
   if (!isOpen) return null;
 
   return (
@@ -55,11 +54,11 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Batch jusqu'à 5 CV par demande</span>
+                <span className="text-sm font-bold text-main">Batch jusqu&apos;à 5 CV par demande</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-main">Export PDF de l'analyse illimité</span>
+                <span className="text-sm font-bold text-main">Export PDF de l&apos;analyse illimité</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -71,14 +70,20 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
               <button 
                 onClick={async () => {
                   try {
+                    setLoading(true);
                     const { getPremiumCheckoutUrlAction } = await import('@/actions/payment.action');
-                    const userId = (window as any).userId || (document as any).cookie.match(/userId=([^;]+)/)?.[1]; 
-                    // Note: En prod, on récupère l'ID via le state global ou le contexte
+                    const userId = (window as unknown as { userId?: string }).userId;
+                    if (!userId) {
+                      alert("Session expirée. Veuillez vous reconnecter.");
+                      setLoading(false);
+                      return;
+                    }
                     const res = await getPremiumCheckoutUrlAction(userId);
                     if (res.success && res.url) {
                       window.location.href = res.url;
                     } else {
                       alert(res.error || "Erreur lors de l'initialisation du paiement.");
+                      setLoading(false);
                     }
                   } catch (err) {
                     console.error(err);

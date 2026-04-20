@@ -32,9 +32,9 @@ export async function GET(
       return NextResponse.json({ error: "Paiement introuvable" }, { status: 404 });
     }
 
+    const planName = 'Abonnement Premium';
+
     // 2. Générer le PDF en mémoire
-    // On utilise as any ici car les types de @react-pdf/renderer peuvent être stricts 
-    // sur l'élément racine (Document), mais fonctionnellement c'est correct.
     const pdfStream = await ReactPDF.renderToBuffer(
       <PaymentReceipt 
         receiptNumber={payment.receiptNumber}
@@ -42,8 +42,8 @@ export async function GET(
         customerName={payment.user.name || "Client"}
         customerEmail={payment.user.email}
         amount={payment.amount}
-        planName="Abonnement Premium"
-      /> as React.ReactElement<any>
+        planName={planName}
+      />
     );
 
     // 3. Retourner le flux PDF avec les bons headers

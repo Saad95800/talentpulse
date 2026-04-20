@@ -1,11 +1,12 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import { deductCredit, checkCredits } from "./credits.action";
 import { extractTextFromFile } from "@/lib/document";
-import { generateMatchingScore, extractCandidateInfo, validateDocumentConformity } from "@/lib/ai";
+import { extractCandidateInfo, validateDocumentConformity } from "@/lib/ai";
 import { logError, logInfo } from "./logger.action";
+import { processSingleMatch } from "@/lib/matching/core";
+import { addMatchingJob } from "@/lib/queue/matching-queue";
 
 /**
  * Chef d'Orchestre : Vérification crédit -> Extraction texte -> IA -> Sauvegarde DB -> Déduction crédit.
@@ -125,59 +126,15 @@ export async function processMatchingWorkflow(formData: FormData) {
     console.log("[Workflow] Étape 1: Extraction Profil...");
     const candidateInfo = await extractCandidateInfo(cvText, cvFileData);
     
-    // 2. Analyse de Matching (Intelligence Path - Claude/Générique)
-    console.log("[Workflow] Étape 2: Matching Sémantique...");
-    const resultIA = await generateMatchingScore(jobText, cvText, candidateInfo);
-
-    // Étape F : Sauvegarde Structurelle BDD (Vivier IA)
-    if (!prisma.mission || !prisma.candidate) {
-      throw new Error("Base de données indisponible.");
-    }
-
-    const finalCandidateName = `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || candidateName;
-
-    // Helper de troncation pour éviter les erreurs "too long" même après passage en TEXT (64kb)
-    const truncate = (str: string | undefined | null, max: number) => 
-      str ? str.substring(0, max) : str;
-
-    const mission = await prisma.mission.create({
-      data: {
-        userId,
-        title: truncate(jobTitle, 1000) || "Sans titre",
-        description: jobText,
-      }
-    });
-
-    const candidate = await prisma.candidate.create({
-      data: {
-        userId,
-        name: truncate(finalCandidateName, 500) || "Candidat",
-        firstName: truncate(candidateInfo.firstName, 200),
-        lastName: truncate(candidateInfo.lastName, 200),
-        email: truncate(candidateInfo.email, 200),
-        phone: truncate(candidateInfo.phone, 200),
-        address: truncate(candidateInfo.address, 500),
-        linkedin: truncate(candidateInfo.linkedin, 500),
-        website: truncate(candidateInfo.website, 500),
-        summary: candidateInfo.summary, // Déjà LongText
-        languages: (candidateInfo.languages || []) as Prisma.InputJsonValue,
-        skills: (candidateInfo.skills || []) as Prisma.InputJsonValue,
-        experiences: (candidateInfo.experiences || []) as Prisma.InputJsonValue,
-        educations: (candidateInfo.educations || []) as Prisma.InputJsonValue,
-        cvText,
-      }
-    });
-
-    const newRecord = await prisma.matchRecord.create({
-      data: {
-        userId,
-        missionId: mission.id,
-        candidateId: candidate.id,
-        jobTitle,
-        candidateName,
-        score: resultIA.score,
-        aiResponse: resultIA as unknown as Prisma.InputJsonValue,
-      },
+    // 2. Traitement du matching via le Core partagé
+    console.log("[Workflow] Étape 2: Matching Sémantique et Sauvegarde...");
+    const resultIA = await processSingleMatch({
+      userId,
+      jobTitle,
+      jobText,
+      candidateName,
+      cvText,
+      candidateInfo
     });
 
     // Étape G : L'analyse a réussi, on déduit le crédit (sauf si mode batch/skip)
@@ -197,20 +154,20 @@ export async function processMatchingWorkflow(formData: FormData) {
 
     // Retour au Front-end
     await logInfo(`Matching réussi pour ${candidateName} sur ${jobTitle}`, userId, { 
-      recordId: newRecord.id,
-      missionId: mission.id,
-      candidateId: candidate.id 
+      recordId: resultIA.recordId,
+      missionId: resultIA.mission.id,
+      candidateId: resultIA.candidate.id 
     });
     
     return JSON.parse(JSON.stringify({ 
       success: true, 
       data: {
-        ...resultIA,
+        ...resultIA.resultIA,
         candidateInfo,
-        jobDescription: mission.description,
-        fullCandidate: candidate
+        jobDescription: resultIA.mission.description,
+        fullCandidate: resultIA.candidate
       }, 
-      recordId: newRecord.id,
+      recordId: resultIA.recordId,
       creditsRemaining: deductResult.success ? (deductResult.creditsRemaining ?? 0) : (creditCheck.currentCredits ?? 0) 
     }));
 
@@ -233,5 +190,154 @@ export async function processMatchingWorkflow(formData: FormData) {
       success: false, 
       error: `Détails de l'erreur : ${message}` 
     };
+  }
+}
+
+/**
+ * Action de démarrage de Matching en arrière-plan (BullMQ)
+ */
+export async function startBatchMatchingAction(formData: FormData) {
+  try {
+    const userId = formData.get('userId') as string;
+    const jobFile = formData.get('jobFile') as File | null;
+    const jobTextRaw = formData.get('jobTextRaw') as string | null;
+    const cvFiles = formData.getAll('cvFiles') as File[];
+
+    console.log(`[BatchAction] Démarrage. Modèles Prisma détectés:`, Object.keys(prisma || {}).filter(k => !k.startsWith('_')));
+    if (!prisma.batchJob) {
+      throw new Error("Le modèle 'BatchJob' est introuvable sur le client Prisma. Un redémarrage de 'npm run dev' est peut-être nécessaire.");
+    }
+    
+    if (!userId) return { success: false, error: "Utilisateur non identifié." };
+    if (cvFiles.length === 0) return { success: false, error: "Aucun CV fourni." };
+
+    // 1. Extraction du Job Description (JD)
+    let jobText = "";
+    if (jobFile && jobFile.size > 0) {
+      const buffer = Buffer.from(await jobFile.arrayBuffer());
+      const doc = await extractTextFromFile(buffer, jobFile.name);
+      jobText = doc.text.substring(0, 30000);
+    } else if (jobTextRaw) {
+      jobText = jobTextRaw.substring(0, 30000);
+    }
+
+    // 2. Création du BatchJob en DB
+    const batchJob = await prisma.batchJob.create({
+      data: {
+        userId,
+        totalItems: cvFiles.length,
+        status: 'PROCESSING'
+      }
+    });
+
+    // 3. Queue immédiate de chaque CV (Traitement différé)
+    for (const cvFile of cvFiles) {
+      // Lecture ultra-rapide du buffer (en mémoire)
+      const arrayBuffer = await cvFile.arrayBuffer();
+      const cvBufferBase64 = Buffer.from(arrayBuffer).toString('base64');
+      
+      const candidateNamePlaceholder = cvFile.name; // Fallback initial
+
+      // Création du BatchItem (Statut PENDING)
+      const item = await prisma.batchItem.create({
+        data: {
+          batchJobId: batchJob.id,
+          candidateName: candidateNamePlaceholder,
+          status: 'PENDING'
+          // cvText n'est plus requis ici, le worker s'en chargera
+        }
+      });
+
+      // Ajout à la file d'attente BullMQ avec les données brutes
+      await addMatchingJob({
+        userId,
+        batchJobId: batchJob.id,
+        batchItemId: item.id,
+        jobText,
+        cvBufferBase64,
+        cvFileName: cvFile.name
+      });
+    }
+
+    return { 
+      success: true, 
+      batchJobId: batchJob.id,
+      message: `${cvFiles.length} CVs envoyés en traitement.` 
+    };
+
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[startBatchMatchingAction] Erreur critique:", error);
+    return { 
+      success: false, 
+      error: `Erreur lors du lancement : ${message}` 
+    };
+  }
+}
+
+/**
+ * Récupère l'état d'un batch et ses résultats
+ */
+export async function getBatchStatusAction(batchJobId: string) {
+  try {
+    const batchJob = await prisma.batchJob.findUnique({
+      where: { id: batchJobId },
+      include: {
+        items: {
+          include: {
+            matchRecord: true
+          }
+        }
+      }
+    });
+
+    if (!batchJob) return { success: false, error: "Batch introuvable." };
+
+    return { success: true, data: batchJob };
+  } catch (error) {
+    console.error("[getBatchStatusAction] Erreur:", error);
+    return { success: false, error: "Erreur lors de la récupération du statut." };
+  }
+}
+
+/**
+ * Récupère le dernier batch actif d'un utilisateur
+ */
+export async function getActiveBatchAction(userId: string) {
+  try {
+    const activeBatch = await prisma.batchJob.findFirst({
+      where: { 
+        userId,
+        status: { in: ['PENDING', 'PROCESSING'] }
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: {
+          include: {
+            matchRecord: true
+          }
+        }
+      }
+    });
+
+    return { success: true, data: activeBatch };
+  } catch {
+    return { success: false, error: "Erreur récupération batch actif." };
+  }
+}
+
+/**
+ * Annule un batch actif pour débloquer l'utilisateur
+ */
+export async function cancelActiveBatchAction(batchJobId: string) {
+  try {
+    await prisma.batchJob.update({
+      where: { id: batchJobId },
+      data: { status: 'FAILED' }
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("[cancelActiveBatchAction] Erreur:", error);
+    return { success: false, error: "Impossible d'annuler le batch." };
   }
 }

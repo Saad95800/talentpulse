@@ -88,7 +88,7 @@ export default function AdminDashboard() {
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-              TalentMatcher Admin
+              TalentPulse Admin
             </h1>
           </div>
           <button 

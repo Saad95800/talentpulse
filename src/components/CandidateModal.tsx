@@ -110,7 +110,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
             </div>
             <div>
               <h3 className="text-white font-black uppercase tracking-widest text-sm">Profil Candidat</h3>
-              <p className="text-indigo-300 transform -skew-x-12 text-[10px] font-bold">TALENTMATCHER INTELLIGENCE</p>
+              <p className="text-indigo-300 transform -skew-x-12 text-[10px] font-bold">TALENTPULSE INTELLIGENCE</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

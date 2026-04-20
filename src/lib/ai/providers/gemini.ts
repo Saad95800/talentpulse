@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, Part, ResponseSchema } from '@google/generative-ai';
 import type { IAIProvider, AIMessage, AICompletionOptions } from '../types';
 
 /**
@@ -69,7 +69,7 @@ export class GeminiProvider implements IAIProvider {
           maxOutputTokens: options.maxTokens ?? 32000,
           temperature: options.temperature ?? 0,
           responseMimeType: options.json ? 'application/json' : 'text/plain',
-          responseSchema: options.schema as any,
+          responseSchema: options.schema as unknown as ResponseSchema,
         },
       });
 
@@ -113,11 +113,11 @@ export class GeminiProvider implements IAIProvider {
           maxOutputTokens: options.maxTokens ?? 32000,
           temperature: options.temperature ?? 0,
           responseMimeType: options.json ? 'application/json' : 'text/plain',
-          responseSchema: options.schema as any,
+          responseSchema: options.schema as unknown as ResponseSchema,
         },
       });
 
-      const promptParts: { text?: string; inlineData?: { data: string; mimeType: string } }[] = [];
+      const promptParts: Part[] = [];
       const pageLimitInstruction = mimeType === 'application/pdf' 
         ? "\n\nIMPORTANT: Analyse UNIQUEMENT les 10 premières pages si le document est long." 
         : "";
@@ -134,8 +134,7 @@ export class GeminiProvider implements IAIProvider {
       });
 
       const result = await model.generateContent({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        contents: [{ role: 'user', parts: promptParts as any }],
+        contents: [{ role: 'user', parts: promptParts }],
       }, { timeout: 300000 }); // Augmenté à 300s (5min) pour l'OCR et les PDF lourds
 
       const response = await result.response;

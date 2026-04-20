@@ -36,6 +36,36 @@ model User {
   subscriptionStatus     String?    // "active", "canceled", "suspended"
   nextBillingDate        DateTime?
   payments               MolliePayment[]
+  batchJobs              BatchJob[]
+}
+
+model BatchJob {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  status          String         @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  totalItems      Int
+  processedItems  Int            @default(0)
+  items           BatchItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model BatchItem {
+  id              String         @id @default(uuid())
+  batchJobId      String
+  batchJob        BatchJob       @relation(fields: [batchJobId], references: [id])
+  candidateName   String?
+  cvText          String?        @db.LongText
+  status          String         @default("PENDING")
+  matchRecordId   String?        @unique
+  matchRecord     MatchRecord?   @relation(fields: [matchRecordId], references: [id])
+  error           String?        @db.Text
+  createdAt       DateTime       @default(now())
+
+  @@index([batchJobId])
 }
 
 model Mission {
@@ -88,6 +118,7 @@ model MatchRecord {
   candidateName String
   score         Float
   aiResponse    Json
+  batchItem     BatchItem?
   createdAt     DateTime   @default(now())
 
   @@index([userId])

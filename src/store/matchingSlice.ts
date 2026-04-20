@@ -9,6 +9,7 @@ interface MatchingState {
   batchCurrent: number;
   batchTotal: number;
   error: string | null;
+  activeBatchId: string | null;
 }
 
 const initialState: MatchingState = {
@@ -19,6 +20,7 @@ const initialState: MatchingState = {
   batchCurrent: 0,
   batchTotal: 0,
   error: null,
+  activeBatchId: null,
 };
 
 export const matchingSlice = createSlice({
@@ -75,9 +77,22 @@ export const matchingSlice = createSlice({
       state.loading = false;
       state.loadingStep = "";
       state.error = null;
+      state.activeBatchId = null;
+    },
+    setActiveBatchId: (state, action: PayloadAction<string | null>) => {
+      state.activeBatchId = action.payload;
     },
   },
 });
 
-export const { setLoading, setLoadingStep, setBatchProgress, setResult, setMultiResults, setError, resetResult } = matchingSlice.actions;
+export const { 
+  setLoading, 
+  setLoadingStep, 
+  setBatchProgress, 
+  setResult, 
+  setMultiResults, 
+  setError, 
+  resetResult,
+  setActiveBatchId 
+} = matchingSlice.actions;
 export default matchingSlice.reducer;
