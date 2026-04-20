@@ -24,19 +24,34 @@ export async function getPremiumCheckoutUrlAction(userId: string, couponCode?: s
     const customerId = await getOrCreateMollieCustomer(userId, user.name || "Client", user.email);
 
     // 2. Gestion du coupon de réduction
-    let amount = "39.90";
-    if (couponCode?.trim().toUpperCase() === "ONE") {
-      amount = "1.00";
-    } else if (couponCode) {
-      // Si un coupon est fourni mais n'est pas "ONE", on pourrait lever une erreur ou juste ignorer.
-      // Ici on ignore pour rester simple, mais on prévient dans le log.
-      console.log(`[Payment] Coupon invalide tenté : ${couponCode}`);
+    let amount = 39.90;
+    let finalCouponCode: string | undefined = undefined;
+
+    if (couponCode) {
+      const dbCoupon = await prisma.coupon.findUnique({
+        where: { 
+          code: couponCode.trim().toUpperCase(),
+          isActive: true 
+        }
+      });
+
+      if (dbCoupon) {
+        if (dbCoupon.type === "FIXED_PRICE") {
+          amount = dbCoupon.value;
+        } else if (dbCoupon.type === "DISCOUNT") {
+          amount = Math.max(0, amount - dbCoupon.value);
+        }
+        finalCouponCode = dbCoupon.code;
+        console.log(`[Payment] Coupon appliqué : ${dbCoupon.code} (${dbCoupon.type} - New amount: ${amount}€)`);
+      } else {
+        console.log(`[Payment] Coupon invalide tenté : ${couponCode}`);
+      }
     }
 
     // 3. Créer le paiement de premier mandat
     const checkoutUrl = await createFirstSubscriptionPayment(customerId, userId, user.email, {
-      amount,
-      couponCode: amount === "1.00" ? "ONE" : undefined
+      amount: amount.toFixed(2),
+      couponCode: finalCouponCode
     });
 
     if (!checkoutUrl) {

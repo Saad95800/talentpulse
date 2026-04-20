@@ -9,7 +9,12 @@ import {
   Clock,
   Sparkles
 } from 'lucide-react';
-import { getPremiumCheckoutUrlAction, getPaymentHistoryAction, cancelSubscriptionAction } from '@/actions/payment.action';
+import { 
+  getPremiumCheckoutUrlAction, 
+  getPaymentHistoryAction, 
+  cancelSubscriptionAction 
+} from '@/actions/payment.action';
+import { validateCouponAction } from '@/actions/coupon.action';
 
 import PricingGrid from '@/components/PricingGrid';
 
@@ -39,7 +44,38 @@ export default function SubscriptionManager({
   const [history, setHistory] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [coupon, setCoupon] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; value: number; type: string } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
   const isPremium = userPlan === 'PREMIUM';
+
+  const handleApplyCoupon = async () => {
+    if (!coupon.trim()) return;
+    setIsValidating(true);
+    setCouponError(null);
+    try {
+      const res = await validateCouponAction(coupon);
+      if (res.success && res.coupon) {
+        setAppliedCoupon(res.coupon);
+      } else {
+        setCouponError(res.error || "Code invalide");
+        setAppliedCoupon(null);
+      }
+    } catch {
+      setCouponError("Erreur technique");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const calculateDiscountedPrice = () => {
+    if (!appliedCoupon) return null;
+    if (appliedCoupon.type === "FIXED_PRICE") return appliedCoupon.value;
+    return Math.max(0, 39.90 - appliedCoupon.value);
+  };
+
+  const discountAmount = appliedCoupon ? (39.90 - (calculateDiscountedPrice() || 39.90)) : 0;
 
   useEffect(() => {
     if (userId) {
@@ -108,14 +144,39 @@ export default function SubscriptionManager({
               <p className="text-xs text-slate-500 font-medium">Saisissez-le ici pour bénéficier d'une réduction immédiate.</p>
             </div>
           </div>
-          <div className="w-full md:w-auto">
-            <input 
-              type="text" 
-              placeholder="Ex: ONE"
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-              className="w-full md:w-64 px-6 py-4 rounded-2xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-bold text-main uppercase tracking-widest placeholder:text-slate-300 placeholder:normal-case placeholder:tracking-normal"
-            />
+          <div className="w-full md:w-auto flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                placeholder=""
+                value={coupon}
+                onChange={(e) => {
+                  setCoupon(e.target.value.toUpperCase());
+                  setCouponError(null);
+                }}
+                className={`w-full md:w-64 px-6 py-4 rounded-2xl border-2 outline-none transition-all font-bold text-main uppercase tracking-widest placeholder:text-slate-300 placeholder:normal-case placeholder:tracking-normal ${couponError ? 'border-red-200 focus:border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10'}`}
+              />
+              <button
+                onClick={handleApplyCoupon}
+                disabled={isValidating || !coupon.trim()}
+                className="px-6 py-4 bg-main text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+              >
+                {isValidating ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : 'Appliquer'}
+              </button>
+            </div>
+            
+            {appliedCoupon && (
+              <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
+                ✅ Code appliqué : -{discountAmount.toFixed(2)} € de réduction
+              </p>
+            )}
+            {couponError && (
+              <p className="text-red-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
+                ❌ {couponError}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -128,6 +189,7 @@ export default function SubscriptionManager({
         onUpgrade={handleUpgrade}
         onCancel={handleCancel}
         loading={loading}
+        discountedPrice={calculateDiscountedPrice()}
       />
 
       {/* Payment History Table */}

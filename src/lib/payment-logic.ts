@@ -76,7 +76,19 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
     const webhookUrl = process.env.MOLLIE_WEBHOOK_URL;
 
     // Détermination du prix de l'abonnement récurrent
-    const subscriptionPrice = metadata.couponCode === 'ONE' ? '1.00' : '39.90';
+    let subscriptionPrice = "39.90";
+    if (metadata.couponCode) {
+      const dbCoupon = await prisma.coupon.findUnique({
+        where: { code: metadata.couponCode, isActive: true }
+      });
+      if (dbCoupon) {
+        if (dbCoupon.type === "FIXED_PRICE") {
+          subscriptionPrice = dbCoupon.value.toFixed(2);
+        } else if (dbCoupon.type === "DISCOUNT") {
+          subscriptionPrice = Math.max(0, 39.90 - dbCoupon.value).toFixed(2);
+        }
+      }
+    }
 
     // Créer l'abonnement récurrent chez Mollie
     const subscription = await mollieClient.customerSubscriptions.create({

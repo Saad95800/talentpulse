@@ -18,6 +18,7 @@ interface PricingGridProps {
   onCancel?: () => void;
   loading?: boolean;
   isPublic?: boolean;
+  discountedPrice?: number | null;
 }
 
 export default function PricingGrid({
@@ -27,7 +28,8 @@ export default function PricingGrid({
   onUpgrade,
   onCancel,
   loading = false,
-  isPublic = false
+  isPublic = false,
+  discountedPrice = null
 }: PricingGridProps) {
   const [showCancelModal, setShowCancelModal] = React.useState(false);
   
@@ -102,9 +104,18 @@ export default function PricingGrid({
             <p className="text-sm text-slate-500 font-medium leading-relaxed">Boostez votre productivité et gérez plus de candidatures.</p>
           </div>
 
-          <div className="mb-10 flex items-baseline gap-1">
-            <span className="text-5xl font-black text-primary">39,90€</span>
-            <span className="text-slate-400 font-bold">/mois</span>
+          <div className="mb-10 flex items-baseline gap-2">
+            {discountedPrice !== null ? (
+              <>
+                <span className="text-5xl font-black text-primary">{discountedPrice.toFixed(2)}€</span>
+                <span className="text-xl font-bold text-slate-300 line-through">39,90€</span>
+              </>
+            ) : (
+              <>
+                <span className="text-5xl font-black text-primary">39,90€</span>
+                <span className="text-slate-400 font-bold">/mois</span>
+              </>
+            )}
           </div>
 
           <ul className="space-y-5 flex-1 mb-10">

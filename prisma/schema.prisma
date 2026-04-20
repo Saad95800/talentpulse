@@ -223,3 +223,13 @@ model MolliePayment {
   @@index([userId])
   @@index([createdAt])
 }
+
+model Coupon {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  value         Float    // Montant de la réduction ou prix fixe
+  type          String   @default("FIXED_PRICE") // "FIXED_PRICE" ou "DISCOUNT"
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
