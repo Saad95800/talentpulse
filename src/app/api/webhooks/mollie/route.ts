@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processPaymentSuccess } from "@/lib/payment-logic";
+import { processPaymentSuccess, processPaymentFailure } from "@/lib/payment-logic";
+import { mollieClient } from "@/lib/mollie";
 
 /**
  * Webhook Mollie : gère les notifications de succès/échec de paiement.
@@ -16,15 +17,18 @@ export async function POST(req: NextRequest) {
 
     console.log(`📡 [MollieWebhook] Notification reçue pour le paiement ${id}`);
 
-    // Appel de la logique partagée (Idempotente)
-    const result = await processPaymentSuccess({ paymentId: id });
+    // 1. Récupérer le statut réel chez Mollie
+    const payment = await mollieClient.payments.get(id);
 
-    if (result.success) {
-      return new NextResponse("OK", { status: 200 });
-    } else {
-      // Si c'est un statut non payé (expiré, échoué), Mollie peut quand même envoyer un webhook
-      return new NextResponse("Handled", { status: 200 });
+    if (payment.status === 'paid') {
+      const result = await processPaymentSuccess({ paymentId: id });
+      if (result.success) return new NextResponse("OK", { status: 200 });
+    } else if (['failed', 'expired', 'canceled'].includes(payment.status)) {
+      const result = await processPaymentFailure(id);
+      if (result.success) return new NextResponse("OK (Failure Handled)", { status: 200 });
     }
+
+    return new NextResponse("Status ignored or Handled", { status: 200 });
 
   } catch (error) {
     console.error("🔥 [MollieWebhook] Erreur critique:", error);

@@ -1,6 +1,6 @@
 import { mollieClient } from "./mollie";
 import prisma from "./prisma";
-import { sendBillingSuccessEmail } from "./mail";
+import { sendBillingSuccessEmail, sendBillingFailureEmail } from "./mail";
 
 /**
  * Logique partagée pour traiter un succès de paiement Mollie.
@@ -88,6 +88,10 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
       interval: '1 month',
       description: `Abonnement TalentPulse Premium (Récurrent${metadata.couponCode ? ` - Coupon ${metadata.couponCode}` : ''})`,
       webhookUrl: isLocalhost ? undefined : webhookUrl,
+      metadata: {
+        userId: effectiveUserId,
+        type: 'RECURRING_PAYMENT'
+      }
     });
 
     // Activer le mode Premium
@@ -99,6 +103,8 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
         mollieSubscriptionId: subscription.id,
         credits: 300, // Dotation Premium (Mise à jour à 300)
         nextBillingDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        gracePeriodStartedAt: null,
+        lastBillingEmailSentAt: null,
       }
     });
 
@@ -112,6 +118,8 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
         subscriptionStatus: "active",
         credits: 300,
         nextBillingDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        gracePeriodStartedAt: null,
+        lastBillingEmailSentAt: null,
       }
     });
     console.log(`[PaymentLogic] Crédits réinitialisés pour ${user.email}`);
@@ -152,4 +160,50 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
   }
 
   return { success: true, processed: true };
+}
+
+/**
+ * Logique pour traiter un échec de paiement Mollie.
+ * Déclenchée par le Webhook.
+ */
+export async function processPaymentFailure(paymentId: string) {
+  console.log(`[PaymentLogic] Traitement de l'échec pour le paiement ${paymentId}`);
+  
+  try {
+    const payment = await mollieClient.payments.get(paymentId);
+    const metadata = payment.metadata as { userId?: string; type?: string };
+    const userId = metadata?.userId;
+
+    if (!userId) {
+      console.warn(`[PaymentLogic] Échec ignoré : pas de userId dans les métadonnées du paiement ${paymentId}`);
+      return { success: false, error: "Pas de userId" };
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return { success: false, error: "Utilisateur non trouvé" };
+
+    // Si l'utilisateur est Premium et qu'un paiement échoue (probablement récurrent)
+    if (user.plan === "PREMIUM") {
+      // Si la période de grâce n'a pas encore commencé, on l'initialise
+      if (!user.gracePeriodStartedAt) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            gracePeriodStartedAt: new Date(),
+            subscriptionStatus: "past_due",
+            lastBillingEmailSentAt: new Date()
+          }
+        });
+
+        // Envoi du premier mail d'alerte (Jour 1 / Tentative 1)
+        await sendBillingFailureEmail(user.email, 1);
+        console.log(`[PaymentLogic] Début de la période de grâce pour ${user.email}`);
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error(`[PaymentLogic] Erreur lors du processPaymentFailure:`, error);
+    return { success: false, error: "Internal error" };
+  }
 }

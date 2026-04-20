@@ -37,8 +37,10 @@ model User {
   mollieSubscriptionId   String?    // ID Subscription Mollie
   plan                   String     @default("FREE") // "FREE", "PREMIUM"
   subscriptionStatus     String?    // "active", "canceled", "suspended"
-  nextBillingDate      DateTime?
-  payments             MolliePayment[]
+  nextBillingDate        DateTime?
+  gracePeriodStartedAt   DateTime?  // Date du début de l'échec de paiement récurrent
+  lastBillingEmailSentAt DateTime?  // Date du dernier email de relance envoyé
+  payments               MolliePayment[]
   batchJobs            BatchJob[]
   conversation         Conversation?
   
