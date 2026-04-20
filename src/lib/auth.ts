@@ -12,9 +12,9 @@ export function signToken(payload: object, expiresIn: string = '24h') {
 /**
  * Vérifie la validité d'un token JWT
  */
-export function verifyToken(token: string) {
+export function verifyToken(token: string): { userId: string, role: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, JWT_SECRET) as { userId: string, role: string };
   } catch {
     return null;
   }

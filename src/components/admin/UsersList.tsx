@@ -22,8 +22,8 @@ export default function UsersList({ token }: { token: string }) {
     setLoading(true);
     const res = await getAdminUsersAction(token, page, searchTerm);
     if (res.success) {
-      setUsers(res.users);
-      setPagination(res.pagination);
+      setUsers(res.users || []);
+      setPagination(res.pagination || null);
     }
     setLoading(false);
   };

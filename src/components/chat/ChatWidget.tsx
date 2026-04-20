@@ -58,7 +58,8 @@ export default function ChatWidget() {
       const conversationId = (messages[0] as any).conversationId;
       if (conversationId) {
         markAsReadAction(token, conversationId);
-        setUnreadCount(0);
+        // Only set back to 0 if it really changed
+        setUnreadCount(prev => prev > 0 ? 0 : prev);
       }
     }
   }, [isOpen, unreadCount, messages, token]);

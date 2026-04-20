@@ -45,8 +45,8 @@ export async function GET(
 
     // 2. Import dynamique de @react-pdf/renderer pour éviter les erreurs de bundler (Turbopack)
     // On récupère renderToBuffer avec un fallback si nécessaire
-    const ReactPDF = await import("@react-pdf/renderer");
-    const renderFn = ReactPDF.renderToBuffer || (ReactPDF as any).default?.renderToBuffer;
+    const ReactPDF = await import("@react-pdf/renderer") as any;
+    const renderFn = ReactPDF.renderToBuffer || ReactPDF.default?.renderToBuffer;
 
     if (typeof renderFn !== 'function') {
       console.error("❌ [ReceiptAPI] renderToBuffer is not a function. Keys found:", Object.keys(ReactPDF));

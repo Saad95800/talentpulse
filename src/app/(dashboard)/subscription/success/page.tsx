@@ -14,16 +14,7 @@ function SuccessContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (paymentId || userId) {
-      handleSync();
-    } else {
-      setStatus('error');
-      setError("Informations de paiement manquantes.");
-    }
-  }, [paymentId, userId]);
-
-  const handleSync = async () => {
+  const handleSync = React.useCallback(async () => {
     try {
       const res = await syncPaymentStatusAction(paymentId || undefined, userId || undefined);
       if (res.success) {
@@ -32,11 +23,20 @@ function SuccessContent() {
         setStatus('error');
         setError(res.error || "Impossible de valider le paiement.");
       }
-    } catch (err) {
+    } catch (_err) {
       setStatus('error');
       setError("Une erreur technique est survenue.");
     }
-  };
+  }, [paymentId, userId]);
+
+  useEffect(() => {
+    if (paymentId || userId) {
+      handleSync();
+    } else {
+      setStatus('error');
+      setError("Informations de paiement manquantes.");
+    }
+  }, [paymentId, userId, handleSync]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">

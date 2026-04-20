@@ -25,7 +25,7 @@ export default function UserDetailEditor({ token, userId }: { token: string, use
   const fetchUser = async () => {
     setLoading(true);
     const res = await getAdminUserDetailAction(token, userId);
-    if (res.success) {
+    if (res.success && res.user) {
       setUser(res.user);
       setFormData({
         firstName: res.user.firstName || "",

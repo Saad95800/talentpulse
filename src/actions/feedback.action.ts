@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { verifyToken } from "@/lib/jwt";
+import { verifyToken } from "@/lib/auth";
 import { logInfo, logError } from "./logger.action";
 
 /**
@@ -9,7 +9,7 @@ import { logInfo, logError } from "./logger.action";
  */
 export async function submitMatchFeedbackAction(token: string, recordId: string, rating: number, comment?: string) {
   try {
-    const session = await verifyToken(token);
+    const session = verifyToken(token);
     if (!session) return { success: false, error: "Session expirée." };
 
     const record = await prisma.matchRecord.findUnique({
@@ -41,7 +41,7 @@ export async function submitMatchFeedbackAction(token: string, recordId: string,
  */
 export async function getAIQualityStatsAction(token: string) {
   try {
-    const session = await verifyToken(token);
+    const session = verifyToken(token);
     if (!session || session.role !== 'ADMIN') return { success: false, error: "Non autorisé." };
 
     // Taux de satisfaction global

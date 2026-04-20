@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getAdminHistoryAction } from "@/actions/history.action";
@@ -16,6 +16,8 @@ import {
   TrendingUp,
   Activity,
   MessageSquare,
+  ChevronRight,
+  Target,
   Users,
   DollarSign
 } from "lucide-react";
@@ -25,6 +27,7 @@ import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
 import AdminChatExplorer from "@/components/admin/AdminChatExplorer";
 import FinancialDashboard from "@/components/admin/FinancialDashboard";
 import AIQualityDashboard from "@/components/admin/AIQualityDashboard";
+import GrowthDashboard from "@/components/admin/GrowthDashboard";
 
 interface AdminHistoryRecord {
   id: string;
@@ -39,12 +42,12 @@ interface AdminHistoryRecord {
   };
 }
 
-export default function AdminDashboard() {
+function DashboardContent() {
   const { user, token, logout, checkAuth } = useAuth();
   const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth">("history");
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialChatUserId = searchParams.get("userId") || undefined;
@@ -96,7 +99,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
-      {/* Sidebar / Topbar */}
+      {/* ... (rest of the component content) ... */}
       <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-8">
@@ -203,10 +206,17 @@ export default function AdminDashboard() {
           >
             <Target className="w-4 h-4" /> Qualité IA
           </button>
+          <button 
+            onClick={() => setActiveTab("growth")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'growth' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <TrendingUp className="w-4 h-4" /> Croissance
+          </button>
         </div>
 
-        {activeTab === "finances" && <FinancialDashboard token={token} />}
-        {activeTab === "quality" && <AIQualityDashboard token={token} />}
+        {activeTab === "finances" && token && <FinancialDashboard token={token} />}
+        {activeTab === "quality" && token && <AIQualityDashboard token={token} />}
+        {activeTab === "growth" && token && <GrowthDashboard token={token} />}
 
         {activeTab === "history" ? (
           /* Search and Table */
@@ -296,5 +306,17 @@ export default function AdminDashboard() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

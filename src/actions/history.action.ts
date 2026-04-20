@@ -9,7 +9,7 @@ import { verifyToken } from "@/lib/auth";
 export async function getUserHistoryAction(userId: string, token: string, page: number = 1, limit: number = 20) {
   try {
     // Sécurité : Vérifier le token
-    const decoded = verifyToken(token) as { userId: string, role: string } | null;
+    const decoded = verifyToken(token);
     if (!decoded || decoded.userId !== userId) {
       return { success: false, error: "Non autorisé." };
     }
@@ -47,7 +47,7 @@ export async function getUserHistoryAction(userId: string, token: string, page: 
 export async function getAdminHistoryAction(token: string) {
   try {
     // Sécurité : Vérifier le token et le rôle admin
-    const decoded = verifyToken(token) as { userId: string, role: string } | null;
+    const decoded = verifyToken(token);
     if (!decoded || decoded.role !== 'ADMIN') {
       return { success: false, error: "Accès réservé aux administrateurs." };
     }
@@ -78,7 +78,7 @@ export async function getAdminHistoryAction(token: string) {
 export async function getAnalysisDetailAction(recordId: string, token: string) {
   try {
     const decoded = verifyToken(token);
-    if (!decoded) return { success: false, error: "Session expirée." };
+    if (!decoded) return { success: false, error: "Non autorisé" };
 
     const record = await prisma.matchRecord.findUnique({
       where: { id: recordId },

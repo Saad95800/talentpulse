@@ -42,7 +42,20 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
       const result = await loginAction(data);
       
       if (result.success) {
-        const { token, user } = result as { token: string; user: { id: string; email: string; name: string | null; role: 'ADMIN' | 'USER'; credits: number; phone: string } };
+        const { token, user } = result as { 
+          token: string; 
+          user: { 
+            id: string; 
+            email: string;
+            firstName: string | null;
+            lastName: string | null;
+            name: string | null; 
+            role: 'ADMIN' | 'USER'; 
+            credits: number; 
+            phone: string;
+            plan: string;
+          } 
+        };
         // Stockage du token et de l'utilisateur
         localStorage.setItem('tm_token', token);
         localStorage.setItem('tm_user', JSON.stringify(user));

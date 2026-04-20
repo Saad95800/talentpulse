@@ -8,7 +8,8 @@ import { sendBillingSuccessEmail } from "./mail";
  * Est idempotente (ne traite pas deux fois le même paiement).
  */
 export async function processPaymentSuccess(params: { paymentId?: string; userId?: string }) {
-  let { paymentId, userId } = params;
+  let { paymentId } = params;
+  const { userId } = params;
   console.log(`[PaymentLogic] Début du traitement. Params:`, params);
 
   // Si pas de paymentId (ou s'il est resté textuel "{id}") mais qu'on a un userId, 

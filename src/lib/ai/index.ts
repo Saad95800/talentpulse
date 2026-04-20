@@ -119,7 +119,7 @@ export async function aiComplete(
       try {
         const geminiProvider = createProvider('gemini', usage);
         return await geminiProvider.complete(messages, options);
-      } catch (fallbackError) {
+      } catch (_fallbackError) {
         throw new Error("L'assistant IA est temporairement indisponible.");
       }
     }

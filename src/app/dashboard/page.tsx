@@ -14,7 +14,7 @@ import SubscriptionManager from '@/components/SubscriptionManager';
 import { MatchResult } from '@/lib/ai';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/store/userSlice';
-import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard } from 'lucide-react';
 import MultiMatchResultView from '@/components/MultiMatchResultView';
 import { getBatchStatusAction, getActiveBatchAction, cancelActiveBatchAction } from '@/actions/matching.action';
 import { setActiveBatchId, setBatchProgress, setMultiResults } from '@/store/matchingSlice';

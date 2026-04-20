@@ -1,10 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/auth";
 import { z } from "zod";
-
-const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
 
 interface JWTPayload {
   userId: string;
@@ -28,8 +26,8 @@ const updateSchema = z.object({
  */
 export async function getAdminUsersAction(token: string, page = 1, search = "") {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
-    if (decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
 
     const pageSize = 20;
     const skip = (page - 1) * pageSize;
@@ -73,8 +71,9 @@ export async function getAdminUsersAction(token: string, page = 1, search = "") 
         currentPage: page
       }
     };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -83,8 +82,8 @@ export async function getAdminUsersAction(token: string, page = 1, search = "") 
  */
 export async function getAdminUserDetailAction(token: string, targetUserId: string) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
-    if (decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
 
     const user = await prisma.user.findUnique({
       where: { id: targetUserId },
@@ -103,8 +102,9 @@ export async function getAdminUserDetailAction(token: string, targetUserId: stri
     if (!user) throw new Error("Utilisateur introuvable.");
 
     return { success: true, user };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -113,8 +113,8 @@ export async function getAdminUserDetailAction(token: string, targetUserId: stri
  */
 export async function updateAdminUserAction(token: string, targetUserId: string, data: any) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
-    if (decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
 
     const validatedData = updateSchema.parse(data);
 
@@ -124,8 +124,9 @@ export async function updateAdminUserAction(token: string, targetUserId: string,
     });
 
     return { success: true, user: updatedUser };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -134,8 +135,8 @@ export async function updateAdminUserAction(token: string, targetUserId: string,
  */
 export async function adjustUserCreditsAction(token: string, targetUserId: string, amount: number) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
-    if (decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
+    const decoded = verifyToken(token);
+    if (!decoded || decoded.role !== 'ADMIN') throw new Error("Accès non autorisé.");
 
     const updatedUser = await prisma.user.update({
       where: { id: targetUserId },
@@ -145,7 +146,8 @@ export async function adjustUserCreditsAction(token: string, targetUserId: strin
     });
 
     return { success: true, credits: updatedUser.credits };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
+    return { success: false, error: errorMsg };
   }
 }

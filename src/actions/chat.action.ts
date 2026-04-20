@@ -9,7 +9,7 @@ import { sendAdminChatNotification, sendUserChatNotification } from "@/lib/mail"
  */
 export async function sendMessageAction(token: string, content: string, recipientUserId?: string) {
   try {
-    const decoded = verifyToken(token) as { userId: string } | null;
+    const decoded = verifyToken(token);
     if (!decoded) return { success: false, error: "Non autorisé" };
 
     const sender = await prisma.user.findUnique({
@@ -145,7 +145,7 @@ export async function getAdminChatListAction(token: string) {
  */
 export async function markAsReadAction(token: string, conversationId: string) {
     try {
-        const decoded = verifyToken(token) as { userId: string } | null;
+        const decoded = verifyToken(token);
         if (!decoded) return { success: false, error: "Non autorisé" };
 
         const user = await prisma.user.findUnique({

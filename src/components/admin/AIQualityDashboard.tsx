@@ -138,7 +138,7 @@ export default function AIQualityDashboard({ token }: { token: string }) {
                             <span className="text-sm font-bold text-slate-700">{report.jobTitle}</span>
                          </div>
                          <p className="text-sm text-red-600 font-bold bg-red-50/50 p-3 rounded-xl border-l-4 border-red-500 mb-2">
-                           "{report.feedbackComment || "L'utilisateur n'a pas laissé de commentaire précisant le problème."}"
+                           &quot;{report.feedbackComment || "L&apos;utilisateur n&apos;a pas laissé de commentaire précisant le problème."}&quot;
                          </p>
                          <div className="flex items-center gap-4">
                             <div className="text-[10px] text-slate-400 flex items-center gap-1 font-bold">
@@ -166,7 +166,7 @@ export default function AIQualityDashboard({ token }: { token: string }) {
         </div>
          <h4 className="text-xl font-black mb-2">Conseil d&apos;Optimisation</h4>
          <p className="text-blue-100 text-sm font-medium leading-relaxed max-w-2xl">
-            Si vous observez plusieurs signalements sur un même type de profil, vous pouvez ajuster les "Instructions Système" de l&apos;IA dans le module matching pour renforcer la détection de compétences spécifiques.
+            Si vous observez plusieurs signalements sur un même type de profil, vous pouvez ajuster les &quot;Instructions Système&quot; de l&apos;IA dans le module matching pour renforcer la détection de compétences spécifiques.
          </p>
       </div>
     </div>

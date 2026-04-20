@@ -287,7 +287,7 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
                     <textarea 
                       value={feedbackComment}
                       onChange={(e) => setFeedbackComment(e.target.value)}
-                      placeholder={feedback === 1 ? "Qu'est-ce qui vous a le plus aidé ? (Optionnel)" : "Pourriez-vous nous dire ce qui manque ou ce qui est incorrect ?"}
+                      placeholder={feedback === 1 ? "Qu'est-ce qui vous a le plus aidé ? (Optionnel)" : "Pourriez-vous nous tell ce qui manque ou ce qui est incorrect ?"}
                       className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none mb-4"
                       rows={3}
                     />
@@ -311,7 +311,6 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
             candidateName={displayCandidateName} 
           />
         )}
-      </div>
 
       {/* Modals de consultation détaillée */}
       <InfoModal 
@@ -319,7 +318,7 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
         onClose={() => setIsJobModalOpen(false)} 
         title={`Offre : ${result.jobTitle || 'Détails'}`}
         type="job"
-        data={result.jobDescription || "Contenu de l'offre non disponible pour cette analyse."}
+        data={result.jobDescription || "Contenu de l&apos;offre non disponible pour cette analyse."}
       />
 
       <CandidateModal 
