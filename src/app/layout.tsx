@@ -4,6 +4,7 @@ import "./globals.css";
 
 import ReduxProvider from "@/store/ReduxProvider";
 import ActivityTracker from "@/components/providers/ActivityTracker";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         <ReduxProvider>
           <ActivityTracker />
           {children}
+          <ChatWidget />
         </ReduxProvider>
       </body>
     </html>

@@ -209,3 +209,53 @@ export async function sendBillingSuccessEmail(email: string, amount: string | nu
 
   return sendBrevoEmail(email, `Confirmation de paiement ${receiptNumber} - TalentPulse ✅`, htmlContent);
 }
+
+/**
+ * Alerte l'admin d'un nouveau message utilisateur
+ */
+export async function sendAdminChatNotification(userName: string, userId: string, messagePreview: string) {
+  const adminUrl = `${APP_URL}/admin-talent-scraper/dashboard?tab=chat&userId=${userId}`;
+
+  const htmlContent = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+      <h2 style="color: #0f172a;">Nouveau message de ${userName} 💬</h2>
+      <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
+        <p style="margin: 0; color: #475569; font-style: italic;">"${messagePreview}"</p>
+      </div>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${adminUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+          Répondre dans le Dashboard
+        </a>
+      </div>
+      <p style="color: #94a3b8; font-size: 12px; text-align: center;">ID Utilisateur : ${userId}</p>
+    </div>
+  `;
+
+  return sendBrevoEmail("contact@reactivedigital.fr", `Nouveau message chat de ${userName} - TalentPulse`, htmlContent);
+}
+
+/**
+ * Informe l'utilisateur d'une réponse de l'admin
+ */
+export async function sendUserChatNotification(email: string, messagePreview: string) {
+  const loginUrl = `${APP_URL}/dashboard`;
+
+  const htmlContent = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+      <h2 style="color: #0f172a;">Nouvelle réponse de l'équipe TalentPulse 📬</h2>
+      <p style="color: #475569;">Vous avez reçu un nouveau message concernant votre demande :</p>
+      <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+        <p style="margin: 0; color: #0c4a6e;">${messagePreview}</p>
+      </div>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${loginUrl}" style="background-color: #0c4a6e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+          Voir la conversation
+        </a>
+      </div>
+      <p style="color: #94a3b8; font-size: 12px; text-align: center;">Merci de votre confiance.</p>
+    </div>
+  `;
+
+  return sendBrevoEmail(email, "Nouvelle réponse sur votre chat TalentPulse 💬", htmlContent);
+}
+

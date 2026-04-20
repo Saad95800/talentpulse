@@ -37,10 +37,41 @@ model User {
   mollieSubscriptionId   String?    // ID Subscription Mollie
   plan                   String     @default("FREE") // "FREE", "PREMIUM"
   subscriptionStatus     String?    // "active", "canceled", "suspended"
-  nextBillingDate        DateTime?
-  payments               MolliePayment[]
-  batchJobs              BatchJob[]
+  nextBillingDate      DateTime?
+  payments             MolliePayment[]
+  batchJobs            BatchJob[]
+  conversation         Conversation?
+  
+  // ─── Administration & Statistiques ──────────────────
+  totalCreditsUsed     Int            @default(0)
+  isActive             Boolean        @default(true)
 }
+
+model Conversation {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  messages  Message[]
+  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  content        String       @db.LongText
+  senderId       String       // ID de l'utilisateur ou "ADMIN"
+  senderRole     Role         // ADMIN ou USER
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
 
 model BatchJob {
   id              String         @id @default(uuid())

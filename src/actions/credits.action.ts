@@ -114,6 +114,7 @@ export async function deductCredit(userId: string) {
       where: { id: userId },
       data: {
         credits: { decrement: 1 },
+        totalCreditsUsed: { increment: 1 }
       },
     });
 

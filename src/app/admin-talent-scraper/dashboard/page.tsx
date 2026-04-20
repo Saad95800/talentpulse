@@ -14,9 +14,14 @@ import {
   Clock,
   ArrowRight,
   TrendingUp,
-  Activity
+  Activity,
+  MessageSquare,
+  Users
 } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
+import AdminChatExplorer from "@/components/admin/AdminChatExplorer";
 
 interface AdminHistoryRecord {
   id: string;
@@ -36,8 +41,16 @@ export default function AdminDashboard() {
   const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"history" | "users">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat">("history");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialChatUserId = searchParams.get("userId") || undefined;
+
+  useEffect(() => {
+    if (initialChatUserId) {
+      setActiveTab("chat");
+    }
+  }, [initialChatUserId]);
 
   useEffect(() => {
     const init = async () => {
@@ -83,13 +96,30 @@ export default function AdminDashboard() {
       {/* Sidebar / Topbar */}
       <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
-              <TrendingUp className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-600/20">
+                T
+              </div>
+              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                TalentPulse Admin
+              </h1>
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-              TalentPulse Admin
-            </h1>
+
+            <div className="hidden md:flex items-center gap-1">
+               <Link 
+                href="/admin-talent-scraper/dashboard"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 shadow-lg shadow-blue-600/20 transition-all"
+               >
+                 <TrendingUp className="w-4 h-4" /> Dashboard
+               </Link>
+               <Link 
+                href="/admin-talent-scraper/users"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+               >
+                 <Users className="w-4 h-4" /> Utilisateurs
+               </Link>
+            </div>
           </div>
           <button 
             onClick={() => { logout(); router.push("/admin-talent-scraper"); }}
@@ -151,6 +181,12 @@ export default function AdminDashboard() {
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
           >
             <Activity className="w-4 h-4" /> Utilisateurs & Activité
+          </button>
+          <button 
+            onClick={() => setActiveTab("chat")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'chat' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <MessageSquare className="w-4 h-4" /> Messages
           </button>
         </div>
 
@@ -235,8 +271,10 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-        ) : (
+        ) : activeTab === "users" ? (
            <UserActivityExplorer token={token || ""} />
+        ) : (
+           <AdminChatExplorer token={token || ""} initialUserId={initialChatUserId} />
         )}
       </main>
     </div>

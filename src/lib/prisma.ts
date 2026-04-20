@@ -31,4 +31,6 @@ const prisma = globalThis.prismaGlobalV3 ?? prismaClientSingleton();
 
 export default prisma;
 
+// Force reload after schema update: 2026-04-20
+
 if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobalV3 = prisma;
