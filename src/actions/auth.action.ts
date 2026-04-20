@@ -9,7 +9,8 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Le nom doit faire au moins 2 caractères."),
+  firstName: z.string().min(2, "Le prénom doit faire au moins 2 caractères."),
+  lastName: z.string().min(2, "Le nom doit faire au moins 2 caractères."),
   email: z.string().email("Format d'email invalide."),
   phone: z.string().min(10, "Le numéro de téléphone doit faire au moins 10 chiffres."),
   password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères."),
@@ -32,7 +33,7 @@ export async function registerAction(data: unknown) {
       };
     }
 
-    const { name, email, phone, password } = validated.data;
+    const { firstName, lastName, email, phone, password } = validated.data;
 
     // 2. Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -52,7 +53,9 @@ export async function registerAction(data: unknown) {
     // 5. Création de l'utilisateur
     await prisma.user.create({
       data: {
-        name,
+        firstName,
+        lastName,
+        name: `${firstName} ${lastName}`,
         email,
         phone,
         password: hashedPassword,
@@ -65,7 +68,7 @@ export async function registerAction(data: unknown) {
     
     // 5.5 Synchronisation Brevo (CRM)
     try {
-      await syncContactToBrevo(email, name, phone);
+      await syncContactToBrevo(email, firstName, lastName, phone);
     } catch (brevoError) {
       console.error("❌ [Brevo] Erreur synchronisation contact:", brevoError);
     }
@@ -131,6 +134,8 @@ export async function loginAction(formData: { email: string; password: string })
       token,
       user: {
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -192,6 +197,8 @@ export async function validateTokenAction(token: string) {
       where: { id: decoded.userId },
       select: { 
         id: true, 
+        firstName: true,
+        lastName: true,
         name: true, 
         email: true, 
         phone: true, 
@@ -213,6 +220,8 @@ export async function validateTokenAction(token: string) {
       userId: user.id,
       user: {
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -223,7 +232,7 @@ export async function validateTokenAction(token: string) {
         nextBillingDate: user.nextBillingDate,
       }
     };
-  } catch {
+  } catch (error) {
     return { valid: false };
   }
 }

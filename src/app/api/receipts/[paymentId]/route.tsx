@@ -27,6 +27,8 @@ export async function GET(
       include: {
         user: {
           select: {
+            firstName: true,
+            lastName: true,
             name: true,
             email: true,
           }
@@ -52,11 +54,15 @@ export async function GET(
     }
 
     // 3. Générer le PDF
+    const customerFullName = (payment.user.firstName || payment.user.lastName) 
+      ? `${payment.user.firstName || ''} ${payment.user.lastName || ''}`.trim() 
+      : (payment.user.name || "Client");
+
     const pdfBuffer = await renderFn(
       <PaymentReceipt 
         receiptNumber={payment.receiptNumber}
         date={payment.createdAt.toLocaleDateString('fr-FR')}
-        customerName={payment.user.name || "Client"}
+        customerName={customerFullName}
         customerEmail={payment.user.email}
         amount={payment.amount}
         planName={planName}

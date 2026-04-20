@@ -43,8 +43,9 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
       
       if (result.success) {
         const { token, user } = result as { token: string; user: { id: string; email: string; name: string | null; role: 'ADMIN' | 'USER'; credits: number; phone: string } };
-        // Stockage du token
+        // Stockage du token et de l'utilisateur
         localStorage.setItem('tm_token', token);
+        localStorage.setItem('tm_user', JSON.stringify(user));
         
         // Mise à jour du store Redux
         dispatch(setUser({

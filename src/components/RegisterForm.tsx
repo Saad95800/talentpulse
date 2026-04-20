@@ -8,7 +8,8 @@ import { registerAction } from '@/actions/auth.action';
 import { Mail, Phone, Loader2, ArrowRight, User, Lock, CheckCircle2 } from 'lucide-react';
 
 const registerSchema = z.object({
-  name: z.string().min(2, { message: "Nom trop court" }),
+  firstName: z.string().min(2, { message: "Prénom trop court" }),
+  lastName: z.string().min(2, { message: "Nom trop court" }),
   email: z.string().email({ message: "Email invalide" }),
   phone: z.string().min(10, { message: "Numéro de téléphone invalide (10 chiffres min)" }),
   password: z.string().min(8, { message: "Le mot de passe doit faire au moins 8 caractères" }),
@@ -43,7 +44,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     
     try {
       const result = await registerAction({
-        name: data.name,
+        firstName: data.firstName,
+        lastName: data.lastName,
         email: data.email,
         phone: data.phone,
         password: data.password
@@ -92,17 +94,47 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-main mb-1.5 ml-1 uppercase tracking-wider">Nom complet</label>
+            <label className="block text-xs font-bold text-main mb-1.5 ml-1 uppercase tracking-wider">Prénom</label>
             <div className="relative group">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
               <input
-                {...register('name')}
+                {...register('firstName')}
                 type="text"
-                placeholder="Jean D."
-                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.name ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all text-sm font-medium`}
+                placeholder="Jean"
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.firstName ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all text-sm font-medium`}
               />
             </div>
-            {errors.name && <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.name.message}</p>}
+            {errors.firstName && <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.firstName.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-main mb-1.5 ml-1 uppercase tracking-wider">Nom</label>
+            <div className="relative group">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
+              <input
+                {...register('lastName')}
+                type="text"
+                placeholder="Dupont"
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.lastName ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all text-sm font-medium`}
+              />
+            </div>
+            {errors.lastName && <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.lastName.message}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-main mb-1.5 ml-1 uppercase tracking-wider">Email Pro</label>
+            <div className="relative group">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
+              <input
+                {...register('email')}
+                type="email"
+                placeholder="jean@entreprise.com"
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.email ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all text-sm font-medium`}
+              />
+            </div>
+            {errors.email && <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.email.message}</p>}
           </div>
 
           <div>
@@ -118,20 +150,6 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             </div>
             {errors.phone && <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.phone.message}</p>}
           </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-main mb-1.5 ml-1 uppercase tracking-wider">Email Professionnel</label>
-          <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
-            <input
-              {...register('email')}
-              type="email"
-              placeholder="jean@entreprise.com"
-              className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.email ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50'} focus:border-primary focus:bg-white outline-none transition-all text-sm font-medium`}
-            />
-          </div>
-          {errors.email && <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.email.message}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

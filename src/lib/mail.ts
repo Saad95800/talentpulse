@@ -16,10 +16,16 @@ const SENDER = {
 /**
  * Inscription d'un contact dans la liste Brevo
  */
-export async function syncContactToBrevo(email: string, name: string, phone?: string) {
+export async function syncContactToBrevo(email: string, firstName: string, lastName: string, phone?: string) {
   if (!BREVO_API_KEY) {
     console.warn("⚠️ BREVO_API_KEY manquante, synchronisation contact ignorée.");
     return;
+  }
+
+  // Normalisation basique du téléphone pour Brevo (ex: 06 -> +336)
+  let formattedPhone = phone || "";
+  if (formattedPhone.startsWith('0') && formattedPhone.length === 10) {
+    formattedPhone = '+33' + formattedPhone.substring(1);
   }
 
   try {
@@ -33,8 +39,9 @@ export async function syncContactToBrevo(email: string, name: string, phone?: st
       body: JSON.stringify({
         email: email,
         attributes: {
-          NOM: name,
-          SMS: phone || "",
+          PRENOM: firstName,
+          NOM: lastName,
+          SMS: formattedPhone,
           SOURCE: "TalentPulse"
         },
         listIds: [BREVO_LIST_ID],

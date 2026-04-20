@@ -20,6 +20,8 @@ import { getAllUsersAdminAction, getUserDetailedActivityAdminAction } from "@/ac
 
 interface AdminUser {
   id: string;
+  firstName: string | null;
+  lastName: string | null;
   name: string | null;
   email: string;
   role: string;
@@ -76,6 +78,8 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
 
   const filteredUsers = users.filter(u => 
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (u.firstName && u.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (u.lastName && u.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -117,7 +121,9 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
                   <UserIcon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{u.name || "Utilisateur sans nom"}</p>
+                  <p className="text-sm font-semibold text-white truncate">
+                    {u.firstName || u.lastName ? `${u.firstName || ''} ${u.lastName || ''}` : (u.name || "Utilisateur sans nom")}
+                  </p>
                   <p className="text-xs text-slate-500 truncate">{u.email}</p>
                 </div>
                 <ChevronRight className={`w-4 h-4 text-slate-600 transition-transform ${selectedUser?.id === u.id ? "rotate-90 text-blue-500" : "group-hover:translate-x-1"}`} />
@@ -151,7 +157,9 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
                   <UserIcon className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-white">{selectedUser.name || "N/A"}</h3>
+                  <h3 className="text-2xl font-bold text-white">
+                    {selectedUser.firstName || selectedUser.lastName ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}` : (selectedUser.name || "N/A")}
+                  </h3>
                   <p className="text-slate-400 flex items-center gap-2">
                     {selectedUser.email}
                     {selectedUser.role === 'ADMIN' && <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-[10px] font-bold rounded-full border border-purple-500/20 uppercase tracking-tighter">Admin</span>}

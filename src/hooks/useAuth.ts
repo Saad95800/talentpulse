@@ -56,7 +56,6 @@ export function useAuth() {
         return { valid: false };
       }
 
-      // Vérification AJAX de la validité
       const result = await validateTokenAction(storedToken);
       
       if (!result.valid) {

@@ -62,6 +62,8 @@ export async function getAllUsersAdminAction(token: string) {
       select: {
         id: true,
         email: true,
+        firstName: true,
+        lastName: true,
         name: true,
         role: true,
         credits: true,
@@ -97,6 +99,8 @@ export async function getUserDetailedActivityAdminAction(token: string, targetUs
       select: {
         id: true,
         email: true,
+        firstName: true,
+        lastName: true,
         name: true,
         role: true,
         credits: true,
