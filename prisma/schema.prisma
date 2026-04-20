@@ -155,6 +155,10 @@ model MatchRecord {
   batchItem     BatchItem?
   createdAt     DateTime   @default(now())
 
+  // Feedback utilisateur sur la qualité de l'IA
+  feedbackRating  Int?      // 1: Top, -1: Mauvais
+  feedbackComment String?   @db.Text
+
   @@index([userId])
   @@index([missionId])
   @@index([candidateId])

@@ -24,6 +24,7 @@ import { useSearchParams } from "next/navigation";
 import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
 import AdminChatExplorer from "@/components/admin/AdminChatExplorer";
 import FinancialDashboard from "@/components/admin/FinancialDashboard";
+import AIQualityDashboard from "@/components/admin/AIQualityDashboard";
 
 interface AdminHistoryRecord {
   id: string;
@@ -43,7 +44,7 @@ export default function AdminDashboard() {
   const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality">("history");
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialChatUserId = searchParams.get("userId") || undefined;
@@ -196,9 +197,16 @@ export default function AdminDashboard() {
           >
             <DollarSign className="w-4 h-4" /> Finances
           </button>
+          <button 
+            onClick={() => setActiveTab("quality")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'quality' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <Target className="w-4 h-4" /> Qualité IA
+          </button>
         </div>
 
         {activeTab === "finances" && <FinancialDashboard token={token} />}
+        {activeTab === "quality" && <AIQualityDashboard token={token} />}
 
         {activeTab === "history" ? (
           /* Search and Table */
