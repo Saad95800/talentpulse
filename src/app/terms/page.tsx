@@ -61,7 +61,7 @@ export default function TermsPage() {
       <section className="mb-12" id="litiges">
         <h2 className="text-2xl font-black mb-4">7. Litiges et Droit applicable</h2>
         <p>
-          Les présentes CGV sont soumises au droit français. En cas de litige, une solution amiable sera recherchée avant toute action judiciaire devant les tribunaux compétents de <span className="text-red-500 font-bold">[VOTRE VILLE]</span>.
+          Les présentes CGV sont soumises au droit français. En cas de litige, une solution amiable sera recherchée avant toute action judiciaire devant les tribunaux compétents de <strong>Bobigny</strong>.
         </p>
       </section>
     </LegalWrapper>

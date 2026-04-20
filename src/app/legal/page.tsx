@@ -15,11 +15,11 @@ export default function LegalPage() {
           Le site <strong>TalentPulse</strong> accessible à l'adresse <code>{typeof window !== 'undefined' ? window.location.origin : 'https://talentpulse.fr'}</code> est édité par :
         </p>
         <ul className="list-disc pl-5 mt-4 space-y-2">
-          <li><strong>Société / Nom :</strong> <span className="text-red-500 font-bold">[VOTRE NOM OU SOCIETE, ex: ReactiveDigital]</span></li>
-          <li><strong>Forme juridique :</strong> <span className="text-red-500 font-bold">[AUTO-ENTREPRENEUR / SAS / SARL]</span></li>
-          <li><strong>Siège social :</strong> <span className="text-red-500 font-bold">[VOTRE ADRESSE]</span></li>
-          <li><strong>SIRET :</strong> <span className="text-red-500 font-bold">[VOTRE NUMERO SIRET]</span></li>
-          <li><strong>Directeur de la publication :</strong> <span className="text-red-500 font-bold">[VOTRE NOM]</span></li>
+          <li><strong>Société / Nom :</strong> Reactive Digital</li>
+          <li><strong>Forme juridique :</strong> Entreprise individuelle</li>
+          <li><strong>Siège social :</strong> 108 rue jean jaurès, 93240 STAINS</li>
+          <li><strong>SIRET :</strong> 828 004 424 000 36</li>
+          <li><strong>Directeur de la publication :</strong> Saâd RAJRAJI</li>
           <li><strong>Contact :</strong> <code>contact@reactivedigital.fr</code></li>
         </ul>
       </section>
@@ -30,9 +30,9 @@ export default function LegalPage() {
           Le site est hébergé par :
         </p>
         <ul className="list-disc pl-5 mt-4 space-y-2">
-          <li><strong>Hébergeur :</strong> <span className="text-red-500 font-bold">[EX: VERCEL INC. / OVH SAS]</span></li>
-          <li><strong>Adresse :</strong> <span className="text-red-500 font-bold">[ADRESSE DE L'HEBERGEUR]</span></li>
-          <li><strong>Site web :</strong> <span className="text-red-500 font-bold">[URL HEBERGEUR]</span></li>
+          <li><strong>Hébergeur :</strong> OVH</li>
+          <li><strong>Adresse :</strong> 2 rue Kellermann, 59100 Roubaix (France)</li>
+          <li><strong>Site web :</strong> <a href="https://www.ovhcloud.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://www.ovhcloud.com/</a></li>
         </ul>
       </section>
 
