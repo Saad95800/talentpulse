@@ -84,8 +84,8 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
 
   // Construction du nom complet à partir des infos de l'IA
   const displayCandidateName = result.candidateInfo 
-    ? `${result.candidateInfo.firstName || ''} ${result.candidateInfo.lastName || ''}`.trim() || candidateName
-    : candidateName;
+    ? `${result.candidateInfo.firstName || ''} ${result.candidateInfo.lastName || ''}`.trim() || candidateName || '--'
+    : candidateName || '--';
 
   return (
     <div className="w-full max-w-5xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700">

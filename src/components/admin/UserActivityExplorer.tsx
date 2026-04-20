@@ -122,7 +122,7 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">
-                    {u.firstName || u.lastName ? `${u.firstName || ''} ${u.lastName || ''}` : (u.name || "Utilisateur sans nom")}
+                    {u.firstName || u.lastName ? `${u.firstName || ''} ${u.lastName || ''}` : (u.name || "--")}
                   </p>
                   <p className="text-xs text-slate-500 truncate">{u.email}</p>
                 </div>
@@ -158,7 +158,7 @@ export default function UserActivityExplorer({ token }: UserActivityExplorerProp
                 </div>
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold text-white">
-                    {selectedUser.firstName || selectedUser.lastName ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}` : (selectedUser.name || "N/A")}
+                    {selectedUser.firstName || selectedUser.lastName ? `${selectedUser.firstName || ''} ${selectedUser.lastName || ''}` : (selectedUser.name || "--")}
                   </h3>
                   <p className="text-slate-400 flex items-center gap-2">
                     {selectedUser.email}

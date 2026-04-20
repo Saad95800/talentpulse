@@ -82,7 +82,7 @@ export default function MultiMatchResultView({ results }: MultiMatchResultViewPr
           
           const name = result.candidateInfo 
             ? `${result.candidateInfo.firstName || ''} ${result.candidateInfo.lastName || ''}`.trim() || `Candidat ${index + 1}`
-            : `Candidat ${index + 1}`;
+            : `Candidat ${index + 1}` || '--';
 
           return (
             <div 

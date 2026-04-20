@@ -172,8 +172,8 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                     </div>
                   ) : (
                     <h2 className="text-2xl font-black text-main leading-tight">
-                      {currentCandidate.firstName} <br />
-                      <span className="text-primary">{currentCandidate.lastName}</span>
+                      {currentCandidate.firstName || '--'} <br />
+                      <span className="text-primary">{currentCandidate.lastName || '--'}</span>
                     </h2>
                   )}
                 </div>
@@ -190,7 +190,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                           className="flex-1 bg-transparent text-xs font-bold text-slate-600 outline-none"
                         />
                       ) : (
-                        <span className="text-xs font-bold text-slate-600 truncate">{currentCandidate.email || 'Non renseigné'}</span>
+                        <span className="text-xs font-bold text-slate-600 truncate">{currentCandidate.email || '--'}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 group transition-all">
@@ -203,7 +203,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                           className="flex-1 bg-transparent text-xs font-bold text-slate-600 outline-none"
                         />
                       ) : (
-                        <span className="text-xs font-bold text-slate-600">{currentCandidate.phone || 'Non renseigné'}</span>
+                        <span className="text-xs font-bold text-slate-600">{currentCandidate.phone || '--'}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -216,7 +216,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                           className="flex-1 bg-transparent text-xs font-bold text-slate-600 outline-none"
                         />
                       ) : (
-                        <span className="text-xs font-bold text-slate-600">{currentCandidate.address || 'Non renseigné'}</span>
+                        <span className="text-xs font-bold text-slate-600">{currentCandidate.address || '--'}</span>
                       )}
                     </div>
                   </div>
@@ -250,7 +250,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                     <span key={i} className="px-3 py-1 bg-primary/5 text-primary border border-primary/10 rounded-lg text-[10px] font-black uppercase">
                       {skill}
                     </span>
-                  )) : <p className="text-[10px] text-muted italic">Non spécifiées</p>}
+                  )) : <p className="text-[10px] text-muted italic">--</p>}
                 </div>
               </div>
 
@@ -266,7 +266,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                       <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                       {lang}
                     </div>
-                  )) : <p className="text-[10px] text-muted italic">Non spécifiées</p>}
+                  )) : <p className="text-[10px] text-muted italic">--</p>}
                 </div>
               </div>
             </div>

@@ -319,7 +319,7 @@ export default function UserDetailEditor({ token, userId }: { token: string, use
                           </div>
                           <div>
                             <p className="font-bold text-slate-900">{c.firstName} {c.lastName}</p>
-                            <p className="text-xs text-slate-500">{c.email || "Pas d'email"}</p>
+                            <p className="text-xs text-slate-500">{c.email || "--"}</p>
                           </div>
                         </div>
                         <div className="text-right">
