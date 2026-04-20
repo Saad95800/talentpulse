@@ -41,7 +41,7 @@ export default function DashboardPage() {
       interval = setInterval(async () => {
         try {
           const response = await getBatchStatusAction(activeBatchId);
-          if (response.success && response.data) {
+          if (response.success && 'data' in response && response.data) {
             const batch = response.data;
             
             dispatch(setBatchProgress({ 
@@ -108,13 +108,13 @@ export default function DashboardPage() {
       try {
         initialCheckDone.current = true;
         const response = await getActiveBatchAction(activeUserId);
-        if (response.success && response.data?.id) {
+        if (response.success && 'data' in response && response.data?.id) {
           const jobId = response.data.id;
           console.log("[DashboardPage] Reconnexion au batch actif au montage:", jobId);
           dispatch(setActiveBatchId(jobId));
           
           const statusRes = await getBatchStatusAction(jobId);
-          if (statusRes.success && statusRes.data) {
+          if (statusRes.success && 'data' in statusRes && statusRes.data) {
             const batch = statusRes.data;
             const transformedResults = batch.items.map((item: any) => {
               if (item.status === 'COMPLETED' && item.matchRecord) {
@@ -148,7 +148,8 @@ export default function DashboardPage() {
     };
 
     checkActiveBatch();
-  }, [user?.id, dispatch]); // activeBatchId retiré des dépendances pour éviter la boucle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, dispatch]);
 
   const handleLogout = () => {
     localStorage.removeItem('tm_token');

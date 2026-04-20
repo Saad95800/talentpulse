@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserHistoryAction } from '@/actions/history.action';
 import { format } from 'date-fns';
@@ -44,7 +44,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
   const [totalPages, setTotalPages] = useState(1);
   const [isChangingPage, setIsChangingPage] = useState(false);
 
-  const fetchHistory = async (page: number) => {
+  const fetchHistory = useCallback(async (page: number) => {
     if (!token || !user?.id) return;
     
     setIsChangingPage(true);
@@ -63,7 +63,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
       // Remonter en haut de la liste lors du changement de page
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [token, user?.id]);
 
   useEffect(() => {
     fetchHistory(1);

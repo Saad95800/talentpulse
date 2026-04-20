@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   CheckCircle2, 
-  Calendar, 
   Download, 
   Zap, 
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { getPremiumCheckoutUrlAction, getPaymentHistoryAction, cancelSubscriptionAction } from '@/actions/payment.action';
 
@@ -38,6 +38,7 @@ export default function SubscriptionManager({
 }: SubscriptionManagerProps) {
   const [history, setHistory] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [coupon, setCoupon] = useState("");
   const isPremium = userPlan === 'PREMIUM';
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function SubscriptionManager({
   const handleUpgrade = async () => {
     setLoading(true);
     try {
-      const res = await getPremiumCheckoutUrlAction(userId);
+      const res = await getPremiumCheckoutUrlAction(userId, coupon);
       if (res.success && res.url) {
         window.location.href = res.url;
       } else {
@@ -94,6 +95,30 @@ export default function SubscriptionManager({
           <p className="text-xl font-black text-primary">{credits > 900000 ? 'Illimités' : credits}</p>
         </div>
       </div>
+
+      {/* Coupon Section */}
+      {!isPremium && (
+        <div className="bg-slate-50 rounded-[2rem] p-8 border-2 border-dashed border-slate-200 flex flex-col md:flex-row items-center gap-6">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 text-primary">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-main">Vous avez un code promo ?</p>
+              <p className="text-xs text-slate-500 font-medium">Saisissez-le ici pour bénéficier d'une réduction immédiate.</p>
+            </div>
+          </div>
+          <div className="w-full md:w-auto">
+            <input 
+              type="text" 
+              placeholder="Ex: ONE"
+              value={coupon}
+              onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+              className="w-full md:w-64 px-6 py-4 rounded-2xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-bold text-main uppercase tracking-widest placeholder:text-slate-300 placeholder:normal-case placeholder:tracking-normal"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Pricing Comparison Grid */}
       <PricingGrid 

@@ -21,19 +21,19 @@ export default function MatchingLoader() {
   // Réinitialisation du simulateur à chaque changement de CV (batch)
   useEffect(() => {
     if (loadingStep) {
-      /* eslint-disable react-hooks/set-state-in-effect */
-      setCurrentStep(0);
-      setProgress(0);
-      /* eslint-enable react-hooks/set-state-in-effect */
+      queueMicrotask(() => {
+        setCurrentStep(0);
+        setProgress(0);
+      });
     }
   }, [loadingStep]);
 
   useEffect(() => {
     if (!loading) {
-      /* eslint-disable react-hooks/set-state-in-effect */
-      setCurrentStep(0);
-      setProgress(0);
-      /* eslint-enable react-hooks/set-state-in-effect */
+      queueMicrotask(() => {
+        setCurrentStep(0);
+        setProgress(0);
+      });
       return;
     }
 

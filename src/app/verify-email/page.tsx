@@ -25,10 +25,10 @@ function VerifyEmailContent() {
         const result = await verifyEmailAction(token);
         if (result.success) {
           setStatus('success');
-          setMessage(result.message || 'Compte activé !');
+          setMessage((result as any).message || 'Compte activé !');
         } else {
           setStatus('error');
-          setMessage(result.error || 'Cette vérification a échoué.');
+          setMessage((result as any).error || 'Cette vérification a échoué.');
         }
       } catch {
         setStatus('error');

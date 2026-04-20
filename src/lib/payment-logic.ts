@@ -54,7 +54,7 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
     return { success: true, alreadyProcessed: true };
   }
 
-  const metadata = payment.metadata as { userId?: string; type?: string; email?: string };
+  const metadata = payment.metadata as { userId?: string; type?: string; email?: string; couponCode?: string };
   const effectiveUserId = metadata?.userId || userId;
 
   if (!effectiveUserId) {
@@ -75,15 +75,18 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
     const isLocalhost = process.env.NEXT_PUBLIC_APP_URL?.includes('localhost');
     const webhookUrl = process.env.MOLLIE_WEBHOOK_URL;
 
+    // Détermination du prix de l'abonnement récurrent
+    const subscriptionPrice = metadata.couponCode === 'ONE' ? '1.00' : '39.90';
+
     // Créer l'abonnement récurrent chez Mollie
     const subscription = await mollieClient.customerSubscriptions.create({
       customerId: user.mollieCustomerId as string,
       amount: {
         currency: 'EUR',
-        value: '39.90',
+        value: subscriptionPrice,
       },
       interval: '1 month',
-      description: 'Abonnement TalentPulse Premium (Récurrent)',
+      description: `Abonnement TalentPulse Premium (Récurrent${metadata.couponCode ? ` - Coupon ${metadata.couponCode}` : ''})`,
       webhookUrl: isLocalhost ? undefined : webhookUrl,
     });
 

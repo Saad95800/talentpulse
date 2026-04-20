@@ -47,7 +47,7 @@ export default function VivierManager() {
   const [isChangingPage, setIsChangingPage] = useState(false);
 
   // Chargement des Candidats
-  const loadCandidates = async (page: number) => {
+  const loadCandidates = React.useCallback(async (page: number) => {
     if (!user?.id) return;
     setIsChangingPage(true);
     try {
@@ -64,10 +64,10 @@ export default function VivierManager() {
       setIsChangingPage(false);
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Chargement des Missions
-  const loadMissions = async (page: number) => {
+  const loadMissions = React.useCallback(async (page: number) => {
     if (!user?.id) return;
     setIsChangingPage(true);
     try {
@@ -84,7 +84,7 @@ export default function VivierManager() {
       setIsChangingPage(false);
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Initialisation : Charger les deux premières pages
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function VivierManager() {
       setLoading(false);
     };
     init();
-  }, [user?.id]);
+  }, [loadCandidates, loadMissions]);
 
   // États pour les Modals
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);

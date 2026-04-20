@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send, User, ChevronDown, Bell } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { MessageCircle, X, Send, User, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { sendMessageAction, getMessagesAction, markAsReadAction } from "@/actions/chat.action";
 import { format } from "date-fns";
@@ -24,26 +24,29 @@ export default function ChatWidget() {
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const fetchMessages = useCallback(async () => {
+    if (!token) return;
+    const res = await getMessagesAction(token);
+    if (res.success && res.messages) {
+      setMessages(res.messages as any);
+      
+      // Calculer les non-lus (venant de l'admin)
+      const unread = (res.messages as any).filter((m: any) => m.senderRole === 'ADMIN' && !m.isRead).length;
+      setUnreadCount(unread);
+    }
+  }, [token]);
+
   // Charger les messages et gérer le polling
   useEffect(() => {
     if (!token || user?.role === 'ADMIN') return;
 
-    const fetchMessages = async () => {
-      const res = await getMessagesAction(token);
-      if (res.success && res.messages) {
-        setMessages(res.messages as any);
-        
-        // Calculer les non-lus (venant de l'admin)
-        const unread = (res.messages as any).filter((m: any) => m.senderRole === 'ADMIN' && !m.isRead).length;
-        setUnreadCount(unread);
-      }
-    };
-
-    fetchMessages();
+    queueMicrotask(() => {
+      fetchMessages();
+    });
     const interval = setInterval(fetchMessages, 10000); // Poll every 10s
 
     return () => clearInterval(interval);
-  }, [token, user?.role]);
+  }, [token, user?.role, fetchMessages]);
 
   // Scroller en bas quand un nouveau message arrive
   useEffect(() => {
@@ -58,8 +61,10 @@ export default function ChatWidget() {
       const conversationId = (messages[0] as any).conversationId;
       if (conversationId) {
         markAsReadAction(token, conversationId);
-        // Only set back to 0 if it really changed
-        setUnreadCount(prev => prev > 0 ? 0 : prev);
+        // Defer state update to avoid cascading render warning
+        queueMicrotask(() => {
+          setUnreadCount(prev => prev > 0 ? 0 : prev);
+        });
       }
     }
   }, [isOpen, unreadCount, messages, token]);

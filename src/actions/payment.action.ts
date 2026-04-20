@@ -9,7 +9,7 @@ import { processPaymentSuccess } from "@/lib/payment-logic";
  * L'abonnement est à 39,90€/mois et donne 100 crédits.
  * Mollie nécessite un premier paiement pour valider le mandat de prélèvement.
  */
-export async function getPremiumCheckoutUrlAction(userId: string) {
+export async function getPremiumCheckoutUrlAction(userId: string, couponCode?: string) {
   if (!userId) return { success: false, error: "Utilisateur non authentifié." };
 
   try {
@@ -23,8 +23,21 @@ export async function getPremiumCheckoutUrlAction(userId: string) {
     // 1. S'assurer que le client Mollie existe
     const customerId = await getOrCreateMollieCustomer(userId, user.name || "Client", user.email);
 
-    // 2. Créer le paiement de premier mandat
-    const checkoutUrl = await createFirstSubscriptionPayment(customerId, userId, user.email);
+    // 2. Gestion du coupon de réduction
+    let amount = "39.90";
+    if (couponCode?.trim().toUpperCase() === "ONE") {
+      amount = "1.00";
+    } else if (couponCode) {
+      // Si un coupon est fourni mais n'est pas "ONE", on pourrait lever une erreur ou juste ignorer.
+      // Ici on ignore pour rester simple, mais on prévient dans le log.
+      console.log(`[Payment] Coupon invalide tenté : ${couponCode}`);
+    }
+
+    // 3. Créer le paiement de premier mandat
+    const checkoutUrl = await createFirstSubscriptionPayment(customerId, userId, user.email, {
+      amount,
+      couponCode: amount === "1.00" ? "ONE" : undefined
+    });
 
     if (!checkoutUrl) {
       throw new Error("Mollie n'a pas renvoyé d'URL de paiement.");

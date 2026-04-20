@@ -45,6 +45,9 @@ model User {
   // ─── Administration & Statistiques ──────────────────
   totalCreditsUsed     Int            @default(0)
   isActive             Boolean        @default(true)
+
+  @@index([mollieCustomerId])
+  @@index([email])
 }
 
 model Conversation {
@@ -72,7 +75,6 @@ model Message {
   @@index([createdAt])
 }
 
-
 model BatchJob {
   id              String         @id @default(uuid())
   userId          String
@@ -85,6 +87,7 @@ model BatchJob {
   updatedAt       DateTime       @updatedAt
 
   @@index([userId])
+  @@index([status])
 }
 
 model BatchItem {
@@ -100,6 +103,7 @@ model BatchItem {
   createdAt       DateTime       @default(now())
 
   @@index([batchJobId])
+  @@index([status])
 }
 
 model Mission {
@@ -162,6 +166,7 @@ model MatchRecord {
   @@index([userId])
   @@index([missionId])
   @@index([candidateId])
+  @@index([createdAt])
 }
 
 model AppSettings {

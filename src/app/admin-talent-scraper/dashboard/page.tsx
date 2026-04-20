@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getAdminHistoryAction } from "@/actions/history.action";
 import { format } from "date-fns";
@@ -16,13 +16,11 @@ import {
   TrendingUp,
   Activity,
   MessageSquare,
-  ChevronRight,
   Target,
   Users,
   DollarSign
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
 import AdminChatExplorer from "@/components/admin/AdminChatExplorer";
 import FinancialDashboard from "@/components/admin/FinancialDashboard";
@@ -44,19 +42,15 @@ interface AdminHistoryRecord {
 
 function DashboardContent() {
   const { user, token, logout, checkAuth } = useAuth();
+  const searchParams = useSearchParams();
   const [history, setHistory] = useState<AdminHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth">("history");
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const initialChatUserId = searchParams.get("userId") || undefined;
-
-  useEffect(() => {
-    if (initialChatUserId) {
-      setActiveTab("chat");
-    }
-  }, [initialChatUserId]);
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth">(
+    initialChatUserId ? "chat" : "history"
+  );
+  const router = useRouter();
 
   useEffect(() => {
     const init = async () => {

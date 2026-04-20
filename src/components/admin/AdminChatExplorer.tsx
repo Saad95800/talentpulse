@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Search, Send, User, Clock, MessageSquare, Check, CheckCheck } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Send, Clock, MessageSquare, Check, CheckCheck } from "lucide-react";
 import { getAdminChatListAction, getMessagesAction, sendMessageAction, markAsReadAction } from "@/actions/chat.action";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -42,7 +42,7 @@ export default function AdminChatExplorer({ token, initialUserId }: { token: str
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Charger la liste des conversations
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     const res = await getAdminChatListAction(token);
     if (res.success && res.conversations) {
       setConversations(res.conversations as any);
@@ -52,10 +52,10 @@ export default function AdminChatExplorer({ token, initialUserId }: { token: str
         setSelectedUser(initialUserId);
       }
     }
-  };
+  }, [token, initialUserId, selectedUser]);
 
   // Charger les messages de l'utilisateur sélectionné
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!selectedUser) return;
     const res = await getMessagesAction(token, selectedUser);
     if (res.success && res.messages) {
@@ -67,19 +67,23 @@ export default function AdminChatExplorer({ token, initialUserId }: { token: str
         markAsReadAction(token, conv.id);
       }
     }
-  };
+  }, [token, selectedUser, conversations]);
 
   useEffect(() => {
-    fetchConversations();
+    queueMicrotask(() => {
+      fetchConversations();
+    });
     const interval = setInterval(fetchConversations, 15000); // 15s pour la liste
     return () => clearInterval(interval);
-  }, [token]);
+  }, [fetchConversations]);
 
   useEffect(() => {
-    fetchMessages();
+    queueMicrotask(() => {
+      fetchMessages();
+    });
     const interval = setInterval(fetchMessages, 8000); // 8s pour le chat actif
     return () => clearInterval(interval);
-  }, [selectedUser, token]);
+  }, [fetchMessages]);
 
   useEffect(() => {
     if (scrollRef.current) {

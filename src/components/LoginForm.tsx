@@ -41,21 +41,8 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
     try {
       const result = await loginAction(data);
       
-      if (result.success) {
-        const { token, user } = result as { 
-          token: string; 
-          user: { 
-            id: string; 
-            email: string;
-            firstName: string | null;
-            lastName: string | null;
-            name: string | null; 
-            role: 'ADMIN' | 'USER'; 
-            credits: number; 
-            phone: string;
-            plan: string;
-          } 
-        };
+      if (result.success && 'token' in result) {
+        const { token, user } = (result as any);
         // Stockage du token et de l'utilisateur
         localStorage.setItem('tm_token', token);
         localStorage.setItem('tm_user', JSON.stringify(user));
@@ -68,7 +55,7 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
         
         if (onSuccess) onSuccess();
       } else {
-        setServerError(result.error || "Identifiants invalides.");
+        setServerError((result as any).error || "Identifiants invalides.");
       }
     } catch {
       setServerError("Erreur de connexion au serveur.");

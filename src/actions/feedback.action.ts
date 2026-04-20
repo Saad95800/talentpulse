@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-import { logInfo, logError } from "./logger.action";
+import { logInfo } from "./logger.action";
 
 /**
  * Enregistre le feedback d'un utilisateur sur un matching spécifique

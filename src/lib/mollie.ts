@@ -42,7 +42,7 @@ export async function getOrCreateMollieCustomer(userId: string, name: string, em
  * Initie un premier paiement (mandat) pour l'abonnement Premium.
  * Une fois payé, Mollie nous renverra un webhook pour créer la Subscription réelle.
  */
-export async function createFirstSubscriptionPayment(customerId: string, userId: string, email: string) {
+export async function createFirstSubscriptionPayment(customerId: string, userId: string, email: string, options?: { amount?: string; couponCode?: string }) {
   const webhookUrl = process.env.MOLLIE_WEBHOOK_URL;
   const isLocalhost = webhookUrl?.includes('localhost') || webhookUrl?.includes('127.0.0.1');
 
@@ -53,7 +53,7 @@ export async function createFirstSubscriptionPayment(customerId: string, userId:
   const checkout = await mollieClient.payments.create({
     amount: {
       currency: 'EUR',
-      value: '39.90', // Prix de l'abonnement Premium
+      value: options?.amount || '39.90', // Prix de l'abonnement Premium (ou prix réduit)
     },
     description: 'Abonnement TalentPulse Premium (1er mois)',
     redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/success?paymentId={id}&userId=${userId}`,
@@ -61,7 +61,8 @@ export async function createFirstSubscriptionPayment(customerId: string, userId:
     metadata: {
       userId,
       email,
-      type: 'FIRST_PAYMENT'
+      type: 'FIRST_PAYMENT',
+      couponCode: options?.couponCode // On transmet le coupon pour le Webhook
     },
     customerId,
     sequenceType: SequenceType.first, // Indique que c'est le paiement de mandat

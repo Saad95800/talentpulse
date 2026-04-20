@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   LineChart, 
   Line, 
@@ -8,71 +8,66 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  Cell,
-  Legend
+  ResponsiveContainer
 } from "recharts";
 import { 
   Users, 
   UserPlus, 
   UserCheck, 
-  Zap, 
   TrendingUp, 
-  ArrowUpRight, 
   Filter,
   RefreshCw,
-  Loader2,
   Trophy,
   Activity
 } from "lucide-react";
 import { getGrowthStatsAction } from "@/actions/growth.admin.action";
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-2xl">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-sm font-black text-white">
+          {payload[0].value} Inscriptions
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function GrowthDashboard({ token }: { token: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<"daily" | "monthly">("daily");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const res = await getGrowthStatsAction(token);
     if (res.success) {
       setData(res);
     }
     setLoading(false);
-  };
+  }, [token]);
 
   useEffect(() => {
-    fetchData();
-  }, [token]);
+    queueMicrotask(() => {
+      fetchData();
+    });
+  }, [fetchData]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-        <p className="text-slate-500 font-medium">Compilation des données de croissance...</p>
+        <RefreshCw className="w-10 h-10 text-indigo-600 animate-spin" />
+        <p className="text-slate-500 font-medium animate-pulse">Analyse de la croissance...</p>
       </div>
     );
   }
 
-  if (!data) return null;
+  if (!data) return <div className="p-10 text-center text-red-500">Erreur de chargement des données.</div>;
 
-  const { growth, funnel, stats } = data;
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-2xl">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-sm font-black text-white">
-            {payload[0].value} Inscriptions
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const { stats, growth, funnel } = data;
 
   return (
     <div className="space-y-8 animate-fadeIn">

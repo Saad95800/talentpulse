@@ -5,8 +5,7 @@ import {
   Zap, 
   CheckCircle2, 
   Download, 
-  Clock,
-  ArrowRight
+  Clock
 } from 'lucide-react';
 
 import ConfirmationModal from './ConfirmationModal';

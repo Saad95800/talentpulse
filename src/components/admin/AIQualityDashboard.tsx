@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
-  BarChart3, 
   ThumbsUp, 
   ThumbsDown, 
   AlertCircle, 
-  Search, 
   MessageSquare,
   ChevronRight,
   TrendingDown,
@@ -22,18 +20,20 @@ export default function AIQualityDashboard({ token }: { token: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const res = await getAIQualityStatsAction(token);
     if (res.success) {
       setData(res);
     }
     setLoading(false);
-  };
+  }, [token]);
 
   useEffect(() => {
-    fetchData();
-  }, [token]);
+    queueMicrotask(() => {
+      fetchData();
+    });
+  }, [fetchData]);
 
   if (loading) {
     return (

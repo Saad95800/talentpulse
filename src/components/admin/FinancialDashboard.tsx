@@ -1,36 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   TrendingUp, DollarSign, Users, Target, 
-  ArrowUpRight, ArrowDownRight, Activity, 
+  ArrowUpRight, 
   Calendar, Download, RefreshCw, Loader2,
-  CheckCircle2, CreditCard
+  CheckCircle2, CreditCard, Star
 } from "lucide-react";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, BarChart, Bar, Cell 
+  Tooltip, ResponsiveContainer 
 } from "recharts";
-import { getFinancialStatsAction } from "@/actions/finance.admin.action";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getFinancialStatsAction } from "@/actions/finance.admin.action";
 
 export default function FinancialDashboard({ token }: { token: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const res = await getFinancialStatsAction(token);
     if (res.success) {
       setData(res);
     }
     setLoading(false);
-  };
+  }, [token]);
 
   useEffect(() => {
-    fetchData();
-  }, [token]);
+    queueMicrotask(() => {
+      fetchData();
+    });
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -262,14 +264,5 @@ export default function FinancialDashboard({ token }: { token: string }) {
          </div>
       </div>
     </div>
-  );
-}
-
-// Utilitaire simple pour Star qui manque dans l'import lucide de base parfois
-function Star({ className }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
   );
 }

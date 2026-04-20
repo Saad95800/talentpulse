@@ -54,7 +54,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       if (result.success) {
         setIsSuccess(true);
       } else {
-        setServerError(result.error || "Une erreur est survenue.");
+        setServerError((result as any).error || "Une erreur est survenue.");
       }
     } catch {
       setServerError("Erreur de connexion au serveur.");

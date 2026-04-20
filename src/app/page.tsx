@@ -5,7 +5,6 @@ import {
   Zap, 
   ShieldCheck, 
   ArrowRight,
-  BrainCircuit,
   BarChart3
 } from "lucide-react";
 
@@ -22,7 +21,6 @@ import PricingGrid from '@/components/PricingGrid';
 
 export default function Home() {
   const router = useRouter();
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const { isLoggedIn } = useSelector((state: RootState) => state.user);
   const [authMode, setAuthMode] = React.useState<'none' | 'login' | 'register'>('none');
 
@@ -33,13 +31,14 @@ export default function Home() {
     }
     
     // Détection du mode via URL
-    if (searchParams) {
-      const mode = searchParams.get('mode');
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const mode = sp.get('mode');
       if (mode === 'login' || mode === 'register') {
         setAuthMode(mode as any);
       }
     }
-  }, [isLoggedIn, router, searchParams]);
+  }, [isLoggedIn, router]);
 
   const handleStart = () => {
     if (isLoggedIn) {

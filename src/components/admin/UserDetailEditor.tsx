@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
-  User as UserIcon, Mail, Phone, Shield, 
+  User as UserIcon, Shield, 
   Star, Ban, CheckCircle2, Save, 
   Plus, Minus, TrendingUp, FileText, 
   Users, History, ArrowLeft, Loader2
 } from "lucide-react";
 import { getAdminUserDetailAction, updateAdminUserAction, adjustUserCreditsAction } from "@/actions/user.admin.action";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import Link from "next/link";
 
 export default function UserDetailEditor({ token, userId }: { token: string, userId: string }) {
@@ -22,7 +21,7 @@ export default function UserDetailEditor({ token, userId }: { token: string, use
   const [formData, setFormData] = useState<any>({});
   const [creditAdjustment, setCreditAdjustment] = useState(1);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     setLoading(true);
     const res = await getAdminUserDetailAction(token, userId);
     if (res.success && res.user) {
@@ -38,11 +37,13 @@ export default function UserDetailEditor({ token, userId }: { token: string, use
       });
     }
     setLoading(false);
-  };
+  }, [token, userId]);
 
   useEffect(() => {
-    fetchUser();
-  }, [userId, token]);
+    queueMicrotask(() => {
+      fetchUser();
+    });
+  }, [fetchUser]);
 
   const handleUpdate = async (patch: any) => {
     setSaving(true);
@@ -67,7 +68,7 @@ export default function UserDetailEditor({ token, userId }: { token: string, use
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-        <p className="text-slate-500 font-medium animat-pulse">Chargement du profil...</p>
+        <p className="text-slate-500 font-medium animate-pulse">Chargement du profil...</p>
       </div>
     );
   }

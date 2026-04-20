@@ -5,7 +5,8 @@ import {
   Lock, 
   X, 
   Zap, 
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 
 interface PaywallModalProps {
@@ -88,11 +89,13 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                   } catch (err) {
                     console.error(err);
                     alert("Une erreur technique est survenue.");
+                    setLoading(false);
                   }
                 }}
-                className="w-full bg-primary text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-primary-hover hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20"
+                disabled={loading}
+                className="w-full bg-primary text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-primary-hover hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/25 disabled:opacity-50"
               >
-                <Zap className="w-5 h-5" />
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
                 Démarrer l&apos;abonnement Premium
               </button>
               

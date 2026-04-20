@@ -1,18 +1,21 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Zap, ArrowRight, Loader2, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { syncPaymentStatusAction } from '@/actions/payment.action';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const paymentId = searchParams.get('paymentId');
   const userId = searchParams.get('userId');
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    (paymentId || userId) ? 'loading' : 'error'
+  );
+  const [error, setError] = useState<string | null>(
+    (paymentId || userId) ? null : "Informations de paiement manquantes."
+  );
 
   const handleSync = React.useCallback(async () => {
     try {
@@ -31,10 +34,9 @@ function SuccessContent() {
 
   useEffect(() => {
     if (paymentId || userId) {
-      handleSync();
-    } else {
-      setStatus('error');
-      setError("Informations de paiement manquantes.");
+      queueMicrotask(() => {
+        handleSync();
+      });
     }
   }, [paymentId, userId, handleSync]);
 

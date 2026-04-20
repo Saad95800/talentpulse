@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Users, Search, ChevronLeft, ChevronRight, 
   ShieldCheck, User as UserIcon, Star, 
-  ExternalLink, Ban, CheckCircle2, MoreHorizontal
+  ExternalLink, Ban, CheckCircle2
 } from "lucide-react";
 import { getAdminUsersAction } from "@/actions/user.admin.action";
 import { format } from "date-fns";
@@ -18,7 +18,7 @@ export default function UsersList({ token }: { token: string }) {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     const res = await getAdminUsersAction(token, page, searchTerm);
     if (res.success) {
@@ -26,11 +26,13 @@ export default function UsersList({ token }: { token: string }) {
       setPagination(res.pagination || null);
     }
     setLoading(false);
-  };
+  }, [token, page, searchTerm]);
 
   useEffect(() => {
-    fetchUsers();
-  }, [page, token]);
+    queueMicrotask(() => {
+      fetchUsers();
+    });
+  }, [fetchUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

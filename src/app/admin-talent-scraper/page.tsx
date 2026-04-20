@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/actions/auth.action";
 import { useAuth } from "@/hooks/useAuth";
-import { User } from "@/store/userSlice";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -22,7 +21,7 @@ export default function AdminLoginPage() {
     try {
       const res = await loginAction({ email, password });
       if (res.success) {
-        const { token: resToken, user: resUser } = res as { token: string; user: User };
+        const { token: resToken, user: resUser } = (res as any);
         if (resUser.role !== 'ADMIN') {
           setError("Accès refusé. Vous n'êtes pas administrateur.");
           setLoading(false);
@@ -32,7 +31,7 @@ export default function AdminLoginPage() {
         login(resToken, resUser);
         router.push("/admin-talent-scraper/dashboard");
       } else {
-        setError(res.error || "Identifiants invalides.");
+        setError((res as any).error || "Identifiants invalides.");
       }
     } catch {
       setError("Une erreur est survenue.");

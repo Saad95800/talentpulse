@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, LayoutDashboard, Users, MessageSquare } from "lucide-react";
+import { LogOut, LayoutDashboard, Users } from "lucide-react";
 import Link from "next/link";
 import UsersList from "@/components/admin/UsersList";
 
