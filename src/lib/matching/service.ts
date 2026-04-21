@@ -105,7 +105,7 @@ export class MatchingService {
       });
 
       if (!resultIA.success) {
-        return { success: false, error: resultIA.error };
+        return { success: false, error: (resultIA as any).error || "Erreur de matching" };
       }
 
       // 9. Credit Deduction

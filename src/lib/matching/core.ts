@@ -77,7 +77,7 @@ export async function processSingleMatch(params: {
   });
 
   return {
-    success: true,
+    success: true as const,
     recordId: newRecord.id,
     resultIA,
     candidate,
