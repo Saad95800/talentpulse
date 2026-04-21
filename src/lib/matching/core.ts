@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { generateMatchingScore, CandidateInfo } from "@/lib/ai";
+import { handleActionError } from "../error-handler";
 
 /**
  * Traite un matching individuel (IA + Sauvegarde DB)
@@ -17,7 +18,17 @@ export async function processSingleMatch(params: {
   const { userId, jobTitle, jobText, candidateName, cvText, candidateInfo } = params;
 
   // 1. Analyse de Matching
-  const resultIA = await generateMatchingScore(jobText, cvText, candidateInfo);
+  let resultIA;
+  try {
+    resultIA = await generateMatchingScore(jobText, cvText, candidateInfo);
+  } catch (error) {
+    // Propagate the error with context for Sentry and logs
+    return handleActionError("Échec de l'analyse IA du matching", error, {
+      userId,
+      actionName: "processSingleMatch",
+      context: { candidateName }
+    });
+  }
 
   // 2. Sauvegarde Structurelle BDD
   const truncate = (str: string | undefined | null, max: number) => 

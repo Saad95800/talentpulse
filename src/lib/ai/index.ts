@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import * as Sentry from "@sentry/nextjs";
 import type { AIProviderName, IAIProvider, AIMessage, AICompletionOptions } from './types';
 import { AI_PROVIDERS_CONFIG } from './types';
 import { AnthropicProvider } from './providers/anthropic';
@@ -282,11 +283,24 @@ export async function generateMatchingScore(
   cvText: string,
   existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
-  const systemPrompt = `Tu es une IA experte en recrutement. Analyse le matching poste/candidat.
-SOIS EXTRÊMEMENT CONCIS.
-RETOUNE UN OBJET JSON STRICT.`;
+  const systemPrompt = `Tu es une IA experte en recrutement senior (Headhunter). 
+Ton rôle est de fournir une ANALYSE CRITIQUE et PRÉCISE du matching entre une offre d'emploi et un candidat.
 
-  const userPrompt = `FICHE DE POSTE :\n${jobText}\n\nCANDIDAT :\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nAnalyse le matching.`;
+CONSIGNES DE RÉDACTION :
+1. SCORE (score) : Entre 0 et 100. Sois exigeant. Un 100% est quasi impossible.
+2. COMPÉTENCES VALIDÉES (competences_validees) : Liste uniquement ce qui est explicitement prouvé.
+3. COMPÉTENCES MANQUANTES (competences_manquantes) : Identifie les "red flags" ou manques réels par rapport à l'offre.
+4. ARGUMENTAIRE CLIENT (argumentaire_client) : Rédige un texte de 3-5 phrases professionnelles résumant le verdict. 
+   - NE RESTE PAS VAGUE. 
+   - "Le candidat match bien" est interdit. Préfère "L'expertise technique en React est solide, mais l'absence d'expérience en management sur de gros volumes est un risque."
+5. QUESTIONS (questions_candidat) : 3 questions pièges ou pertinentes à poser en entretien pour lever les doutes.
+
+OBLIGATION : 
+- Si tu ne peux pas analyser le candidat (données illisibles), retourne un score de 0 mais EXPLIQUE POURQUOI dans l'argumentaire.
+- NE RETOURNE JAMAIS DE STRINGS VIDES.
+- RÉPONDS UNIQUEMENT EN JSON STRICT.`;
+
+  const userPrompt = `### FICHE DE POSTE\n${jobText}\n\n### PROFIL CANDIDAT\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nEffectue l'analyse de matching maintenant.`;
 
   const provider = await getAIProvider('matching');
   const options = { 
@@ -298,7 +312,22 @@ RETOUNE UN OBJET JSON STRICT.`;
   };
   
   const rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
-  return extractJSON<MatchResult>(rawText);
+  const result = extractJSON<MatchResult>(rawText);
+
+  // Validation Layer: Detect anomalies (Lazy AI or silent failure)
+  const isEmpty = !result.argumentaire_client || result.argumentaire_client.trim().length < 10;
+  const isSuspicious = result.score === 0 && !isEmpty; // 0 is okay if explained, but empty text is not.
+  
+  if (isEmpty) {
+    const errorMsg = "L'IA a renvoyé une analyse vide ou insuffisante.";
+    Sentry.captureMessage(errorMsg, {
+      level: 'warning',
+      extra: { rawText, result, userId: "matching_system" }
+    });
+    throw new Error(errorMsg);
+  }
+
+  return result;
 }
 
 export async function validateDocumentConformity(

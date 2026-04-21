@@ -61,6 +61,10 @@ export async function matchingProcessor(job: Job<MatchingJobData>) {
       candidateInfo: candidateInfo!
     });
 
+    if (!result.success) {
+      throw new Error(result.error || "Échec de l'analyse structurée du matching.");
+    }
+
     // 4. Enregistrer le succès et lier le MatchRecord
     await prisma.$transaction([
       prisma.batchItem.update({

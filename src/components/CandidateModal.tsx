@@ -353,9 +353,11 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
               <div className="pt-8 border-t border-slate-200 flex items-center justify-between text-[10px] text-muted font-bold uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-3 h-3" />
-                  Importé le {format(new Date(initialCandidate.createdAt), 'dd MMMM yyyy', { locale: fr })}
+                  Importé le {initialCandidate.createdAt && !isNaN(new Date(initialCandidate.createdAt).getTime()) 
+                    ? format(new Date(initialCandidate.createdAt), 'dd MMMM yyyy', { locale: fr }) 
+                    : '--'}
                 </div>
-                <div>ID: {initialCandidate.id.split('-')[0]}...</div>
+                <div>ID: {initialCandidate.id ? initialCandidate.id.split('-')[0] : '--'}...</div>
               </div>
             </div>
 
