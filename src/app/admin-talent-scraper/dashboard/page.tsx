@@ -28,7 +28,8 @@ import FinancialDashboard from "@/components/admin/FinancialDashboard";
 import AIQualityDashboard from "@/components/admin/AIQualityDashboard";
 import GrowthDashboard from "@/components/admin/GrowthDashboard";
 import CouponManager from "@/components/admin/CouponManager";
-import { Ticket } from "lucide-react";
+import WorkerMonitor from "@/components/admin/WorkerMonitor";
+import { Ticket, Cpu } from "lucide-react";
 
 interface AdminHistoryRecord {
   id: string;
@@ -50,7 +51,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const initialChatUserId = searchParams.get("userId") || undefined;
-  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth" | "coupons" | "feedbacks">(
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth" | "coupons" | "feedbacks" | "worker">(
     initialChatUserId ? "chat" : "history"
   );
   const router = useRouter();
@@ -216,6 +217,12 @@ function DashboardContent() {
             <TrendingUp className="w-4 h-4" /> Croissance
           </button>
           <button 
+            onClick={() => setActiveTab("worker")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'worker' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <Cpu className="w-4 h-4" /> Worker & Système
+          </button>
+          <button 
             onClick={() => setActiveTab("coupons")}
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'coupons' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
           >
@@ -228,6 +235,7 @@ function DashboardContent() {
         {activeTab === "quality" && token && <AIQualityDashboard token={token} />}
         {activeTab === "growth" && token && <GrowthDashboard token={token} />}
         {activeTab === "coupons" && <CouponManager />}
+        {activeTab === "worker" && <WorkerMonitor />}
 
         {activeTab === "history" ? (
           /* Search and Table */
