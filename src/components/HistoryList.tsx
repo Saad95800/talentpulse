@@ -71,7 +71,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
     // Sécurité : Si après 3 secondes on charge toujours, on libère le spinner
     const timer = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timer);
-  }, [token, user?.id]);
+  }, [token, user?.id, fetchHistory]);
 
   const handlePageChange = (newPage: number) => {
     fetchHistory(newPage);
@@ -134,6 +134,7 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
             key={record.id}
             onClick={() => onSelectAnalysis({
               ...record.aiResponse,
+              recordId: record.id,
               jobTitle: record.jobTitle,
               jobDescription: record.mission?.description,
               fullCandidate: record.candidate

@@ -67,9 +67,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. SÉCURITÉ : Désactiver les accès Premium dont la date de validité est largement dépassée
-    const hardExpiryGrace = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-
     return NextResponse.json({ 
       success: true,
       processedGracePeriods: activeGracePeriods.length

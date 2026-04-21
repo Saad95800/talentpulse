@@ -36,6 +36,7 @@ export interface CandidateInfo {
 }
 
 export interface MatchResult {
+  recordId?: string;
   score: number;
   competences_validees: string[];
   competences_manquantes: string[];
@@ -251,9 +252,18 @@ export async function extractCandidateInfo(
   cvText: string,
   cvFileData?: { buffer: Buffer, mimeType: string, isScanned: boolean }
 ): Promise<CandidateInfo> {
-  const systemPrompt = `Tu es un expert en extraction de données RH. Ton rôle est d'extraire le profil COMPLET d'un candidat.
-SOIS EXTRÊMEMENT CONCIS.
-RETORNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
+  const systemPrompt = `Tu es un expert en extraction de données RH spécialisé dans les CV français et internationaux.
+Ton rôle est d'extraire le profil COMPLET d'un candidat avec une rigueur absolue.
+
+CONSIGNES CRITIQUES POUR L'IDENTITÉ :
+1. NE JAMAIS INVENTER D'IDENTITÉ. INTERDICTION FORMELLE d'utiliser des noms de substitution comme "Jean-Baptiste LOUVET", "John Doe" ou "Dupont".
+2. Recherche le Prénom et le NOM au tout début du document (bandeau, en-tête). Le NOM est souvent en MAJUSCULES (ex: Saad RAJRAJI).
+3. Si le nom est illisible (ex: scan de mauvaise qualité), retourne une chaîne vide "" ou "Non spécifié".
+4. Ne confonds pas le nom avec un titre de poste (ex: DÉVELOPPEUR) ou une entreprise.
+
+INSTRUCTIONS DE SORTIE :
+- Réponse au format JSON pur uniquement.
+- Sois exhaustif sur les compétences, expériences et formations.`;
 
   const userPrompt = cvFileData?.isScanned 
     ? "Extrais le profil depuis ce document joint." 
@@ -275,7 +285,18 @@ RETORNE UN OBJET JSON STRICT SUIVANT LE SCHÉMA FOURNI.`;
     rawText = await provider.complete([{ role: 'user', content: userPrompt }], options);
   }
   
-  return extractJSON<CandidateInfo>(rawText);
+  const info = extractJSON<CandidateInfo>(rawText);
+
+  // Nettoyage de sécurité pour les hallucinations de l'IA (Non spécifié, etc.)
+  const forbidden = ["non spécifié", "n/a", "inconnu", "not specified", "unknown"];
+  if (info.lastName && forbidden.includes(info.lastName.toLowerCase())) {
+    info.lastName = "";
+  }
+  if (info.firstName && forbidden.includes(info.firstName.toLowerCase())) {
+    info.firstName = "";
+  }
+
+  return info;
 }
 
 export async function generateMatchingScore(
@@ -316,7 +337,6 @@ OBLIGATION :
 
   // Validation Layer: Detect anomalies (Lazy AI or silent failure)
   const isEmpty = !result.argumentaire_client || result.argumentaire_client.trim().length < 10;
-  const isSuspicious = result.score === 0 && !isEmpty; // 0 is okay if explained, but empty text is not.
   
   if (isEmpty) {
     const errorMsg = "L'IA a renvoyé une analyse vide ou insuffisante.";

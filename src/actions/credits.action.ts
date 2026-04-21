@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { startOfDay, differenceInDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 import { sendLowCreditsEmail } from '@/lib/mail';
 
 /**

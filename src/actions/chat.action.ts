@@ -102,7 +102,7 @@ export async function getMessagesAction(token: string, userId?: string) {
     });
 
     return { success: true, messages: conversation?.messages || [] };
-  } catch (error) {
+  } catch (_error) {
     return { success: false, error: "Erreur serveur" };
   }
 }
@@ -165,7 +165,7 @@ export async function markAsReadAction(token: string, conversationId: string) {
         });
 
         return { success: true };
-    } catch (error) {
+    } catch (_error) {
         return { success: false, error: "Erreur serveur" };
     }
 }

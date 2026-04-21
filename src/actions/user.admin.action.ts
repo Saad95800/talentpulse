@@ -4,11 +4,7 @@ import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import { z } from "zod";
 
-interface JWTPayload {
-  userId: string;
-  email: string;
-  role: string;
-}
+
 
 const updateSchema = z.object({
   firstName: z.string().optional(),

@@ -22,6 +22,8 @@ import InfoModal from './InfoModal';
 import CandidateModal from './CandidateModal';
 import { useAuth } from '@/hooks/useAuth';
 import { submitMatchFeedbackAction } from '@/actions/feedback.action';
+import { toast } from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 
 // Import dynamique du bouton d'export PDF avec SSR désactivé
 // Cela isole totalement @react-pdf/renderer et évite les erreurs de hooks/contexte
@@ -64,13 +66,31 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
   };
 
   const submitFeedback = async () => {
-    if (!recordId || !token) return;
-    setSubmittingFeedback(true);
-    const res = await submitMatchFeedbackAction(token, recordId, feedback!, feedbackComment);
-    if (res.success) {
-      setFeedbackSent(true);
+    if (!token) {
+      toast.error("Vous devez être connecté pour envoyer un avis.");
+      return;
     }
-    setSubmittingFeedback(false);
+    if (!recordId) {
+      toast.error("Impossible d'identifier l'analyse pour cet avis.");
+      console.warn("[MatchResultView] recordId missing", { result });
+      return;
+    }
+
+    setSubmittingFeedback(true);
+    try {
+      const res = await submitMatchFeedbackAction(token, recordId, feedback!, feedbackComment);
+      if (res.success) {
+        setFeedbackSent(true);
+        toast.success("Votre avis a été enregistré !");
+      } else {
+        toast.error(res.error || "Une erreur est survenue lors de l'envoi.");
+      }
+    } catch (_error) {
+      console.error("[MatchResultView] Erreur feedback:", _error);
+      toast.error("Échec de l'envoi de l'avis.");
+    } finally {
+      setSubmittingFeedback(false);
+    }
   };
 
   const getScoreColor = (score: number) => {
@@ -296,8 +316,17 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
                       disabled={submittingFeedback}
                       className="bg-slate-900 text-white px-8 py-3 rounded-full text-xs font-black hover:bg-black transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
                     >
-                      {submittingFeedback ? "Envoi..." : "Envoyer mon avis"} <ArrowRight className="w-3 h-3" />
-                  </button>
+                      {submittingFeedback ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Envoi...
+                        </>
+                      ) : (
+                        <>
+                          Envoyer mon avis <ArrowRight className="w-3 h-3" />
+                        </>
+                      )}
+                    </button>
                 </div>
               )}
              </>

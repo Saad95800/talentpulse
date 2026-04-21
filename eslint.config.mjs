@@ -23,6 +23,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "*.cjs",
+    "lint_*.txt",
+    "build_output.txt"
   ]),
 ]);
 

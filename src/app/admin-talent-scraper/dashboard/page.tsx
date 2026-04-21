@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
 import AdminChatExplorer from "@/components/admin/AdminChatExplorer";
+import FeedbackExplorer from "@/components/admin/FeedbackExplorer";
 import FinancialDashboard from "@/components/admin/FinancialDashboard";
 import AIQualityDashboard from "@/components/admin/AIQualityDashboard";
 import GrowthDashboard from "@/components/admin/GrowthDashboard";
@@ -49,7 +50,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const initialChatUserId = searchParams.get("userId") || undefined;
-  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth" | "coupons">(
+  const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth" | "coupons" | "feedbacks">(
     initialChatUserId ? "chat" : "history"
   );
   const router = useRouter();
@@ -171,7 +172,7 @@ function DashboardContent() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-xl w-fit">
+        <div className="flex flex-wrap gap-2 p-1 bg-slate-900 border border-slate-800 rounded-xl w-fit">
           <button 
             onClick={() => setActiveTab("history")}
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
@@ -183,6 +184,12 @@ function DashboardContent() {
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
           >
             <Activity className="w-4 h-4" /> Utilisateurs & Activité
+          </button>
+          <button 
+            onClick={() => setActiveTab("feedbacks")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'feedbacks' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+          >
+            <MessageSquare className="w-4 h-4" /> Avis Utilisateurs
           </button>
           <button 
             onClick={() => setActiveTab("chat")}
@@ -217,6 +224,7 @@ function DashboardContent() {
         </div>
 
         {activeTab === "finances" && token && <FinancialDashboard token={token} />}
+        {activeTab === "feedbacks" && token && <FeedbackExplorer token={token} />}
         {activeTab === "quality" && token && <AIQualityDashboard token={token} />}
         {activeTab === "growth" && token && <GrowthDashboard token={token} />}
         {activeTab === "coupons" && <CouponManager />}

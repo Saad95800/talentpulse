@@ -80,3 +80,46 @@ export async function getAIQualityStatsAction(token: string) {
     return { success: false, error: "Erreur lors de la récupération des stats." };
   }
 }
+/**
+ * Récupère tous les feedbacks pour l'admin
+ */
+export async function getAllFeedbacksAction(token: string) {
+  try {
+    const session = verifyToken(token);
+    if (!session || session.role !== 'ADMIN') return { success: false, error: "Non autorisé." };
+
+    const feedbacks = await prisma.matchRecord.findMany({
+      where: {
+        feedbackRating: { not: null }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        mission: {
+          select: {
+            title: true
+          }
+        },
+        candidate: {
+          select: {
+            name: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return { success: true, data: feedbacks };
+  } catch (error) {
+    console.error("[GetAllFeedbacks] Erreur:", error);
+    return { success: false, error: "Erreur lors de la récupération des avis." };
+  }
+}

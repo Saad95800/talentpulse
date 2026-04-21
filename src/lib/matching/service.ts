@@ -83,7 +83,7 @@ export class MatchingService {
         cvText = cvTextRaw.substring(0, 30000);
       }
 
-      if (!cvText) return { success: false, error: "CV manquant." };
+      if (!cvText && !cvFileData?.isScanned) return { success: false, error: "CV manquant ou illisible." };
 
       // 6. CV Conformity check
       const cvValidation = await validateDocumentConformity(cvText, 'cv', cvFileData);
@@ -94,12 +94,22 @@ export class MatchingService {
       // 7. Data Extraction (Candidate Profile)
       const candidateInfo = await extractCandidateInfo(cvText, cvFileData);
 
+      // CRITIQUE : Si on est sur un scan, cvText est vide. On le bascule sur le résumé de l'IA
+      // pour que l'étape de Matching suivante ait du contenu textuel à comparer.
+      const firstName = candidateInfo?.firstName || '';
+      const lastName = candidateInfo?.lastName || '';
+      const finalCandidateName = `${firstName} ${lastName}`.trim() || candidateNameFallback;
+      
+      if (!cvText && cvFileData?.isScanned) {
+        cvText = candidateInfo?.summary || `CV de ${finalCandidateName}`;
+      }
+
       // 8. Matching Core Processing & DB Persistence
       const resultIA = await processSingleMatch({
         userId,
         jobTitle,
         jobText,
-        candidateName: candidateNameFallback,
+        candidateName: finalCandidateName,
         cvText,
         candidateInfo
       });

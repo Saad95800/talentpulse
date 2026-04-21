@@ -35,20 +35,27 @@ export async function matchingProcessor(job: Job<MatchingJobData>) {
       const extractedInfo = await extractCandidateInfo(cvText, cvFileData);
       candidateInfo = extractedInfo;
 
-      // CRITIQUE : Mettre à jour le nom RÉEL dans la DB immédiatement pour le polling
-      const candidateName = `${candidateInfo?.firstName || ''} ${candidateInfo?.lastName || ''}`.trim() || cvFileName || 'Candidat';
+      // Détermination du nom réel (IA > Fichier > Défaut)
+      const firstName = candidateInfo?.firstName || '';
+      const lastName = candidateInfo?.lastName || '';
+      const finalCandidateName = `${firstName} ${lastName}`.trim() || cvFileName || 'Candidat';
+      
+      // CRITIQUE : Si on est sur un scan, cvText est vide. On le bascule sur le résumé de l'IA
+      // pour que l'étape de Matching suivante ait du contenu textuel à comparer.
+      cvText = cvText || candidateInfo?.summary || `CV de ${finalCandidateName}`;
+
       await prisma.batchItem.update({
         where: { id: batchItemId },
         data: { 
-          candidateName,
+          candidateName: finalCandidateName,
           cvText 
         }
       });
-      console.log(`[Worker] Nom identifié: ${candidateName}`);
+      console.log(`[Worker] Informations extraites pour: ${finalCandidateName} (Scan: ${cvFileData.isScanned})`);
     }
 
-    if (!cvText || !candidateInfo) {
-      throw new Error("Impossible d'extraire les données du CV (Données manquantes après extraction).");
+    if (!candidateInfo) {
+      throw new Error("Impossible d'extraire les données du candidat (IA non disponible ou document illisible).");
     }
 
     // 3. Lancer le matching
@@ -57,7 +64,7 @@ export async function matchingProcessor(job: Job<MatchingJobData>) {
       jobTitle: job.data.jobTitle || "Analyse Groupée",
       jobText,
       candidateName: `${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim() || 'Candidat',
-      cvText,
+      cvText: cvText!,
       candidateInfo: candidateInfo!
     });
 

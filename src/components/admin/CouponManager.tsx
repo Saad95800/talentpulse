@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Ticket, 
   Plus, 
   Trash2, 
-  AlertCircle, 
   CheckCircle2,
-  Tag,
-  DollarSign,
-  Percent
+  AlertCircle,
+  Tag
 } from "lucide-react";
 import { getCouponsAction, addCouponAction, deleteCouponAction } from "@/actions/coupon.action";
 
@@ -25,16 +23,20 @@ export default function CouponManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  useEffect(() => {
-    loadCoupons();
-  }, []);
-
-  const loadCoupons = async () => {
+  const loadCoupons = useCallback(async () => {
     setLoading(true);
     const data = await getCouponsAction();
     setCoupons(data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    // Appel asynchrone sécurisé dans useEffect
+    const init = async () => {
+      await loadCoupons();
+    };
+    init();
+  }, [loadCoupons]);
 
   const handleAddCoupon = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -158,6 +158,7 @@ export async function getBatchStatusAction(batchJobId: string) {
               select: {
                 id: true,
                 score: true,
+                aiResponse: true,
                 candidateName: true,
                 createdAt: true
               }

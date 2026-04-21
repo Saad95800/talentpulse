@@ -53,7 +53,8 @@ export default function DashboardPage() {
               if (item.status === 'COMPLETED' && item.matchRecord) {
                 const aiData = (item.matchRecord.aiResponse as Record<string, unknown>) || {};
                 return {
-                  score: (aiData.score as number) || 0,
+                  recordId: item.matchRecord.id,
+                  score: (aiData.score as number) || (item.matchRecord.score as number) || 0,
                   competences_validees: (aiData.competences_validees as string[]) || [],
                   competences_manquantes: (aiData.competences_manquantes as string[]) || [],
                   argumentaire_client: (aiData.argumentaire_client as string) || "Analyse terminée.",
@@ -120,7 +121,8 @@ export default function DashboardPage() {
               if (item.status === 'COMPLETED' && item.matchRecord) {
                 const aiData = (item.matchRecord.aiResponse as Record<string, unknown>) || {};
                 return {
-                  score: (aiData.score as number) || 0,
+                  recordId: item.matchRecord.id,
+                  score: (aiData.score as number) || (item.matchRecord.score as number) || 0,
                   competences_validees: (aiData.competences_validees as string[]) || [],
                   competences_manquantes: (aiData.competences_manquantes as string[]) || [],
                   argumentaire_client: (aiData.argumentaire_client as string) || "Analyse terminée.",
@@ -300,7 +302,7 @@ export default function DashboardPage() {
                     Nouvelle analyse
                   </button>
                 </div>
-                {results.length > 1 ? (
+                {results.length > 0 ? (
                    <MultiMatchResultView results={results} />
                 ) : currentResult ? (
                    <MatchResultView result={currentResult} candidateName="Candidat" />

@@ -40,7 +40,7 @@ export default function MultiMatchResultView({ results }: MultiMatchResultViewPr
             <Users className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-main leading-tight">Résultats Groupés</h2>
+            <h2 className="text-2xl font-black text-main leading-tight">Analyse de Profils IA</h2>
             <p className="text-sm font-bold text-muted uppercase tracking-wider">
               {results.length} Candidat{results.length > 1 ? 's' : ''} analysé{results.length > 1 ? 's' : ''} pour cette mission
             </p>
@@ -216,6 +216,7 @@ export default function MultiMatchResultView({ results }: MultiMatchResultViewPr
               <MatchResultView 
                 result={selectedResult} 
                 candidateName={selectedResult.candidateInfo ? `${selectedResult.candidateInfo.firstName} ${selectedResult.candidateInfo.lastName}` : "Candidat"} 
+                recordId={selectedResult.recordId}
               />
             </div>
           </div>
