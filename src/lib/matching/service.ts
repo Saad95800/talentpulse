@@ -104,6 +104,10 @@ export class MatchingService {
         candidateInfo
       });
 
+      if (!resultIA.success) {
+        return { success: false, error: resultIA.error };
+      }
+
       // 9. Credit Deduction
       let creditsRemaining = creditCheck.currentCredits as number;
       if (!skipDeduction) {
