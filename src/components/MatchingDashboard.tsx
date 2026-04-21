@@ -166,7 +166,7 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
         }
 
         dispatch(setMultiResults(ghostResults));
-        dispatch(setActiveBatchId(result.batchJobId));
+        dispatch(setActiveBatchId((result as any).batchJobId));
         dispatch(setLoading(false));
       } else {
         dispatch(setError((result as any).error || "Échec du lancement de l'analyse."));
