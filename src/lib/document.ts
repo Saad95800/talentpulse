@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { PDFParse } from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import path from 'path';
@@ -39,6 +40,7 @@ function decodeTextBuffer(buffer: Buffer): string {
   const replacementCharCount = (utf8String.match(/\uFFFD/g) || []).length;
   
   if (replacementCharCount > 0 || /[\x80-\x9F]/.test(utf8String)) {
+    Sentry.captureMessage(`Encodage UTF-8 suspect détecté lors du décodage d'un buffer texte.`, "warning");
     console.log(`[Document] Encodage UTF-8 suspect (${replacementCharCount} erreurs). Tentative Décodage Latin1...`);
     return buffer.toString('latin1');
   }
@@ -82,6 +84,9 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
         const isErrorMsg = lowerText.includes('forme d\'images') || lowerText.includes('no text');
 
         if (isSuspiciouslyShort || hasNoAlpha || isErrorMsg) {
+          Sentry.captureMessage(`PDF détecté comme scan ou texte de mauvaise qualité (${filename})`, "warning", {
+            extra: { textLength: result.text.length, filename }
+          });
           console.log(`[Document] PDF détecté comme scan/image (Qualité texte insuffisante).`);
           result.isScanned = true;
           // On garde le peu de texte extrait au cas où, mais l'IA privilégiera le document brut
@@ -91,6 +96,7 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
         return result;
       } catch (pdfError: unknown) {
         const errorMsg = pdfError instanceof Error ? pdfError.message : String(pdfError);
+        Sentry.captureException(pdfError, { tags: { document: "pdf_extraction" }, extra: { filename, errorMsg } });
         console.warn(`[Document] Échec PDFParse (${filename}), basculement OCR Gemini:`, errorMsg);
         result.isScanned = true;
         result.text = ""; 
@@ -135,6 +141,7 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
     }
   } catch (error) {
     if (error instanceof Error) {
+      Sentry.captureException(error, { tags: { document: "global_extraction" }, extra: { filename, ext } });
       console.error(`[Document] Erreur d'extraction (${filename}):`, error.message);
     }
     throw error;

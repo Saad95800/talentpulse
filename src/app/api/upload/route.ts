@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -9,6 +10,7 @@ export async function POST(request: Request) {
 
     // 1. Validation de présence
     if (!jobFile || !cvFile) {
+      Sentry.captureMessage("[UploadAPI] Fichiers manquants dans la requête", "warning");
       return NextResponse.json(
         { success: false, error: "La Fiche de Poste et le CV sont obligatoires." },
         { status: 400 }
@@ -35,6 +37,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
+    Sentry.captureException(error, { tags: { api: "upload" } });
     console.error("Erreur Upload API:", error);
     return NextResponse.json(
       { success: false, error: "Une erreur est survenue lors de la réception des fichiers." },

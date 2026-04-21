@@ -6,7 +6,7 @@ import { signToken, verifyToken } from "@/lib/auth";
 import { sendVerificationEmail, syncContactToBrevo } from "@/lib/mail";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { handleActionError, handleActionSuccess } from "@/lib/error-handler";
+import { handleActionError, handleActionSuccess, handleActionWarning } from "@/lib/error-handler";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit faire au moins 2 caractères."),
@@ -57,8 +57,8 @@ export async function registerAction(data: unknown) {
     });
     
     // Background tasks with individual error catchers
-    syncContactToBrevo(email, firstName, lastName, phone).catch(e => console.error("Brevo Sync Error", e));
-    sendVerificationEmail(email, verificationToken).catch(e => console.error("Mail Error", e));
+    syncContactToBrevo(email, firstName, lastName, phone).catch(e => handleActionWarning("Échec synchro Brevo (Background)", { userId: user.id, error: e }));
+    sendVerificationEmail(email, verificationToken).catch(e => handleActionWarning("Échec envoi mail vérification (Background)", { userId: user.id, error: e }));
 
     await handleActionSuccess(`Inscription réussie: ${email}`, { userId: user.id, actionName: "registerAction" });
 
@@ -190,7 +190,8 @@ export async function validateTokenAction(token: string) {
         nextBillingDate: user.nextBillingDate,
       }
     };
-  } catch {
+  } catch (error) {
+    handleActionError("Échec validation token AJAX", error, { actionName: "validateTokenAction" });
     return { valid: false };
   }
 }

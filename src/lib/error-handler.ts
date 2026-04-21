@@ -23,8 +23,9 @@ export async function handleActionError(
   const errorMessage = error instanceof Error ? error.message : String(error);
   const fullMessage = `${actionName ? `[${actionName}] ` : ""}${message}: ${errorMessage}`;
   
-  // 1. Sentry Logging
-  Sentry.captureException(error, {
+  // 1. Sentry Logging (ERROR LEVEL)
+  Sentry.captureException(error || new Error(message), {
+    level: "error",
     extra: {
       actionName,
       message,
@@ -59,6 +60,45 @@ export async function handleActionError(
       ? `[${actionName || "Server"}] ${message}: ${errorMessage}`
       : "Une erreur est survenue. L'incident a été enregistré pour analyse."
   };
+}
+
+/**
+ * Capture warnings or unusual behaviors that don't throw but need attention
+ */
+export async function handleActionWarning(
+  message: string,
+  metadata?: ErrorContext
+) {
+  const { userId, actionName, context, ...rest } = metadata || {};
+  const fullMessage = `${actionName ? `[${actionName}] ` : ""}${message}`;
+
+  // 1. Sentry Capture (WARNING LEVEL)
+  Sentry.captureMessage(fullMessage, {
+    level: "warning",
+    extra: {
+      actionName,
+      context,
+      ...rest,
+    },
+    user: userId ? { id: userId } : undefined,
+  });
+
+  // 2. Database Logging
+  try {
+    await prisma.appLog.create({
+      data: {
+        level: "WARN",
+        message: fullMessage,
+        userId: userId || null,
+        context: context ? JSON.stringify({ ...context, ...rest }) : JSON.stringify(rest),
+      },
+    });
+  } catch (dbError) {
+    console.error("Failed to log warning to database", dbError);
+  }
+
+  // 3. Console Logging
+  console.warn(`⚠️ ${fullMessage}`);
 }
 
 /**

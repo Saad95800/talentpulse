@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { mollieClient } from "./mollie";
 import prisma from "./prisma";
 import { sendBillingSuccessEmail, sendBillingFailureEmail } from "./mail";
@@ -24,9 +25,11 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
           paymentId = payments[0].id;
           console.log(`[PaymentLogic] Dernier paiement identifié : ${paymentId}`);
         } else {
+          Sentry.captureMessage(`Aucun paiement trouvé chez Mollie pour le client ${user.mollieCustomerId}`, "warning");
           console.warn(`[PaymentLogic] Aucun paiement trouvé chez Mollie pour le client ${user.mollieCustomerId}`);
         }
       } catch (err) {
+        Sentry.captureException(err, { tags: { payment_flow: "recovery" }, extra: { userId } });
         console.error(`[PaymentLogic] Erreur lors de la liste des paiements Mollie:`, err);
       }
     }
@@ -58,7 +61,9 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
   const effectiveUserId = metadata?.userId || userId;
 
   if (!effectiveUserId) {
-    throw new Error(`Aucun userId trouvé pour le paiement ${paymentId}`);
+    const err = new Error(`Aucun userId trouvé pour le paiement ${paymentId}`);
+    Sentry.captureException(err, { extra: { paymentId, metadata: payment.metadata } });
+    throw err;
   }
 
   // 3. Récupérer l'utilisateur
@@ -67,7 +72,9 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
   });
 
   if (!user) {
-    throw new Error(`Utilisateur ${effectiveUserId} introuvable pour le paiement ${paymentId}`);
+    const err = new Error(`Utilisateur ${effectiveUserId} introuvable pour le paiement ${paymentId}`);
+    Sentry.captureException(err, { extra: { effectiveUserId, paymentId } });
+    throw err;
   }
 
   // 4. Traiter selon le type de paiement
@@ -168,6 +175,7 @@ export async function processPaymentSuccess(params: { paymentId?: string; userId
     await sendBillingSuccessEmail(user.email, payment.amount.value, receiptNumber);
     console.log(`[PaymentLogic] Email de confirmation envoyé à ${user.email}`);
   } catch (err) {
+    Sentry.captureException(err, { tags: { service: "mail", context: "payment_success" }, extra: { userEmail: user.email, paymentId } });
     console.error("[PaymentLogic] Échec envoi email:", err);
   }
 
@@ -187,6 +195,7 @@ export async function processPaymentFailure(paymentId: string) {
     const userId = metadata?.userId;
 
     if (!userId) {
+      Sentry.captureMessage(`Échec de paiement ignoré : pas de userId dans les métadonnées (Paiement: ${paymentId})`, "warning");
       console.warn(`[PaymentLogic] Échec ignoré : pas de userId dans les métadonnées du paiement ${paymentId}`);
       return { success: false, error: "Pas de userId" };
     }
@@ -215,6 +224,7 @@ export async function processPaymentFailure(paymentId: string) {
 
     return { success: true };
   } catch (error) {
+    Sentry.captureException(error, { tags: { payment_flow: "failure_processing" }, extra: { paymentId } });
     console.error(`[PaymentLogic] Erreur lors du processPaymentFailure:`, error);
     return { success: false, error: "Internal error" };
   }

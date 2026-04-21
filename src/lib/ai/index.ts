@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import * as Sentry from "@sentry/nextjs";
+import { extractJSON } from '@/lib/utils/json';
 import type { AIProviderName, IAIProvider, AIMessage, AICompletionOptions } from './types';
 import { AI_PROVIDERS_CONFIG } from './types';
 import { AnthropicProvider } from './providers/anthropic';
@@ -372,16 +373,3 @@ export async function validateDocumentConformity(
   }
 }
 
-export function extractJSON<T>(text: string): T {
-  let jsonString = text.trim();
-  const markdownMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (markdownMatch && markdownMatch[1]) {
-    jsonString = markdownMatch[1].trim();
-  }
-  const firstBrace = jsonString.indexOf('{');
-  const lastBrace = jsonString.lastIndexOf('}');
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    jsonString = jsonString.substring(firstBrace, lastBrace + 1);
-  }
-  return JSON.parse(jsonString) as T;
-}

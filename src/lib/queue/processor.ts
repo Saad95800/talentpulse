@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { Job } from 'bullmq';
 import { MatchingJobData } from './types';
 import prisma from '@/lib/prisma';
@@ -108,6 +109,12 @@ export async function matchingProcessor(job: Job<MatchingJobData>) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[Worker] Erreur sur le Job ${job.id}:`, error);
+
+    // ─── Monitoring Sentry ──────────────────────────────────
+    Sentry.captureException(error, {
+      tags: { job: "matching", jobId: String(job.id) },
+      extra: { batchItemId, userId, cvFileName, errorMessage }
+    });
 
     await prisma.batchItem.update({
       where: { id: batchItemId },

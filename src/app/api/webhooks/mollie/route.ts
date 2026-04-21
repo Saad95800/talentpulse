@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { processPaymentSuccess, processPaymentFailure } from "@/lib/payment-logic";
 import { mollieClient } from "@/lib/mollie";
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
     const id = formData.get("id") as string;
 
     if (!id) {
+      Sentry.captureMessage("[MollieWebhook] ID manquant dans la notification", "warning");
       return new NextResponse("ID manquant", { status: 400 });
     }
 
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Status ignored or Handled", { status: 200 });
 
   } catch (error) {
+    Sentry.captureException(error, { tags: { webhook: "mollie" } });
     console.error("🔥 [MollieWebhook] Erreur critique:", error);
     return new NextResponse("Webhook Error", { status: 500 });
   }

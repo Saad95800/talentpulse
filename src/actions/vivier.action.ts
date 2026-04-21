@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { handleActionError, handleActionWarning } from "@/lib/error-handler";
 import { aiComplete } from "@/lib/ai/index";
 import { MatchResult } from "@/lib/ai";
 
@@ -33,9 +34,9 @@ export async function getCandidatesAction(userId: string, page: number = 1, limi
       totalPages,
       currentPage: page 
     };
+    };
   } catch (error) {
-    console.error("Erreur getCandidatesAction:", error);
-    return { success: false, error: "Impossible de récupérer les candidats." };
+    return handleActionError("Impossible de récupérer les candidats", error, { actionName: "getCandidatesAction", userId });
   }
 }
 
@@ -60,9 +61,9 @@ export async function getMissionsAction(userId: string, page: number = 1, limit:
       totalPages,
       currentPage: page 
     };
+    };
   } catch (error) {
-    console.error("Erreur getMissionsAction:", error);
-    return { success: false, error: "Impossible de récupérer les missions." };
+    return handleActionError("Impossible de récupérer les missions", error, { actionName: "getMissionsAction", userId });
   }
 }
 
@@ -77,11 +78,9 @@ export async function deleteCandidateAction(candidateId: string, userId: string)
       return { success: false, error: "Non autorisé ou introuvable." };
     }
 
-    await prisma.candidate.delete({ where: { id: candidateId }});
     return { success: true };
   } catch (error) {
-    console.error("Erreur deleteCandidateAction:", error);
-    return { success: false, error: "Erreur lors de la suppression." };
+    return handleActionError("Erreur lors de la suppression du candidat", error, { actionName: "deleteCandidateAction", userId, candidateId });
   }
 }
 
@@ -96,11 +95,9 @@ export async function deleteMissionAction(missionId: string, userId: string) {
       return { success: false, error: "Non autorisé ou introuvable." };
     }
 
-    await prisma.mission.delete({ where: { id: missionId }});
     return { success: true };
   } catch (error) {
-    console.error("Erreur deleteMissionAction:", error);
-    return { success: false, error: "Erreur lors de la suppression." };
+    return handleActionError("Erreur lors de la suppression de la mission", error, { actionName: "deleteMissionAction", userId, missionId });
   }
 }
 
@@ -158,16 +155,16 @@ Instructions :
       'main'
     );
 
+    if (!text || text.trim() === "") {
+      handleActionWarning("L'IA du Vivier a renvoyé une réponse vide.", { userId, context: { messageCount: messages.length } });
+    }
+
     return { 
       success: true, 
-      message: text
+      message: text || "Désolé, je n'ai pas pu générer de réponse. Pouvez-vous reformuler ?"
     };
 
   } catch (error) {
-    console.error("Erreur Query Vivier IA:", error);
-    return { 
-      success: false, 
-      error: "Impossible de contacter l'assistant IA pour le moment." 
-    };
+    return handleActionError("Erreur Query Vivier IA", error, { actionName: "queryVivierIA", userId });
   }
 }

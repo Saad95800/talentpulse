@@ -2,6 +2,7 @@
  * Service d'envoi d'emails via l'API REST de Brevo (Sendinblue).
  * Approche moderne remplaçant SMTP pour une meilleure fiabilité.
  */
+import * as Sentry from "@sentry/nextjs";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_LIST_ID = parseInt(process.env.BREVO_LIST_ID || '3');
@@ -18,7 +19,7 @@ const SENDER = {
  */
 export async function syncContactToBrevo(email: string, firstName: string, lastName: string, phone?: string) {
   if (!BREVO_API_KEY) {
-    console.warn("⚠️ BREVO_API_KEY manquante, synchronisation contact ignorée.");
+    Sentry.captureMessage("BREVO_API_KEY manquante, synchronisation contact ignorée.", "warning");
     return;
   }
 
@@ -55,12 +56,16 @@ export async function syncContactToBrevo(email: string, firstName: string, lastN
       if (errorData.code === 'duplicate_parameter') {
         console.log(`[Brevo] Contact ${email} déjà présent, mis à jour.`);
       } else {
+        Sentry.captureException(new Error(`Erreur API Brevo Contacts: ${JSON.stringify(errorData)}`), {
+          extra: { email, errorData }
+        });
         console.error("❌ Erreur API Brevo Contacts:", errorData);
       }
     } else {
       console.log(`✅ [Brevo] Contact synchronisé : ${email}`);
     }
   } catch (error) {
+    Sentry.captureException(error, { tags: { service: "brevo", action: "syncContact" } });
     console.error("❌ Échec de la synchronisation Brevo:", error);
   }
 }
@@ -70,7 +75,7 @@ export async function syncContactToBrevo(email: string, firstName: string, lastN
  */
 async function sendBrevoEmail(to: string, subject: string, htmlContent: string) {
   if (!BREVO_API_KEY) {
-    console.error("❌ BREVO_API_KEY manquante dans les variables d'environnement.");
+    Sentry.captureMessage("BREVO_API_KEY manquante pour l'envoi d'email.", "error");
     throw new Error("Erreur de configuration email.");
   }
 
@@ -92,12 +97,16 @@ async function sendBrevoEmail(to: string, subject: string, htmlContent: string) 
 
     if (!response.ok) {
       const errorData = await response.json();
+      Sentry.captureException(new Error(`Brevo Email Failure: ${response.statusText}`), {
+        extra: { to, subject, errorData }
+      });
       console.error("❌ Erreur API Brevo:", errorData);
       throw new Error(`Brevo API error: ${response.statusText}`);
     }
 
     return await response.json();
   } catch (error) {
+    Sentry.captureException(error, { tags: { service: "brevo", action: "sendEmail" } });
     console.error("❌ Échec de l'envoi d'email via API Brevo:", error);
     throw error;
   }
