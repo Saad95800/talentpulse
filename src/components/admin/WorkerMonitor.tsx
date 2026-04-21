@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { 
-  Cpu, Activity, CheckCircle, XCircle, Clock, 
-  Search, RefreshCw, AlertTriangle, Terminal,
-  Maximize2, ArrowRight, MousePointer2, Zap
+  Cpu, Activity, CheckCircle, XCircle, 
+  RefreshCw, AlertTriangle, Terminal,
+  Maximize2, Zap
 } from "lucide-react";
 import { 
   getWorkerDashboardStats, 
@@ -14,7 +14,6 @@ import {
   resetStuckJobsAction
 } from "@/actions/worker.admin.action";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 export default function WorkerMonitor() {
   const [stats, setStats] = useState<any>(null);
@@ -24,8 +23,8 @@ export default function WorkerMonitor() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    setRefreshing(true);
+  const fetchData = useCallback(async (isInitial: boolean = false) => {
+    if (!isInitial) setRefreshing(true);
     const [statsRes, jobsRes, logsRes] = await Promise.all([
       getWorkerDashboardStats(),
       getBatchJobsList(1, 20),
@@ -33,15 +32,18 @@ export default function WorkerMonitor() {
     ]);
 
     if (statsRes.success) setStats(statsRes.stats);
-    if (jobsRes.success) setJobs(jobsRes.jobs);
-    if (logsRes.success) setLogs(logsRes.logs);
+    if (jobsRes.success) setJobs(jobsRes.jobs || []);
+    if (logsRes.success) setLogs(logsRes.logs || []);
     
     setLoading(false);
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
-    fetchData();
+    // Utilisation de queueMicrotask pour éviter le warning de setState synchrone dans l'effet
+    queueMicrotask(() => {
+      fetchData(true);
+    });
     // Auto-refresh toutes les 30 secondes pour le monitoring
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
@@ -81,7 +83,7 @@ export default function WorkerMonitor() {
             Console Pipeline IA
           </h2>
           <p className="text-slate-500 font-medium font-mono text-xs uppercase tracking-tighter mt-1">
-            Status: <span className="text-emerald-500">Operational</span> // node_v22.20 // bullmq_engine
+            Status: <span className="text-emerald-500">Operational</span> {"//"} node_v22.20 {"//"} bullmq_engine
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -92,7 +94,7 @@ export default function WorkerMonitor() {
             <AlertTriangle className="w-4 h-4" /> Reset Stuck Jobs
           </button>
           <button 
-            onClick={fetchData}
+            onClick={() => fetchData()}
             disabled={refreshing}
             className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 rounded-xl text-sm font-bold text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
           >
@@ -102,7 +104,7 @@ export default function WorkerMonitor() {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Grille des statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -220,7 +222,7 @@ export default function WorkerMonitor() {
               </div>
 
               <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-                 {logs.map((log, i) => (
+                 {logs.map((log) => (
                     <div key={log.id} className="p-3 bg-slate-900 border border-slate-800 rounded-xl group hover:border-slate-700 transition-all cursor-default">
                        <div className="flex items-center gap-2 mb-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${

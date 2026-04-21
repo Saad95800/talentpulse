@@ -34,7 +34,6 @@ export async function getCandidatesAction(userId: string, page: number = 1, limi
       totalPages,
       currentPage: page 
     };
-    };
   } catch (error) {
     return handleActionError("Impossible de récupérer les candidats", error, { actionName: "getCandidatesAction", userId });
   }
@@ -60,7 +59,6 @@ export async function getMissionsAction(userId: string, page: number = 1, limit:
       totalCount, 
       totalPages,
       currentPage: page 
-    };
     };
   } catch (error) {
     return handleActionError("Impossible de récupérer les missions", error, { actionName: "getMissionsAction", userId });

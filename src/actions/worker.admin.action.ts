@@ -1,7 +1,6 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Role } from "@prisma/client";
 
 /**
  * Interface pour les statistiques du dashboard worker

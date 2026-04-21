@@ -135,7 +135,7 @@ export async function getAdminChatListAction(token: string) {
     });
 
     return { success: true, conversations };
-  } catch (error) {
+  } catch (_error) {
     return { success: false, error: "Erreur serveur" };
   }
 }

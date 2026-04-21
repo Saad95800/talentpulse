@@ -84,7 +84,8 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
         const isErrorMsg = lowerText.includes('forme d\'images') || lowerText.includes('no text');
 
         if (isSuspiciouslyShort || hasNoAlpha || isErrorMsg) {
-          Sentry.captureMessage(`PDF détecté comme scan ou texte de mauvaise qualité (${filename})`, "warning", {
+          Sentry.captureMessage(`PDF détecté comme scan ou texte de mauvaise qualité (${filename})`, {
+            level: "warning",
             extra: { textLength: result.text.length, filename }
           });
           console.log(`[Document] PDF détecté comme scan/image (Qualité texte insuffisante).`);

@@ -18,7 +18,9 @@ import {
   MessageSquare,
   Target,
   Users,
-  DollarSign
+  DollarSign,
+  Ticket, 
+  Cpu
 } from "lucide-react";
 import Link from "next/link";
 import UserActivityExplorer from "@/components/admin/UserActivityExplorer";
@@ -29,7 +31,6 @@ import AIQualityDashboard from "@/components/admin/AIQualityDashboard";
 import GrowthDashboard from "@/components/admin/GrowthDashboard";
 import CouponManager from "@/components/admin/CouponManager";
 import WorkerMonitor from "@/components/admin/WorkerMonitor";
-import { Ticket, Cpu } from "lucide-react";
 
 interface AdminHistoryRecord {
   id: string;
@@ -97,7 +98,6 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
-      {/* ... (rest of the component content) ... */}
       <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-8">
@@ -135,7 +135,7 @@ function DashboardContent() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Stats Grid */}
+        {/* Grid des statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
             <div className="flex items-center gap-4">
