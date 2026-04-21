@@ -191,13 +191,33 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
             </div>
             <h3 className="font-bold text-main text-xl">Compétences Validées</h3>
           </div>
-          <ul className="space-y-3">
-            {result.competences_validees.map((skill, index) => (
-              <li key={index} className="flex items-start gap-3 p-4 bg-emerald-50/50 rounded-xl group hover:bg-emerald-100/60 border border-emerald-100 transition-all">
-                <div className="mt-1.5 w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                <span className="text-sm font-bold text-emerald-950 leading-tight">{skill}</span>
-              </li>
-            ))}
+          <ul className="space-y-4">
+            {result.competences_validees.map((skill, index) => {
+              // Support old format (string) and new format (object)
+              const isObject = typeof skill === 'object' && skill !== null;
+              const name = isObject ? (skill as any).nom : skill;
+              const proof = isObject ? (skill as any).preuve : null;
+              const level = isObject ? (skill as any).niveau : null;
+
+              return (
+                <li key={index} className="flex flex-col gap-2 p-5 bg-emerald-50/50 rounded-2xl group hover:bg-emerald-100/60 border border-emerald-100 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-sm font-black text-emerald-950 uppercase tracking-tight">{name}</span>
+                    {level && (
+                      <span className="ml-auto text-[10px] font-black bg-emerald-200 text-emerald-700 px-2 py-0.5 rounded-md">
+                        Niveau {level}/5
+                      </span>
+                    )}
+                  </div>
+                  {proof && (
+                    <div className="ml-5 text-xs font-medium text-emerald-800 leading-snug italic opacity-80 decoration-emerald-200 decoration-2">
+                       &ldquo;{proof}&rdquo;
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -232,11 +252,60 @@ export default function MatchResultView({ result, candidateName, recordId }: Mat
           <h3 className="text-2xl font-black mb-6 flex items-center gap-4 uppercase tracking-wider text-primary">
             Verdict du Chasseur de Têtes
           </h3>
-          <div className="text-lg md:text-xl font-medium leading-relaxed text-slate-300 whitespace-pre-line">
+          <div className="text-lg md:text-xl font-medium leading-relaxed text-slate-300 whitespace-pre-line mb-8">
             {result.argumentaire_client}
           </div>
+
+          {result.argumentaire_scientifique && (
+            <div className="pt-8 border-t border-slate-800">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Analyse Psychométrique & Scientifique</h4>
+              <p className="text-sm md:text-base text-slate-400 font-medium italic leading-relaxed">
+                {result.argumentaire_scientifique}
+              </p>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Analyse du Processus IA (Accountability) */}
+      {result.analyse_processus && (
+        <section className="mt-8 grid md:grid-cols-3 gap-6">
+           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl shadow-slate-100">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                <Award className="w-3 h-3" /> Rigueur d&apos;Analyse
+              </h4>
+              <p className="text-sm font-bold text-main leading-tight italic decoration-primary/20 decoration-4">
+                {result.analyse_processus.rigueur}
+              </p>
+           </div>
+           
+           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl shadow-slate-100">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-3 h-3" /> Facteurs Clés
+              </h4>
+              <ul className="flex flex-wrap gap-2">
+                {result.analyse_processus.facteurs_determinants.map((f, i) => (
+                  <li key={i} className="text-[10px] font-black bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200">
+                    {f}
+                  </li>
+                ))}
+              </ul>
+           </div>
+
+           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl shadow-slate-100">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                <CheckCircle className="w-3 h-3 text-emerald-500" /> Biais Neutralisés
+              </h4>
+              <ul className="flex flex-wrap gap-2">
+                {result.analyse_processus.biais_neutralises.map((b, i) => (
+                  <li key={i} className="text-[10px] font-black bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-100">
+                    {b}
+                  </li>
+                ))}
+              </ul>
+           </div>
+        </section>
+      )}
 
       {/* Questions à poser au candidat */}
       {result.questions_candidat && result.questions_candidat.length > 0 && (

@@ -55,9 +55,15 @@ export default function DashboardPage() {
                 return {
                   recordId: item.matchRecord.id,
                   score: (aiData.score as number) || (item.matchRecord.score as number) || 0,
-                  competences_validees: (aiData.competences_validees as string[]) || [],
+                  competences_validees: (aiData.competences_validees as any) || [],
                   competences_manquantes: (aiData.competences_manquantes as string[]) || [],
                   argumentaire_client: (aiData.argumentaire_client as string) || "Analyse terminée.",
+                  argumentaire_scientifique: (aiData.argumentaire_scientifique as string) || "",
+                  analyse_processus: (aiData.analyse_processus as any) || { 
+                    rigueur: "Analyse standard", 
+                    facteurs_determinants: [], 
+                    biais_neutralises: [] 
+                  },
                   questions_candidat: (aiData.questions_candidat as string[]) || [],
                   candidateInfo: (aiData.candidateInfo as CandidateInfo) || { firstName: item.candidateName || 'Candidat', lastName: '' },
                   status: item.status
@@ -69,6 +75,8 @@ export default function DashboardPage() {
                 competences_validees: [],
                 competences_manquantes: [],
                 argumentaire_client: item.error || (item.status === 'PROCESSING' ? "L'IA analyse le profil..." : "En attente..."),
+                argumentaire_scientifique: "",
+                analyse_processus: { rigueur: "", facteurs_determinants: [], biais_neutralises: [] },
                 questions_candidat: [],
                 candidateInfo: { firstName: item.candidateName || 'Candidat', lastName: '' }
               };
@@ -123,9 +131,15 @@ export default function DashboardPage() {
                 return {
                   recordId: item.matchRecord.id,
                   score: (aiData.score as number) || (item.matchRecord.score as number) || 0,
-                  competences_validees: (aiData.competences_validees as string[]) || [],
+                  competences_validees: (aiData.competences_validees as any) || [],
                   competences_manquantes: (aiData.competences_manquantes as string[]) || [],
                   argumentaire_client: (aiData.argumentaire_client as string) || "Analyse terminée.",
+                  argumentaire_scientifique: (aiData.argumentaire_scientifique as string) || "",
+                  analyse_processus: (aiData.analyse_processus as any) || { 
+                    rigueur: "Analyse standard", 
+                    facteurs_determinants: [], 
+                    biais_neutralises: [] 
+                  },
                   questions_candidat: (aiData.questions_candidat as string[]) || [],
                   candidateInfo: (aiData.candidateInfo as CandidateInfo) || { firstName: item.candidateName || 'Candidat', lastName: '' },
                   status: item.status
@@ -137,6 +151,8 @@ export default function DashboardPage() {
                 competences_validees: [],
                 competences_manquantes: [],
                 argumentaire_client: item.error || (item.status === 'PROCESSING' ? "L'IA analyse le profil..." : "En attente..."),
+                argumentaire_scientifique: "",
+                analyse_processus: { rigueur: "", facteurs_determinants: [], biais_neutralises: [] },
                 questions_candidat: [],
                 candidateInfo: { firstName: item.candidateName || 'Candidat', lastName: '' }
               };

@@ -148,6 +148,8 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
           competences_validees: [],
           competences_manquantes: [],
           argumentaire_client: "Analyse en attente...",
+          argumentaire_scientifique: "",
+          analyse_processus: { rigueur: "", facteurs_determinants: [], biais_neutralises: [] },
           questions_candidat: [],
           candidateInfo: { firstName: file.name, lastName: '' },
           status: 'PENDING'
@@ -159,6 +161,8 @@ export default function MatchingDashboard({ onPaywallOpen }: MatchingDashboardPr
             competences_validees: [],
             competences_manquantes: [],
             argumentaire_client: "Analyse en attente...",
+            argumentaire_scientifique: "",
+            analyse_processus: { rigueur: "", facteurs_determinants: [], biais_neutralises: [] },
             questions_candidat: [],
             candidateInfo: { firstName: "CV_Saisi.txt", lastName: '' },
             status: 'PENDING'

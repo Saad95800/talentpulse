@@ -39,9 +39,19 @@ export interface CandidateInfo {
 export interface MatchResult {
   recordId?: string;
   score: number;
-  competences_validees: string[];
+  competences_validees: {
+    nom: string;
+    preuve: string;
+    niveau: 1 | 2 | 3 | 4 | 5;
+  }[];
   competences_manquantes: string[];
   argumentaire_client: string;
+  argumentaire_scientifique: string;
+  analyse_processus: {
+    rigueur: string;
+    facteurs_determinants: string[];
+    biais_neutralises: string[];
+  };
   questions_candidat: string[];
   candidateInfo: CandidateInfo;
   jobTitle?: string;
@@ -178,12 +188,41 @@ const matchResultSchema = {
   type: "object",
   properties: {
     score: { type: "number" },
-    competences_validees: { type: "array", items: { type: "string" } },
+    competences_validees: { 
+      type: "array", 
+      items: { 
+        type: "object",
+        properties: {
+          nom: { type: "string" },
+          preuve: { type: "string" },
+          niveau: { type: "number", minimum: 1, maximum: 5 }
+        },
+        required: ["nom", "preuve", "niveau"]
+      } 
+    },
     competences_manquantes: { type: "array", items: { type: "string" } },
     argumentaire_client: { type: "string" },
+    argumentaire_scientifique: { type: "string" },
+    analyse_processus: {
+      type: "object",
+      properties: {
+        rigueur: { type: "string" },
+        facteurs_determinants: { type: "array", items: { type: "string" } },
+        biais_neutralises: { type: "array", items: { type: "string" } }
+      },
+      required: ["rigueur", "facteurs_determinants", "biais_neutralises"]
+    },
     questions_candidat: { type: "array", items: { type: "string" } }
   },
-  required: ["score", "competences_validees", "competences_manquantes", "argumentaire_client", "questions_candidat"]
+  required: [
+    "score", 
+    "competences_validees", 
+    "competences_manquantes", 
+    "argumentaire_client", 
+    "argumentaire_scientifique",
+    "analyse_processus",
+    "questions_candidat"
+  ]
 };
 
 const conformitySchema = {
@@ -305,22 +344,27 @@ export async function generateMatchingScore(
   cvText: string,
   existingInfo?: CandidateInfo
 ): Promise<MatchResult> {
-  const systemPrompt = `Tu es une IA experte en recrutement senior (Headhunter). 
-Ton rôle est de fournir une ANALYSE CRITIQUE et PRÉCISE du matching entre une offre d'emploi et un candidat.
+  const systemPrompt = `Tu es une IA experte en psychologie du travail et recrutement senior. 
+Ton rôle est de fournir une ANALYSE SCIENTIFIQUE et CRITIQUE du matching entre une offre d'emploi et un candidat.
+
+PRINCIPES D'ÉVALUATION (RECHERCHE SCIENTIFIQUE) :
+1. ACCOUNTABILITY DU PROCESSUS : Tu dois justifier CHAQUE compétence validée par une PREUVE TEXTUELLE (citation ou résumé d'une action) extraite du CV.
+2. VALIDITÉ PRÉDICTIVE : Accorde plus de poids à l'impact chiffré et à la complexité des réalisations qu'à la simple durée de l'expérience.
+3. NEUTRALISATION DES BIAIS : Ignore le prestige des écoles ou des anciens employeurs célèbres. Concentre-toi sur les compétences démontrées.
+4. GMA (General Mental Ability) : Valorise les indicateurs de capacité d'apprentissage et de résolution de problèmes complexes.
 
 CONSIGNES DE RÉDACTION :
-1. SCORE (score) : Entre 0 et 100. Sois exigeant. Un 100% est quasi impossible.
-2. COMPÉTENCES VALIDÉES (competences_validees) : Liste uniquement ce qui est explicitement prouvé.
-3. COMPÉTENCES MANQUANTES (competences_manquantes) : Identifie les "red flags" ou manques réels par rapport à l'offre.
-4. ARGUMENTAIRE CLIENT (argumentaire_client) : Rédige un texte de 3-5 phrases professionnelles résumant le verdict. 
-   - NE RESTE PAS VAGUE. 
-   - "Le candidat match bien" est interdit. Préfère "L'expertise technique en React est solide, mais l'absence d'expérience en management sur de gros volumes est un risque."
-5. QUESTIONS (questions_candidat) : 3 questions pièges ou pertinentes à poser en entretien pour lever les doutes.
+1. SCORE (score) : Entre 0 et 100. Sois extrêmement exigeant.
+2. COMPÉTENCES VALIDÉES (competences_validees) : Pour chaque compétence, indique le "nom", une "preuve" (citation/description) et un "niveau" de 1 (théorique) à 5 (expert/leader).
+3. COMPÉTENCES MANQUANTES (competences_manquantes) : Identifie les manques réels ou red flags.
+4. ARGUMENTAIRE CLIENT (argumentaire_client) : Résumé professionnel convaincant (3-5 phrases).
+5. ARGUMENTAIRE SCIENTIFIQUE (argumentaire_scientifique) : Explication technique de la validité du profil basée sur la psychologie du travail.
+6. ANALYSE PROCESSUS (analyse_processus) : Détaille la "rigueur" de ton analyse, les "facteurs_determinants" de ta note, et les "biais_neutralises" (ex: "Nom d'entreprise prestigieuse ignoré au profit des compétences techniques").
+7. QUESTIONS (questions_candidat) : 3 questions comportementales ("Racontez-moi une fois où...") pour lever les doutes.
 
 OBLIGATION : 
-- Si tu ne peux pas analyser le candidat (données illisibles), retourne un score de 0 mais EXPLIQUE POURQUOI dans l'argumentaire.
-- NE RETOURNE JAMAIS DE STRINGS VIDES.
-- RÉPONDS UNIQUEMENT EN JSON STRICT.`;
+- RÉPONDS UNIQUEMENT EN JSON STRICT.
+- SI DONNÉES INSUFFISANTES : Score de 0 et explique pourquoi.`;
 
   const userPrompt = `### FICHE DE POSTE\n${jobText}\n\n### PROFIL CANDIDAT\n${existingInfo ? JSON.stringify(existingInfo) : cvText}\n\nEffectue l'analyse de matching maintenant.`;
 

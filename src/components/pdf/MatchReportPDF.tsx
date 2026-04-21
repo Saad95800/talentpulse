@@ -30,7 +30,10 @@ export default function MatchReportPDF({ result, candidateName }: MatchReportPDF
         />
 
         {/* Verdict qualitatif */}
-        <MatchVerdict verdict={result.argumentaire_client} />
+        <MatchVerdict 
+          verdict={result.argumentaire_client} 
+          scientificVerdict={result.argumentaire_scientifique}
+        />
 
         {/* Questions d'entretien */}
         <MatchQuestions questions={result.questions_candidat} />
