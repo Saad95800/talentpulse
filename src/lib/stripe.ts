@@ -44,24 +44,20 @@ export async function createStripeCheckoutSession(customerId: string, userId: st
   const productId = process.env.STRIPE_PRODUCT_ID;
   if (!productId) throw new Error("STRIPE_PRODUCT_ID is missing");
 
-  // On récupère le prix associé au produit
-  const prices = await stripe.prices.list({
-    product: productId,
-    active: true,
-    limit: 1,
-  });
-
-  if (prices.data.length === 0) {
-    throw new Error(`Aucun prix actif trouvé pour le produit Stripe ${productId}`);
-  }
-
-  const priceId = prices.data[0].id;
+  // Utilisation de price_data pour supporter les prix dynamiques (coupons)
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     line_items: [
       {
-        price: priceId,
+        price_data: {
+          currency: 'eur',
+          product: productId,
+          unit_amount: Math.round(parseFloat(options?.amount || "39.90") * 100),
+          recurring: {
+            interval: 'month',
+          },
+        },
         quantity: 1,
       },
     ],
