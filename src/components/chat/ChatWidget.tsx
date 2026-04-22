@@ -38,7 +38,7 @@ export default function ChatWidget() {
 
   // Charger les messages et gérer le polling
   useEffect(() => {
-    if (!token || user?.role === 'ADMIN') return;
+    if (!token) return;
 
     queueMicrotask(() => {
       fetchMessages();
@@ -84,8 +84,8 @@ export default function ChatWidget() {
     setLoading(false);
   };
 
-  // Ne pas afficher si pas connecté ou si admin (l'admin a son propre dashboard)
-  if (!user || user.role === 'ADMIN') return null;
+  // Ne pas afficher si pas connecté
+  if (!user) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
