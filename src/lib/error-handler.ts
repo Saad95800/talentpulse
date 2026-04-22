@@ -58,7 +58,7 @@ export async function handleActionError(
     success: false as const,
     error: process.env.NODE_ENV === "development" 
       ? `[${actionName || "Server"}] ${message}: ${errorMessage}`
-      : "Une erreur est survenue. L'incident a été enregistré pour analyse."
+      : "Une erreur est survenue."
   };
 }
 
