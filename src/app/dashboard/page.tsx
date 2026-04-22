@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { Suspense } from 'react';
 import MatchingDashboard from '@/components/MatchingDashboard';
 import MatchResultView from '@/components/MatchResultView';
 import PaywallModal from '@/components/PaywallModal';
@@ -22,14 +23,47 @@ import { CandidateInfo } from '@/lib/ai';
 import { useRef } from 'react';
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-bold text-sm tracking-widest uppercase animate-pulse">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const dispatch = useDispatch();
   const { user, isLoggedIn } = useSelector((state: RootState) => state.user);
   const credits = user?.credits ?? 0;
   const { currentResult, results, activeBatchId } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique' | 'abonnement'>('analyse');
+  const [activeTab, setActiveTabState] = useState<'analyse' | 'vivier' | 'historique' | 'abonnement'>('analyse');
   const [selectedHistoryResult, setSelectedHistoryResult] = useState<MatchResult | null>(null);
+
+  // Synchronisation descendante : URL -> State
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'analyse' || tab === 'vivier' || tab === 'historique' || tab === 'abonnement') {
+      setActiveTabState(tab);
+    }
+  }, [searchParams]);
+
+  // Fonction de changement d'onglet avec mise à jour de l'URL
+  const setActiveTab = (tab: 'analyse' | 'vivier' | 'historique' | 'abonnement') => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.push(`${pathname}?${params.toString()}`);
+    // Le useEffect ci-dessus mettra à jour le state via searchParams
+  };
 
   // Gestion de la session via le hook useAuth
   useAuth();
