@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import { captureException } from "../sentry-wrapper";
 import { Job } from 'bullmq';
 import { MatchingJobData } from './types';
 import prisma from '@/lib/prisma';
@@ -111,7 +111,7 @@ export async function matchingProcessor(job: Job<MatchingJobData>) {
     console.error(`[Worker] Erreur sur le Job ${job.id}:`, error);
 
     // ─── Monitoring Sentry ──────────────────────────────────
-    Sentry.captureException(error, {
+    captureException(error, {
       tags: { job: "matching", jobId: String(job.id) },
       extra: { batchItemId, userId, cvFileName, errorMessage }
     });

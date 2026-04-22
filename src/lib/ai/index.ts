@@ -305,9 +305,16 @@ INSTRUCTIONS DE SORTIE :
 - Réponse au format JSON pur uniquement.
 - Sois exhaustif sur les compétences, expériences et formations.`;
 
+  // Nettoyage agressif du texte pour économiser des tokens et éviter de saturer l'IA
+  const cleanCvText = cvText
+    .replace(/\r/g, '')
+    .replace(/\n{3,}/g, '\n\n') // Max 2 newlines consécutifs
+    .replace(/[ \t]{2,}/g, ' ') // Max 1 espace consécutif
+    .substring(0, 15000); // Protection contre les documents monstrueux
+
   const userPrompt = cvFileData?.isScanned 
     ? "Extrais le profil depuis ce document joint." 
-    : `Extrais le profil depuis ce texte :\n${cvText}`;
+    : `Extrais le profil depuis ce texte :\n${cleanCvText}`;
 
   const provider = createProvider('gemini', 'matching') as IAIProvider;
   const options = { 

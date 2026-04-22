@@ -83,6 +83,10 @@ export async function getAnalysisDetailAction(recordId: string, token: string) {
     const record = await prisma.matchRecord.findUnique({
       where: { id: recordId },
       include: {
+        mission: {
+          select: { description: true }
+        },
+        candidate: true,
         user: {
           select: { id: true }
         }

@@ -14,7 +14,7 @@ import SubscriptionManager from '@/components/SubscriptionManager';
 import { MatchResult } from '@/lib/ai';
 import { useAuth } from '@/hooks/useAuth';
 import { logout } from '@/store/userSlice';
-import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard } from 'lucide-react';
+import { LogOut, LayoutDashboard, RefreshCcw, History, Zap, CreditCard, X, TrendingUp } from 'lucide-react';
 import MultiMatchResultView from '@/components/MultiMatchResultView';
 import { getBatchStatusAction, getActiveBatchAction, cancelActiveBatchAction } from '@/actions/matching.action';
 import { setActiveBatchId, setBatchProgress, setMultiResults } from '@/store/matchingSlice';
@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const { currentResult, results, activeBatchId } = useSelector((state: RootState) => state.matching);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'analyse' | 'vivier' | 'historique' | 'abonnement'>('analyse');
+  const [selectedHistoryResult, setSelectedHistoryResult] = useState<MatchResult | null>(null);
 
   // Gestion de la session via le hook useAuth
   useAuth();
@@ -66,6 +67,9 @@ export default function DashboardPage() {
                   },
                   questions_candidat: (aiData.questions_candidat as string[]) || [],
                   candidateInfo: (aiData.candidateInfo as CandidateInfo) || { firstName: item.candidateName || 'Candidat', lastName: '' },
+                  jobDescription: item.matchRecord.mission?.description || "",
+                  fullCandidate: item.matchRecord.candidate || null,
+                  jobTitle: item.matchRecord.jobTitle || (aiData as any).jobTitle || "",
                   status: item.status
                 };
               }
@@ -142,6 +146,9 @@ export default function DashboardPage() {
                   },
                   questions_candidat: (aiData.questions_candidat as string[]) || [],
                   candidateInfo: (aiData.candidateInfo as CandidateInfo) || { firstName: item.candidateName || 'Candidat', lastName: '' },
+                  jobDescription: item.matchRecord.mission?.description || "",
+                  fullCandidate: item.matchRecord.candidate || null,
+                  jobTitle: item.matchRecord.jobTitle || (aiData as any).jobTitle || "",
                   status: item.status
                 };
               }
@@ -196,8 +203,12 @@ export default function DashboardPage() {
   const handleNewAnalysis = async () => {
     // Si un batch est actif, on l'annule côté serveur pour ne plus être "poursuivi"
     if (activeBatchId) {
-      console.log("[DashboardPage] Annulation du batch actif:", activeBatchId);
-      await cancelActiveBatchAction(activeBatchId);
+      console.log("[DashboardPage] Demande d'arrêt forcé du batch:", activeBatchId);
+      try {
+        await cancelActiveBatchAction(activeBatchId);
+      } catch (err) {
+        console.error("Échec de l'annulation serveur:", err);
+      }
     }
     
     dispatch(resetResult());
@@ -319,7 +330,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
                 {results.length > 0 ? (
-                   <MultiMatchResultView results={results} />
+                   <MultiMatchResultView results={results} onCancelAll={handleNewAnalysis} />
                 ) : currentResult ? (
                    <MatchResultView result={currentResult} candidateName="Candidat" />
                 ) : (
@@ -337,8 +348,7 @@ export default function DashboardPage() {
         ) : activeTab === 'historique' ? (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-300 border border-slate-200 overflow-hidden min-h-[500px]">
             <HistoryList onSelectAnalysis={(res: MatchResult) => {
-              dispatch(setResult(res));
-              setActiveTab('analyse');
+              setSelectedHistoryResult(res);
             }} />
           </div>
         ) : (
@@ -349,6 +359,52 @@ export default function DashboardPage() {
             nextBillingDate={user.nextBillingDate}
             credits={credits}
           />
+        )}
+
+        {/* Modal de détail Historique (Popin) */}
+        {selectedHistoryResult && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+            <div 
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" 
+              onClick={() => setSelectedHistoryResult(null)}
+            />
+            
+            <div className="relative w-full max-w-6xl max-h-[90vh] bg-slate-50 rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/20 flex flex-col animate-in zoom-in-95 duration-300">
+              {/* Header Modal */}
+              <div className="px-10 py-6 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-4">
+                      <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                          <TrendingUp className="w-6 h-6" />
+                      </div>
+                      <div>
+                          <h3 className="text-xl font-black text-main leading-tight">
+                            {selectedHistoryResult.candidateInfo 
+                              ? `${selectedHistoryResult.candidateInfo.firstName} ${selectedHistoryResult.candidateInfo.lastName}` 
+                              : "Détail du Matching"}
+                          </h3>
+                          <p className="text-xs font-bold text-muted uppercase tracking-widest italic">Analyse Historique Consultée</p>
+                      </div>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedHistoryResult(null)}
+                    className="p-3 hover:bg-slate-100 rounded-full text-slate-400 hover:text-main transition-colors"
+                  >
+                    <X className="w-7 h-7" />
+                  </button>
+              </div>
+
+              {/* Content Scrollable */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                <MatchResultView 
+                  result={selectedHistoryResult} 
+                  candidateName={selectedHistoryResult.candidateInfo 
+                    ? `${selectedHistoryResult.candidateInfo.firstName} ${selectedHistoryResult.candidateInfo.lastName}` 
+                    : "Candidat"} 
+                  recordId={selectedHistoryResult.recordId}
+                />
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Pied de page du Dashboard */}

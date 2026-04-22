@@ -1,11 +1,11 @@
-import * as Sentry from "@sentry/nextjs";
+import { init } from "./lib/sentry-wrapper";
 import { Worker } from 'bullmq';
 import { connection } from './lib/queue/redis';
 import { MATCHING_QUEUE_NAME } from './lib/queue/matching-queue';
 import { matchingProcessor } from './lib/queue/processor';
 
 // Initialisation Sentry pour le Worker (processus Node standalone)
-Sentry.init({
+init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || "https://c23317701de4564c1a853511aa5a7638@o4511253273837568.ingest.de.sentry.io/4511253275344976",
   tracesSampleRate: 1.0,
   debug: false,

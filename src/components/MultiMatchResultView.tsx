@@ -16,9 +16,10 @@ import MatchResultView from './MatchResultView';
 
 interface MultiMatchResultViewProps {
   results: MatchResult[];
+  onCancelAll?: () => void;
 }
 
-export default function MultiMatchResultView({ results }: MultiMatchResultViewProps) {
+export default function MultiMatchResultView({ results, onCancelAll }: MultiMatchResultViewProps) {
   const [selectedResult, setSelectedResult] = useState<MatchResult | null>(null);
 
   const getScoreColor = (score: number, status?: string) => {
@@ -57,6 +58,15 @@ export default function MultiMatchResultView({ results }: MultiMatchResultViewPr
                 </p>
             </div>
         </div>
+        {onCancelAll && results.some(r => r.status === 'PROCESSING' || r.status === 'PENDING') && (
+          <button 
+            onClick={onCancelAll}
+            className="px-6 py-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-2xl border border-red-200 transition-all flex items-center gap-2 group shadow-sm hover:shadow-md"
+          >
+            <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+            Forcer l&apos;arrêt & Nettoyer
+          </button>
+        )}
       </div>
 
       {/* Titre dynamique "Analyse en cours" */}

@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import { captureException, captureMessage } from "./sentry-wrapper";
 import prisma from "./prisma";
 
 export type LogLevel = "INFO" | "WARN" | "ERROR";
@@ -24,7 +24,7 @@ export async function handleActionError(
   const fullMessage = `${actionName ? `[${actionName}] ` : ""}${message}: ${errorMessage}`;
   
   // 1. Sentry Logging (ERROR LEVEL)
-  Sentry.captureException(error || new Error(message), {
+  captureException(error || new Error(message), {
     level: "error",
     extra: {
       actionName,
@@ -73,7 +73,7 @@ export async function handleActionWarning(
   const fullMessage = `${actionName ? `[${actionName}] ` : ""}${message}`;
 
   // 1. Sentry Capture (WARNING LEVEL)
-  Sentry.captureMessage(fullMessage, {
+  captureMessage(fullMessage, {
     level: "warning",
     extra: {
       actionName,

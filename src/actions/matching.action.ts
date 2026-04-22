@@ -155,12 +155,11 @@ export async function getBatchStatusAction(batchJobId: string) {
         items: {
           include: {
             matchRecord: {
-              select: {
-                id: true,
-                score: true,
-                aiResponse: true,
-                candidateName: true,
-                createdAt: true
+              include: {
+                mission: {
+                  select: { description: true }
+                },
+                candidate: true
               }
             }
           }
@@ -204,10 +203,24 @@ export async function getActiveBatchAction(userId: string) {
  */
 export async function cancelActiveBatchAction(batchJobId: string) {
   try {
+    // 1. Annuler le Job Global
     await prisma.batchJob.update({
       where: { id: batchJobId },
       data: { status: 'FAILED' }
     });
+
+    // 2. Annuler tous les items en attente ou en cours
+    await prisma.batchItem.updateMany({
+      where: { 
+        batchJobId: batchJobId,
+        status: { in: ['PENDING', 'PROCESSING'] }
+      },
+      data: { 
+        status: 'FAILED',
+        error: "Annulé par l'utilisateur"
+      }
+    });
+
     return { success: true };
   } catch (error) {
     return handleActionError("Impossible d'annuler le batch", error, { context: { batchJobId } });
