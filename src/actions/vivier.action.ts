@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { handleActionError, handleActionWarning } from "@/lib/error-handler";
 import { aiComplete } from "@/lib/ai/index";
 import { MatchResult } from "@/lib/ai";
+import { revalidatePath } from "next/cache";
 
 /**
  * Interface pour le message de chat
@@ -76,6 +77,13 @@ export async function deleteCandidateAction(candidateId: string, userId: string)
       return { success: false, error: "Non autorisé ou introuvable." };
     }
 
+    // 2. Suppression en cascade logicielle (analyses associées)
+    await prisma.$transaction([
+      prisma.matchRecord.deleteMany({ where: { candidateId } }),
+      prisma.candidate.delete({ where: { id: candidateId } })
+    ]);
+
+    revalidatePath('/dashboard/vivier');
     return { success: true };
   } catch (error) {
     return handleActionError("Erreur lors de la suppression du candidat", error, { actionName: "deleteCandidateAction", userId, candidateId });
@@ -93,6 +101,13 @@ export async function deleteMissionAction(missionId: string, userId: string) {
       return { success: false, error: "Non autorisé ou introuvable." };
     }
 
+    // 2. Suppression en cascade logicielle (analyses associées)
+    await prisma.$transaction([
+      prisma.matchRecord.deleteMany({ where: { missionId } }),
+      prisma.mission.delete({ where: { id: missionId } })
+    ]);
+
+    revalidatePath('/dashboard/vivier');
     return { success: true };
   } catch (error) {
     return handleActionError("Erreur lors de la suppression de la mission", error, { actionName: "deleteMissionAction", userId, missionId });

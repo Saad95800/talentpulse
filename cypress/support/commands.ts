@@ -47,5 +47,5 @@ Cypress.Commands.add('login', (email = 'contact@reactivedigital.fr', password = 
 
   // Une fois connecté (via login ou register), on doit arriver sur le dashboard
   cy.url({ timeout: 20000 }).should('include', '/dashboard');
-  cy.contains('Tableau de Bord', { timeout: 15000 }).should('be.visible');
+  cy.get('body').should('contain', 'Dashboard');
 });

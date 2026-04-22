@@ -141,29 +141,55 @@ export default function VivierManager() {
     });
   };
 
+  /**
+   * Exécute la suppression après confirmation
+   */
   const executeDelete = async () => {
     if (!user?.id || !confirmDelete.id) return;
     
     const { id, type } = confirmDelete;
     setActionLoading(id);
-    setConfirmDelete(prev => ({ ...prev, isOpen: false })); // Ferme la modal immédiatement
+    setConfirmDelete(prev => ({ ...prev, isOpen: false }));
     
     try {
       if (type === 'candidate') {
         const res = await deleteCandidateAction(id, user.id);
         if (res.success) {
-          // Recharger la page actuelle après suppression pour garder la pagination propre
           await loadCandidates(candPage);
         }
       } else {
         const res = await deleteMissionAction(id, user.id);
         if (res.success) {
-          // Recharger la page actuelle après suppression
           await loadMissions(missPage);
         }
       }
     } catch (err) {
       console.error("Erreur suppression:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /**
+   * Action de suppression directe (alternative sans ConfirmModal quand déjà confirmé par confirm())
+   */
+  const executeDirectDelete = async (id: string, type: 'candidate' | 'mission') => {
+    if (!user?.id) return;
+    setActionLoading(id);
+    try {
+      if (type === 'candidate') {
+        const res = await deleteCandidateAction(id, user.id);
+        if (res.success) {
+          await loadCandidates(candPage);
+        }
+      } else {
+        const res = await deleteMissionAction(id, user.id);
+        if (res.success) {
+          await loadMissions(missPage);
+        }
+      }
+    } catch (err) {
+      console.error("Erreur suppression directe:", err);
     } finally {
       setActionLoading(null);
     }
@@ -271,6 +297,7 @@ export default function VivierManager() {
           setCandidates(prev => prev.map(c => c.id === updated.id ? { ...c, ...updated, name: `${updated.firstName || ''} ${updated.lastName || ''}`.trim() || c.name } : c));
           setSelectedCandidate(updated as Candidate);
         }}
+        onDelete={(id) => executeDirectDelete(id, 'candidate')}
       />
 
       {/* Modal Mission (Utilisation de InfoModal pour le formattage riche) */}
@@ -280,6 +307,8 @@ export default function VivierManager() {
         title={selectedMission?.title || "Détails de l'offre"}
         type="job"
         data={selectedMission?.description || ""}
+        onDelete={(id) => executeDirectDelete(id, 'mission')}
+        id={selectedMission?.id}
       />
 
       {/* Modal de Confirmation Premium */}

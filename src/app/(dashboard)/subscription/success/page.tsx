@@ -10,35 +10,36 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get('paymentId');
   const userId = searchParams.get('userId');
+  const sessionId = searchParams.get('session_id');
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    (paymentId || userId) ? 'loading' : 'error'
+    (paymentId || userId || sessionId) ? 'loading' : 'error'
   );
   const [error, setError] = useState<string | null>(
-    (paymentId || userId) ? null : "Informations de paiement manquantes."
+    (paymentId || userId || sessionId) ? null : "Informations de paiement manquantes."
   );
 
   const handleSync = React.useCallback(async () => {
     try {
-      const res = await syncPaymentStatusAction(paymentId || undefined, userId || undefined);
+      const res = await syncPaymentStatusAction(paymentId || undefined, userId || undefined, sessionId || undefined);
       if (res.success) {
         setStatus('success');
       } else {
         setStatus('error');
-        setError(res.error || "Impossible de valider le paiement.");
+        setError((res as any).error || "Impossible de valider le paiement.");
       }
     } catch (_err) {
       setStatus('error');
       setError("Une erreur technique est survenue.");
     }
-  }, [paymentId, userId]);
+  }, [paymentId, userId, sessionId]);
 
   useEffect(() => {
-    if (paymentId || userId) {
+    if (paymentId || userId || sessionId) {
       queueMicrotask(() => {
         handleSync();
       });
     }
-  }, [paymentId, userId, handleSync]);
+  }, [paymentId, userId, sessionId, handleSync]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">

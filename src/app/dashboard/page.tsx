@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import MatchingDashboard from '@/components/MatchingDashboard';
 import MatchResultView from '@/components/MatchResultView';
 import PaywallModal from '@/components/PaywallModal';
-import { resetResult, setResult } from '@/store/matchingSlice';
+import { resetResult } from '@/store/matchingSlice';
 import VivierManager from '@/components/VivierManager';
 import HistoryList from '@/components/HistoryList';
 import SubscriptionManager from '@/components/SubscriptionManager';

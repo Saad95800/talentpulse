@@ -32,15 +32,19 @@ model User {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  // ─── Facturation (Mollie) ─────────────────────────────
+  // ─── Facturation (Mollie & Stripe) ──────────────────
   mollieCustomerId       String?    // ID Client Mollie
   mollieSubscriptionId   String?    // ID Subscription Mollie
+  stripeCustomerId       String?    // ID Client Stripe
+  stripeSubscriptionId   String?    // ID Subscription Stripe
+  
   plan                   String     @default("FREE") // "FREE", "PREMIUM"
   subscriptionStatus     String?    // "active", "canceled", "suspended"
   nextBillingDate        DateTime?
   gracePeriodStartedAt   DateTime?  // Date du début de l'échec de paiement récurrent
   lastBillingEmailSentAt DateTime?  // Date du dernier email de relance envoyé
-  payments               MolliePayment[]
+  molliePayments         MolliePayment[]
+  stripePayments         StripePayment[]
   batchJobs            BatchJob[]
   conversation         Conversation?
   
@@ -49,6 +53,7 @@ model User {
   isActive             Boolean        @default(true)
 
   @@index([mollieCustomerId])
+  @@index([stripeCustomerId])
   @@index([email])
 }
 
@@ -218,6 +223,22 @@ model MolliePayment {
   method           String?  // "card", "ideal", etc.
   status           String   // "paid", "failed", "expired"
   receiptNumber    String   @unique // ex: RECU-2026-0001
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model StripePayment {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  amount           Float    // Montant total en euros
+  currency         String   @default("EUR")
+  stripePaymentId  String   @unique
+  method           String?  // "card", etc.
+  status           String   // "paid", "failed", etc.
+  receiptNumber    String   @unique
   createdAt        DateTime @default(now())
 
   @@index([userId])

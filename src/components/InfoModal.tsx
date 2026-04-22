@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, User, Briefcase, GraduationCap, Globe, Mail, Phone, Link } from 'lucide-react';
+import { X, User, Briefcase, GraduationCap, Globe, Mail, Phone, Link, Trash2 } from 'lucide-react';
 
 interface InfoModalProps {
   isOpen: boolean;
@@ -9,6 +9,8 @@ interface InfoModalProps {
   title: string;
   type: 'job' | 'candidate';
   data: string | Record<string, unknown>;
+  onDelete?: (id: string) => void;
+  id?: string;
 }
 
 interface InfoData extends Record<string, unknown> {
@@ -87,7 +89,7 @@ function FormattedText({ text }: { text: string | unknown }) {
   return <div className="animate-in fade-in slide-in-from-bottom-2 duration-700">{result}</div>;
 }
 
-export default function InfoModal({ isOpen, onClose, title, type, data }: InfoModalProps) {
+export default function InfoModal({ isOpen, onClose, title, type, data, onDelete, id }: InfoModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -114,12 +116,28 @@ export default function InfoModal({ isOpen, onClose, title, type, data }: InfoMo
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-3 hover:bg-slate-200 rounded-2xl text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onDelete && id && (
+              <button 
+                onClick={() => {
+                  if (confirm(`Voulez-vous vraiment supprimer cette ${type === 'job' ? 'mission' : 'analyse'} et toutes les données associées ? Cette action est irréversible.`)) {
+                    onDelete(id);
+                    onClose();
+                  }
+                }}
+                className="p-3 hover:bg-red-50 rounded-2xl text-red-500 transition-all cursor-pointer mr-2"
+                title="Supprimer"
+              >
+                <Trash2 className="w-6 h-6" />
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="p-3 hover:bg-slate-200 rounded-2xl text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Body */}

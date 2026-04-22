@@ -1,5 +1,7 @@
 "use client";
 
+import { getActivePaymentProviderAction, setActivePaymentProviderAction } from "@/actions/admin-settings.action";
+import { toast } from "react-hot-toast";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,6 +57,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState<"history" | "users" | "chat" | "finances" | "quality" | "growth" | "coupons" | "feedbacks" | "worker">(
     initialChatUserId ? "chat" : "history"
   );
+  const [paymentProvider, setPaymentProvider] = useState<string>("mollie");
   const router = useRouter();
 
   useEffect(() => {
@@ -70,11 +73,25 @@ function DashboardContent() {
         if (res.success && res.records) {
           setHistory(res.records);
         }
+        
+        // Charger le provider actif
+        const provider = await getActivePaymentProviderAction();
+        setPaymentProvider(provider);
       }
       setLoading(false);
     };
     init();
   }, [token, checkAuth, router, user?.role]);
+
+  const handleProviderChange = async (provider: string) => {
+    const res = await setActivePaymentProviderAction(provider as "mollie" | "stripe");
+    if (res.success) {
+      setPaymentProvider(provider);
+      toast.success(`Processeur de paiement activé : ${provider.toUpperCase()}`);
+    } else {
+      toast.error("Erreur lors de la mise à jour");
+    }
+  };
 
   const filteredHistory = history.filter(h => 
     h.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -230,7 +247,43 @@ function DashboardContent() {
           </button>
         </div>
 
-        {activeTab === "finances" && token && <FinancialDashboard token={token} />}
+        {activeTab === "finances" && token && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Payment Provider Toggle */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-500" />
+                    Configuration des Paiements
+                  </h3>
+                  <p className="text-sm text-slate-400">Choisissez le processeur utilisé pour les nouveaux abonnements</p>
+                </div>
+                <div className="flex bg-slate-800 p-1 rounded-xl">
+                  <button
+                    onClick={() => handleProviderChange("mollie")}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${paymentProvider === 'mollie' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    MOLLIE
+                  </button>
+                  <button
+                    onClick={() => handleProviderChange("stripe")}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${paymentProvider === 'stripe' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    STRIPE
+                  </button>
+                </div>
+              </div>
+              <div className={`text-xs px-3 py-2 rounded-lg border ${paymentProvider === 'mollie' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
+                {paymentProvider === 'mollie' 
+                  ? "Actuellement, tous les nouveaux abonnements passent par Mollie Checkout." 
+                  : "Actuellement, tous les nouveaux abonnements passent par Stripe Checkout."}
+              </div>
+            </div>
+
+            <FinancialDashboard token={token} />
+          </div>
+        )}
         {activeTab === "feedbacks" && token && <FeedbackExplorer token={token} />}
         {activeTab === "quality" && token && <AIQualityDashboard token={token} />}
         {activeTab === "growth" && token && <GrowthDashboard token={token} />}

@@ -2,12 +2,21 @@
 
 import prisma from "@/lib/prisma";
 import { getOrCreateMollieCustomer, createFirstSubscriptionPayment, mollieClient } from "@/lib/mollie";
-import { processPaymentSuccess } from "@/lib/payment-logic";
+import { getOrCreateStripeCustomer, createStripeCheckoutSession, stripe } from "@/lib/stripe";
+import { processPaymentSuccess, processStripePaymentSuccess } from "@/lib/payment-logic";
 
 /**
- * Génère une URL de paiement Mollie Checkout pour s'abonner au plan Premium.
- * L'abonnement est à 39,90€/mois et donne 100 crédits.
- * Mollie nécessite un premier paiement pour valider le mandat de prélèvement.
+ * Récupère le processeur de paiement actif (Mollie par défaut).
+ */
+async function getActiveProvider() {
+  const setting = await prisma.appSettings.findUnique({
+    where: { key: "payment_provider" }
+  });
+  return setting?.value === "stripe" ? "stripe" : "mollie";
+}
+
+/**
+ * Génère une URL de paiement (Mollie ou Stripe) pour s'abonner au plan Premium.
  */
 export async function getPremiumCheckoutUrlAction(userId: string, couponCode?: string) {
   if (!userId) return { success: false, error: "Utilisateur non authentifié." };
@@ -15,79 +24,82 @@ export async function getPremiumCheckoutUrlAction(userId: string, couponCode?: s
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, name: true, mollieCustomerId: true }
+      select: { email: true, name: true, mollieCustomerId: true, stripeCustomerId: true }
     });
 
     if (!user) return { success: false, error: "Utilisateur introuvable." };
 
-    // 1. S'assurer que le client Mollie existe
-    const customerId = await getOrCreateMollieCustomer(userId, user.name || "Client", user.email);
-
-    // 2. Gestion du coupon de réduction
+    const provider = await getActiveProvider();
+    
+    // Gestion du coupon
     let amount = 39.90;
     let finalCouponCode: string | undefined = undefined;
 
     if (couponCode) {
       const dbCoupon = await prisma.coupon.findUnique({
-        where: { 
-          code: couponCode.trim().toUpperCase(),
-          isActive: true 
-        }
+        where: { code: couponCode.trim().toUpperCase(), isActive: true }
       });
-
       if (dbCoupon) {
-        if (dbCoupon.type === "FIXED_PRICE") {
-          amount = dbCoupon.value;
-        } else if (dbCoupon.type === "DISCOUNT") {
-          amount = Math.max(0, amount - dbCoupon.value);
-        }
+        if (dbCoupon.type === "FIXED_PRICE") amount = dbCoupon.value;
+        else if (dbCoupon.type === "DISCOUNT") amount = Math.max(0, amount - dbCoupon.value);
         finalCouponCode = dbCoupon.code;
-        console.log(`[Payment] Coupon appliqué : ${dbCoupon.code} (${dbCoupon.type} - New amount: ${amount}€)`);
-      } else {
-        console.log(`[Payment] Coupon invalide tenté : ${couponCode}`);
       }
     }
 
-    // 3. Créer le paiement de premier mandat
-    const checkoutUrl = await createFirstSubscriptionPayment(customerId, userId, user.email, {
-      amount: amount.toFixed(2),
-      couponCode: finalCouponCode
-    });
-
-    if (!checkoutUrl) {
-      throw new Error("Mollie n'a pas renvoyé d'URL de paiement.");
+    if (provider === "stripe") {
+      const customerId = await getOrCreateStripeCustomer(userId, user.name || "Client", user.email);
+      const url = await createStripeCheckoutSession(customerId, userId, user.email, {
+        amount: amount.toFixed(2),
+        couponCode: finalCouponCode
+      });
+      return { success: true, url };
+    } else {
+      const customerId = await getOrCreateMollieCustomer(userId, user.name || "Client", user.email);
+      const url = await createFirstSubscriptionPayment(customerId, userId, user.email, {
+        amount: amount.toFixed(2),
+        couponCode: finalCouponCode
+      });
+      return { success: true, url };
     }
 
-    return { 
-      success: true, 
-      url: checkoutUrl 
-    };
-
   } catch (error) {
-    console.error("❌ [PaymentAction] Erreur checkout Mollie:", error);
-    const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-    return { 
-      success: false, 
-      error: `Impossible d'initialiser le paiement : ${errorMessage}` 
-    };
+    console.error("❌ [PaymentAction] Erreur checkout:", error);
+    return { success: false, error: "Impossible d'initialiser le paiement." };
   }
 }
 
 /**
- * Action de synchronisation manuelle déclenchée au retour sur le site (Success Page)
+ * Action de synchronisation (Success Page)
  */
-export async function syncPaymentStatusAction(paymentId?: string, userId?: string) {
+export async function syncPaymentStatusAction(paymentId?: string, userId?: string, sessionId?: string) {
   try {
-    const result = await processPaymentSuccess({ paymentId, userId });
-    return result;
+    if (sessionId) {
+      // Cas Stripe
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status === 'paid') {
+        const res = await processStripePaymentSuccess({
+          sessionId,
+          userId,
+          subscriptionId: session.subscription as string,
+          amountTotal: session.amount_total,
+          currency: session.currency,
+          customerId: session.customer as string
+        });
+        return res;
+      }
+    } else {
+      // Cas Mollie
+      return await processPaymentSuccess({ paymentId, userId });
+    }
+    return { success: false, error: "Paiement non trouvé ou invalide" };
   } catch (error) {
-    console.error("❌ [PaymentAction] Erreur sync Mollie:", error);
-    return { success: false, error: "Erreur lors de la synchronisation du paiement." };
+    console.error("❌ [PaymentAction] Erreur sync:", error);
+    return { success: false, error: "Erreur synchronisation." };
   }
 }
 
 /**
- * Annule l'abonnement Premium d'un utilisateur chez Mollie.
+ * Annule l'abonnement Premium.
  */
 export async function cancelSubscriptionAction(userId: string) {
   if (!userId) return { success: false, error: "Identifiant manquant." };
@@ -95,19 +107,17 @@ export async function cancelSubscriptionAction(userId: string) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { mollieSubscriptionId: true, mollieCustomerId: true }
+      select: { mollieSubscriptionId: true, mollieCustomerId: true, stripeSubscriptionId: true }
     });
 
-    if (!user || (!user.mollieSubscriptionId && !user.mollieCustomerId)) {
-       // Si pas d'ID Mollie, on annule juste en local
-       await prisma.user.update({
-         where: { id: userId },
-         data: { subscriptionStatus: "canceled" }
-       });
-       return { success: true, message: "Abonnement annulé." };
-    }
+    if (!user) return { success: false, error: "Utilisateur introuvable." };
 
-    // Si on a un ID d'abonnement, on l'annule chez Mollie
+    // Annulation Stripe
+    if (user.stripeSubscriptionId) {
+      await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+    }
+    
+    // Annulation Mollie
     if (user.mollieSubscriptionId && user.mollieCustomerId) {
       await mollieClient.customerSubscriptions.cancel(user.mollieSubscriptionId, {
         customerId: user.mollieCustomerId
@@ -116,33 +126,28 @@ export async function cancelSubscriptionAction(userId: string) {
 
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        subscriptionStatus: "canceled",
-        mollieSubscriptionId: null,
-      }
+      data: { subscriptionStatus: "canceled" }
     });
 
-    return { 
-      success: true, 
-      message: "Abonnement annulé avec succès chez Mollie." 
-    };
+    return { success: true, message: "Abonnement annulé." };
   } catch (error) {
-    console.error("❌ [PaymentAction] Erreur annulation Mollie:", error);
-    return { success: false, error: "Erreur lors de l'annulation de l'abonnement." };
+    console.error("❌ [PaymentAction] Erreur annulation:", error);
+    return { success: false, error: "Erreur lors de l'annulation." };
   }
 }
 
 /**
- * Récupère l'historique des paiements d'un utilisateur (Mollie)
+ * Récupère l'historique complet (Mollie + Stripe)
  */
 export async function getPaymentHistoryAction(userId: string) {
   if (!userId) return [];
-
   try {
-    return await prisma.molliePayment.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' }
-    });
+    const mPayments = await prisma.molliePayment.findMany({ where: { userId } });
+    const sPayments = await prisma.stripePayment.findMany({ where: { userId } });
+    
+    return [...mPayments, ...sPayments].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   } catch {
     return [];
   }

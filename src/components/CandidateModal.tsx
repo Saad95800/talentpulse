@@ -15,7 +15,8 @@ import {
   User as UserIcon,
   Edit2,
   Save,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -44,9 +45,10 @@ interface CandidateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate?: (updated: Candidate) => void;
+  onDelete?: (id: string) => void;
 }
 
-export default function CandidateModal({ candidate: initialCandidate, isOpen, onClose, onUpdate }: CandidateModalProps) {
+export default function CandidateModal({ candidate: initialCandidate, isOpen, onClose, onUpdate, onDelete }: CandidateModalProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [formData, setFormData] = React.useState<Partial<Candidate>>({});
@@ -92,7 +94,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-main/60 backdrop-blur-md"
@@ -132,6 +134,22 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
                 Sauvegarder
               </button>
             )}
+
+            {onDelete && initialCandidate.id && (
+               <button 
+                 onClick={() => {
+                   if (confirm("Voulez-vous vraiment supprimer ce candidat et toutes ses analyses ? Cette action est irréversible.")) {
+                     onDelete(initialCandidate.id);
+                     onClose();
+                   }
+                 }}
+                 className="p-2 hover:bg-red-500/20 rounded-full text-red-400 hover:text-red-500 transition-colors ml-2"
+                 title="Supprimer le candidat"
+               >
+                 <Trash2 className="w-5 h-5" />
+               </button>
+            )}
+
             <button 
               onClick={onClose}
               className="p-2 hover:bg-white/10 rounded-full text-white/80 transition-colors ml-2"
