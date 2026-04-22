@@ -115,13 +115,15 @@ export async function loginAction(formData: { email: string; password: string })
         name: user.name,
         email: user.email,
         phone: user.phone,
-        credits: user.credits,
-        role: user.role,
-        plan: user.plan,
-        subscriptionStatus: user.subscriptionStatus,
-        nextBillingDate: user.nextBillingDate?.toISOString() || null,
+        credits: Number(user.credits),
+        role: String(user.role),
+        plan: String(user.plan),
+        subscriptionStatus: user.subscriptionStatus ? String(user.subscriptionStatus) : null,
+        nextBillingDate: user.nextBillingDate ? user.nextBillingDate.toISOString() : null,
       }
     };
+
+    console.log(`[loginAction] Returning response for ${email}:`, JSON.stringify(response));
 
     await handleActionSuccess(`Connexion réussie: ${email}`, { userId: user.id, actionName: "loginAction" });
 
