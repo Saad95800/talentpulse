@@ -92,12 +92,21 @@ export async function loginAction(formData: { email: string; password: string })
       return { success: false, error: "Identifiants invalides." };
     }
 
+    // Force ADMIN status for main email if not already
+    if (email.toLowerCase() === 'contact@reactivedigital.fr' && user.role !== 'ADMIN') {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: 'ADMIN' }
+      });
+      user.role = 'ADMIN';
+    }
+
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
 
-    await handleActionSuccess(`Connexion réussie: ${email}`, { userId: user.id, actionName: "loginAction" });
+    console.log(`[loginAction] Preparing success response for ${email} (Role: ${user.role})`);
 
-    return {
-      success: true,
+    const response = {
+      success: true as const,
       token,
       user: {
         id: user.id,
@@ -110,9 +119,13 @@ export async function loginAction(formData: { email: string; password: string })
         role: user.role,
         plan: user.plan,
         subscriptionStatus: user.subscriptionStatus,
-        nextBillingDate: user.nextBillingDate,
+        nextBillingDate: user.nextBillingDate?.toISOString() || null,
       }
     };
+
+    await handleActionSuccess(`Connexion réussie: ${email}`, { userId: user.id, actionName: "loginAction" });
+
+    return response;
 
   } catch (error) {
     return handleActionError("Erreur de connexion", error, { actionName: "loginAction" });
