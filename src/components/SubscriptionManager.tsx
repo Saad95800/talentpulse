@@ -9,6 +9,7 @@ import {
   Clock,
   Sparkles
 } from 'lucide-react';
+import toast from "react-hot-toast";
 import { 
   getPremiumCheckoutUrlAction, 
   getPaymentHistoryAction, 
@@ -90,10 +91,10 @@ export default function SubscriptionManager({
       if (res.success && res.url) {
         window.location.href = res.url;
       } else {
-        alert(res.error || "Erreur lors de l'accès au paiement.");
+        toast.error(res.error || "Erreur lors de l'accès au paiement.");
       }
     } catch {
-      alert("Une erreur technique est survenue.");
+      toast.error("Une erreur technique est survenue.");
     } finally {
       setLoading(false);
     }
@@ -104,8 +105,10 @@ export default function SubscriptionManager({
     
     const res = await cancelSubscriptionAction(userId);
     if (res.success) {
-      alert(res.message);
+      toast.success(res.message);
       window.location.reload();
+    } else {
+      toast.error(res.message);
     }
   };
 

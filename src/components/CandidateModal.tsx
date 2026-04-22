@@ -24,6 +24,7 @@ import { updateCandidateAction } from '@/actions/candidate.action';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { toast } from 'react-hot-toast';
+import ConfirmationModal from './common/ConfirmationModal';
 
 interface Experience {
   company: string;
@@ -51,6 +52,7 @@ interface CandidateModalProps {
 export default function CandidateModal({ candidate: initialCandidate, isOpen, onClose, onUpdate, onDelete }: CandidateModalProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [formData, setFormData] = React.useState<Partial<Candidate>>({});
   const userId = useSelector((state: RootState) => state.user.user?.id);
 
@@ -137,12 +139,7 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
 
             {onDelete && initialCandidate.id && (
                <button 
-                 onClick={() => {
-                   if (confirm("Voulez-vous vraiment supprimer ce candidat et toutes ses analyses ? Cette action est irréversible.")) {
-                     onDelete(initialCandidate.id);
-                     onClose();
-                   }
-                 }}
+                 onClick={() => setShowDeleteConfirm(true)}
                  className="p-2 hover:bg-red-500/20 rounded-full text-red-400 hover:text-red-500 transition-colors ml-2"
                  title="Supprimer le candidat"
                >
@@ -383,6 +380,22 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
         </div>
 
       </div>
+
+      <ConfirmationModal 
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          if (onDelete && initialCandidate.id) {
+            onDelete(initialCandidate.id);
+            onClose();
+          }
+          setShowDeleteConfirm(false);
+        }}
+        title="Supprimer le candidat ?"
+        message="Voulez-vous vraiment supprimer ce candidat et toutes ses analyses ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        isDanger={true}
+      />
     </div>
   );
 }

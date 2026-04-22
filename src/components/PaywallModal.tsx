@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Loader2
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                     const { getPremiumCheckoutUrlAction } = await import('@/actions/payment.action');
                     const userId = (window as unknown as { userId?: string }).userId;
                     if (!userId) {
-                      alert("Session expirée. Veuillez vous reconnecter.");
+                      toast.error("Session expirée. Veuillez vous reconnecter.");
                       setLoading(false);
                       return;
                     }
@@ -83,12 +84,12 @@ export default function PaywallModal({ isOpen, onClose }: PaywallModalProps) {
                     if (res.success && res.url) {
                       window.location.href = res.url;
                     } else {
-                      alert(res.error || "Erreur lors de l'initialisation du paiement.");
+                      toast.error(res.error || "Erreur lors de l'initialisation du paiement.");
                       setLoading(false);
                     }
                   } catch (err) {
                     console.error(err);
-                    alert("Une erreur technique est survenue.");
+                    toast.error("Une erreur technique est survenue.");
                     setLoading(false);
                   }
                 }}

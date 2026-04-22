@@ -14,6 +14,8 @@ import {
   resetStuckJobsAction
 } from "@/actions/worker.admin.action";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
+import ConfirmationModal from '../common/ConfirmationModal';
 
 export default function WorkerMonitor() {
   const [stats, setStats] = useState<any>(null);
@@ -21,6 +23,7 @@ export default function WorkerMonitor() {
   const [logs, setLogs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async (isInitial: boolean = false) => {
@@ -50,11 +53,14 @@ export default function WorkerMonitor() {
   }, [fetchData]);
 
   const handleResetJobs = async () => {
-    if (confirm("Voulez-vous vraiment marquer comme échoués les jobs bloqués depuis >30min ?")) {
-      const res = await resetStuckJobsAction();
-      alert(`${res.count} jobs réinitialisés.`);
-      fetchData();
+    setShowResetConfirm(false);
+    const res = await resetStuckJobsAction();
+    if (res.success) {
+      toast.success(`${res.count} jobs réinitialisés.`);
+    } else {
+      toast.error("Erreur lors de la réinitialisation.");
     }
+    fetchData();
   };
 
   const showJobDetails = async (jobId: string) => {
@@ -88,10 +94,11 @@ export default function WorkerMonitor() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={handleResetJobs}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/20 transition-all active:scale-95"
+            onClick={() => setShowResetConfirm(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-red-200"
           >
-            <AlertTriangle className="w-4 h-4" /> Reset Stuck Jobs
+            <AlertCircle className="w-4 h-4" />
+            Réinitialiser les jobs bloqués
           </button>
           <button 
             onClick={() => fetchData()}

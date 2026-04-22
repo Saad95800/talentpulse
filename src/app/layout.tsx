@@ -5,6 +5,7 @@ import "./globals.css";
 import ReduxProvider from "@/store/ReduxProvider";
 import ActivityTracker from "@/components/providers/ActivityTracker";
 import ChatWidget from "@/components/chat/ChatWidget";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
           <ActivityTracker />
           {children}
           <ChatWidget />
+          <Toaster position="top-right" />
         </ReduxProvider>
       </body>
     </html>
