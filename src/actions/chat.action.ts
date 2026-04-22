@@ -20,7 +20,7 @@ export async function sendMessageAction(token: string, content: string, recipien
     if (!sender) return { success: false, error: "Utilisateur introuvable" };
 
     // Si admin envoie à un user spécifique, ou user envoie (crée/trouve sa propre conv)
-    const targetUserId = sender.role === 'ADMIN' ? recipientUserId : sender.id;
+    const targetUserId = (sender.role === 'ADMIN' && recipientUserId) ? recipientUserId : sender.id;
 
     if (!targetUserId) return { success: false, error: "Destinataire manquant" };
 
