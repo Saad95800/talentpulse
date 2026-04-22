@@ -19,7 +19,13 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const res = await loginAction({ email, password });
+      let res = await loginAction({ email, password });
+      
+      // Parse rawData if present
+      if (res && 'rawData' in res) {
+        res = JSON.parse((res as any).rawData);
+      }
+
       if (res.success) {
         const { token: resToken, user: resUser } = (res as any);
         if (resUser.role !== 'ADMIN') {
@@ -32,6 +38,7 @@ export default function AdminLoginPage() {
         router.push("/admin-talent-scraper/dashboard");
       } else {
         setError((res as any).error || "Identifiants invalides.");
+        setLoading(false);
       }
     } catch {
       setError("Une erreur est survenue.");

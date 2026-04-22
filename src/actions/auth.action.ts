@@ -123,11 +123,12 @@ export async function loginAction(formData: { email: string; password: string })
       }
     };
 
-    console.log(`[loginAction] Returning response for ${email}:`, JSON.stringify(response));
+    const serialized = JSON.stringify(response);
+    console.log(`[loginAction] Returning serialized response for ${email}`);
 
     await handleActionSuccess(`Connexion réussie: ${email}`, { userId: user.id, actionName: "loginAction" });
 
-    return response;
+    return { rawData: serialized };
 
   } catch (error) {
     return handleActionError("Erreur de connexion", error, { actionName: "loginAction" });

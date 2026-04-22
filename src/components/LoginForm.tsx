@@ -39,8 +39,12 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
     setServerError(null);
     
     try {
-      const result = await loginAction(data);
+      let result = await loginAction(data);
       
+      if (result && 'rawData' in result) {
+        result = JSON.parse((result as any).rawData);
+      }
+
       if (result.success && 'token' in result) {
         const { token, user } = (result as any);
         // Stockage du token et de l'utilisateur
