@@ -105,10 +105,10 @@ export default function SubscriptionManager({
     
     const res = await cancelSubscriptionAction(userId);
     if (res.success) {
-      toast.success(res.message);
+      toast.success(res.message || "Abonnement annulé.");
       window.location.reload();
     } else {
-      toast.error(res.message);
+      toast.error(res.message || "Erreur lors de l'annulation.");
     }
   };
 
