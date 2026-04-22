@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { 
   Cpu, Activity, CheckCircle, XCircle, 
   RefreshCw, AlertTriangle, Terminal,
-  Maximize2, Zap
+  Maximize2, Zap, AlertCircle
 } from "lucide-react";
 import { 
   getWorkerDashboardStats, 
