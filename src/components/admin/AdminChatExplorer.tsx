@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Send, Clock, MessageSquare, Check, CheckCheck } from "lucide-react";
+import { Search, Send, Clock, MessageSquare, Check, CheckCheck, Users } from "lucide-react";
 import { getAdminChatListAction, getMessagesAction, sendMessageAction, markAsReadAction } from "@/actions/chat.action";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -210,8 +210,16 @@ export default function AdminChatExplorer({ token, initialUserId }: { token: str
               {messages.map((msg) => (
                 <div 
                   key={msg.id} 
-                  className={`flex flex-col ${msg.senderRole === 'ADMIN' ? 'items-end' : 'items-start'}`}
+                  className={`flex gap-3 ${msg.senderRole === 'ADMIN' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
+                  {/* Avatar */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
+                    msg.senderRole === 'ADMIN' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-slate-800 border-slate-700 text-slate-400'
+                  }`}>
+                    {msg.senderRole === 'ADMIN' ? <MessageSquare className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+                  </div>
+
+                  {/* Bubble */}
                   <div className={`max-w-[70%] p-4 rounded-3xl shadow-lg relative transition-all hover:scale-[1.01] ${
                     msg.senderRole === 'ADMIN' 
                       ? 'bg-blue-600 text-white rounded-tr-none' 

@@ -132,14 +132,22 @@ export default function ChatWidget() {
               messages.map((msg) => (
                 <div 
                   key={msg.id} 
-                  className={`flex ${msg.senderRole === 'USER' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex items-end gap-2 ${msg.senderRole === 'USER' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  <div className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${
-                    msg.senderRole === 'USER' 
-                      ? 'bg-blue-600 text-white rounded-tr-none' 
-                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+                  {/* Avatar */}
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mb-1 ${
+                    msg.senderRole === 'USER' ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-600'
                   }`}>
-                    {msg.content}
+                    {msg.senderRole === 'USER' ? <User className="w-3.5 h-3.5" /> : <MessageCircle className="w-3.5 h-3.5" />}
+                  </div>
+
+                  {/* Message Bubble */}
+                  <div className={`max-w-[75%] p-3 rounded-2xl text-sm shadow-sm ${
+                    msg.senderRole === 'USER' 
+                      ? 'bg-blue-600 text-white rounded-br-none shadow-blue-500/10' 
+                      : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'
+                  }`}>
+                    <p className="leading-relaxed">{msg.content}</p>
                     <p className={`text-[9px] mt-1 opacity-60 ${msg.senderRole === 'USER' ? 'text-right' : 'text-left'}`}>
                       {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                     </p>
