@@ -36,15 +36,29 @@ export async function getPremiumCheckoutUrlAction(userId: string, couponCode?: s
     let finalCouponCode: string | undefined = undefined;
 
     if (couponCode) {
-      const dbCoupon = await prisma.coupon.findUnique({
-        where: { code: couponCode.trim().toUpperCase(), isActive: true }
+      console.log(`[Payment] Verification du coupon: ${couponCode}`);
+      // Utilisation de findFirst au lieu de findUnique car isActive ne fait pas partie de l'index unique
+      const dbCoupon = await prisma.coupon.findFirst({
+        where: { 
+          code: couponCode.trim().toUpperCase(), 
+          isActive: true 
+        }
       });
+
       if (dbCoupon) {
-        if (dbCoupon.type === "FIXED_PRICE") amount = dbCoupon.value;
-        else if (dbCoupon.type === "DISCOUNT") amount = Math.max(0, amount - dbCoupon.value);
+        console.log(`[Payment] Coupon trouve: ${dbCoupon.code}, type: ${dbCoupon.type}, value: ${dbCoupon.value}`);
+        if (dbCoupon.type === "FIXED_PRICE") {
+          amount = dbCoupon.value;
+        } else if (dbCoupon.type === "DISCOUNT") {
+          amount = Math.max(1.00, amount - dbCoupon.value); // Minimum 1€ pour Stripe/Mollie
+        }
         finalCouponCode = dbCoupon.code;
+      } else {
+        console.warn(`[Payment] Coupon non trouve ou inactif: ${couponCode}`);
       }
     }
+
+    console.log(`[Payment] Montant final calculate: ${amount.toFixed(2)}€ (${provider})`);
 
     if (provider === "stripe") {
       const customerId = await getOrCreateStripeCustomer(userId, user.name || "Client", user.email);

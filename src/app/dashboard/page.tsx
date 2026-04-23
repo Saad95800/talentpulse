@@ -81,7 +81,12 @@ function DashboardContent() {
             
             dispatch(setBatchProgress({ 
               current: batch.processedItems, 
-              total: batch.totalItems 
+              total: batch.totalItems,
+              items: batch.items.map((it: any) => ({ 
+                id: it.id, 
+                status: it.status, 
+                candidateName: it.candidateName 
+              }))
             }));
             
             const transformedResults = batch.items.map((item: any) => {

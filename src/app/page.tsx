@@ -159,7 +159,7 @@ export default function Home() {
               <RegisterForm onSwitchToLogin={() => setAuthMode('login')} />
             ) : (
               <LoginForm 
-                onSuccess={() => router.push('/dashboard')} 
+                onSuccess={() => {/* La redirection est gérée par le useEffect ci-dessus */}} 
                 onSwitchToRegister={() => setAuthMode('register')} 
               />
             )}

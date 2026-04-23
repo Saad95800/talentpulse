@@ -8,6 +8,7 @@ interface MatchingState {
   loadingStep: string;
   batchCurrent: number;
   batchTotal: number;
+  batchItems: { id: string; status: string; candidateName?: string }[];
   error: string | null;
   activeBatchId: string | null;
 }
@@ -19,6 +20,7 @@ const initialState: MatchingState = {
   loadingStep: "",
   batchCurrent: 0,
   batchTotal: 0,
+  batchItems: [],
   error: null,
   activeBatchId: null,
 };
@@ -33,14 +35,18 @@ export const matchingSlice = createSlice({
         state.loadingStep = "";
         state.batchCurrent = 0;
         state.batchTotal = 0;
+        state.batchItems = [];
       }
     },
     setLoadingStep: (state, action: PayloadAction<string>) => {
       state.loadingStep = action.payload;
     },
-    setBatchProgress: (state, action: PayloadAction<{ current: number; total: number }>) => {
+    setBatchProgress: (state, action: PayloadAction<{ current: number; total: number; items?: { id: string; status: string; candidateName?: string }[] }>) => {
       state.batchCurrent = action.payload.current;
       state.batchTotal = action.payload.total;
+      if (action.payload.items) {
+        state.batchItems = action.payload.items;
+      }
     },
     setResult: (state, action: PayloadAction<MatchResult>) => {
       state.currentResult = action.payload;

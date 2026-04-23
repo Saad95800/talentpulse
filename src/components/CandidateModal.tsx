@@ -113,7 +113,11 @@ export default function CandidateModal({ candidate: initialCandidate, isOpen, on
               <UserIcon className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-white font-black uppercase tracking-widest text-sm">Profil Candidat</h3>
+              <h3 className="text-white font-black uppercase tracking-widest text-sm">
+                {currentCandidate.firstName || currentCandidate.lastName 
+                  ? `${currentCandidate.firstName || ''} ${currentCandidate.lastName || ''}`.trim() 
+                  : "Profil Candidat"}
+              </h3>
               <p className="text-indigo-300 transform -skew-x-12 text-[10px] font-bold">TALENTPULSE INTELLIGENCE</p>
             </div>
           </div>

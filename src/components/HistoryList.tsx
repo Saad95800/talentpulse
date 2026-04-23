@@ -137,7 +137,12 @@ export default function HistoryList({ onSelectAnalysis }: HistoryListProps) {
               recordId: record.id,
               jobTitle: record.jobTitle,
               jobDescription: record.mission?.description,
-              fullCandidate: record.candidate
+              fullCandidate: record.candidate,
+              // S'assurer que le nom est transmis si candidateInfo est manquant dans aiResponse
+              candidateInfo: record.aiResponse.candidateInfo || { 
+                firstName: record.candidateName.split(' ')[0] || '', 
+                lastName: record.candidateName.split(' ').slice(1).join(' ') || '' 
+              }
             })}
             className="group relative bg-white border border-slate-200 p-5 rounded-2xl cursor-pointer hover:border-primary hover:shadow-xl hover:shadow-primary/5 transition-all"
           >

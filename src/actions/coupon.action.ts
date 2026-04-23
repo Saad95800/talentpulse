@@ -10,7 +10,7 @@ export async function validateCouponAction(code: string) {
   if (!code) return { success: false, error: "Code manquant." };
 
   try {
-    const coupon = await prisma.coupon.findUnique({
+    const coupon = await prisma.coupon.findFirst({
       where: { 
         code: code.trim().toUpperCase(),
         isActive: true 
