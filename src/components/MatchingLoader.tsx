@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import { Check } from 'lucide-react';
 
 const steps = [
   { icon: "📄", label: "Lecture de la fiche de poste..." },
@@ -136,23 +137,25 @@ export default function MatchingLoader() {
       <div className="mt-10 w-full max-w-sm px-6">
         <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] mb-3">
           <span className="text-slate-400">Progression {batchTotal > 1 ? 'Totale' : 'Analyse'}</span>
-          <span className="text-primary">{totalProgress}%</span>
+          <span className={totalProgress > 90 ? 'text-emerald-500' : 'text-primary'}>{totalProgress}%</span>
         </div>
         
         {/* Rail de la barre */}
         <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden p-[2px] border border-slate-200/50">
           {/* Background Glow */}
           <div 
-            className="absolute inset-y-0 left-0 bg-primary/20 blur-md transition-all duration-500 ease-out"
+            className={`absolute inset-y-0 left-0 blur-md transition-all duration-500 ease-out ${totalProgress > 90 ? 'bg-emerald-400/30' : 'bg-primary/20'}`}
             style={{ width: `${totalProgress}%` }}
           />
           
           {/* Barre de remplissage principale */}
           <div
-            className="relative h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+            className="relative h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(37,99,235,0.2)]"
             style={{
               width: `${totalProgress}%`,
-              background: 'linear-gradient(90deg, #2563EB 0%, #6366F1 50%, #818CF8 100%)',
+              background: totalProgress > 90 
+                ? 'linear-gradient(90deg, #10b981 0%, #34d399 100%)' 
+                : 'linear-gradient(90deg, #2563EB 0%, #6366F1 50%, #818CF8 100%)',
             }}
           >
             {/* Effet de brillance passant */}
@@ -162,22 +165,24 @@ export default function MatchingLoader() {
 
         {/* Détails du batch */}
         {batchTotal > 1 && (
-          <div className="mt-4 flex justify-between items-center px-1">
-             <div className="flex gap-1">
+          <div className="mt-5 flex flex-col items-center gap-3">
+             <div className="flex gap-2 items-center">
                 {[...Array(batchTotal)].map((_, i) => (
                   <div 
                     key={i}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i + 1 < batchCurrent ? 'w-4 bg-emerald-500' : 
-                      i + 1 === batchCurrent ? 'w-6 bg-primary' : 
-                      'w-2 bg-slate-200'
+                    className={`h-2 rounded-full transition-all duration-500 flex items-center justify-center overflow-hidden ${
+                      i + 1 < batchCurrent ? 'w-8 bg-emerald-500 shadow-lg shadow-emerald-500/20' : 
+                      i + 1 === batchCurrent ? 'w-10 bg-primary ring-4 ring-primary/10 shadow-lg shadow-primary/20' : 
+                      'w-3 bg-slate-200'
                     }`}
-                  />
+                  >
+                    {i + 1 < batchCurrent && <Check className="w-3 h-3 text-white animate-in zoom-in duration-300" />}
+                  </div>
                 ))}
              </div>
-             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-               Séquence {batchCurrent} / {batchTotal}
-             </span>
+             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+               Analyse {batchCurrent} / {batchTotal} terminée à {Math.round(currentStepProgress + (internalProgress * stepWeight / 100))}%
+             </p>
           </div>
         )}
       </div>
