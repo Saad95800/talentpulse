@@ -21,7 +21,7 @@ export default function TermsPage() {
         <p>Plusieurs formules sont proposées :</p>
         <ul className="list-disc pl-5 mt-4 space-y-2">
           <li><strong>Offre Gratuite :</strong> Accès limité à 3 crédits par semaine et analyse groupée limitée à 3 CV.</li>
-          <li><strong>Offre Premium :</strong> Abonnement mensuel à <strong>39,90€ TTC</strong> offrant 300 crédits par mois et analyse groupée jusqu'à 10 CV.</li>
+          <li><strong>Offre Premium :</strong> Abonnement mensuel à <strong>39,90€ TTC</strong> offrant 100 crédits par mois et analyse groupée jusqu'à 10 CV.</li>
         </ul>
       </section>
 

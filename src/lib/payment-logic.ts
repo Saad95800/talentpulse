@@ -93,7 +93,7 @@ export async function finalizeSubscriptionUpgrade(params: {
       plan: "PREMIUM",
       subscriptionStatus: "active",
       ...(provider === 'mollie' ? { mollieSubscriptionId: subscriptionId } : { stripeSubscriptionId: subscriptionId }),
-      credits: 300,
+      credits: 100,
       nextBillingDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
       gracePeriodStartedAt: null,
       lastBillingEmailSentAt: null,

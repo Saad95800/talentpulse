@@ -119,7 +119,7 @@ export default function PricingGrid({
           </div>
 
           <ul className="space-y-5 flex-1 mb-10">
-            <BenefitItem text="300 Crédits par mois" icon={<Zap className="w-4 h-4 text-amber-500 fill-amber-500" />} isStrong />
+            <BenefitItem text="100 Crédits par mois" icon={<Zap className="w-4 h-4 text-amber-500 fill-amber-500" />} isStrong />
             <BenefitItem text="Analyse Groupée (10 CV max)" icon={<Zap className="w-4 h-4 text-primary" />} isStrong />
             <BenefitItem text="Export PDF Illimité & Gratuit" icon={<Download className="w-4 h-4 text-emerald-500" />} />
             <BenefitItem text="Support Prioritaire 24/7" icon={<CheckCircle2 className="w-4 h-4 text-primary" />} />

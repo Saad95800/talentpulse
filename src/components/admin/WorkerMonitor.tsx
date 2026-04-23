@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { 
   Cpu, Activity, CheckCircle, XCircle, 
-  RefreshCw, AlertTriangle, Terminal,
+  RefreshCw, Terminal,
   Maximize2, Zap, AlertCircle
 } from "lucide-react";
 import { 
@@ -15,7 +15,7 @@ import {
 } from "@/actions/worker.admin.action";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
-import ConfirmationModal from '../common/ConfirmationModal';
+
 
 export default function WorkerMonitor() {
   const [stats, setStats] = useState<any>(null);
@@ -23,7 +23,6 @@ export default function WorkerMonitor() {
   const [logs, setLogs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async (isInitial: boolean = false) => {
@@ -53,7 +52,7 @@ export default function WorkerMonitor() {
   }, [fetchData]);
 
   const handleResetJobs = async () => {
-    setShowResetConfirm(false);
+    if (!confirm("Réinitialiser tous les jobs bloqués ?")) return;
     const res = await resetStuckJobsAction();
     if (res.success) {
       toast.success(`${res.count} jobs réinitialisés.`);
@@ -94,7 +93,7 @@ export default function WorkerMonitor() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setShowResetConfirm(true)}
+            onClick={handleResetJobs}
             className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-red-200"
           >
             <AlertCircle className="w-4 h-4" />

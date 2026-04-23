@@ -64,7 +64,7 @@ function SuccessContent() {
             <div className="space-y-3">
               <h1 className="text-4xl font-black text-main tracking-tight">Félicitations !</h1>
               <p className="text-slate-500 font-medium leading-relaxed">
-                Votre abonnement **TalentPulse Premium** est désormais actif. Vous avez reçu 300 crédits pour commencer vos recherches.
+                Votre abonnement **TalentPulse Premium** est désormais actif. Vous avez reçu 100 crédits pour commencer vos recherches.
               </p>
             </div>
 
