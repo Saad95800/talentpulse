@@ -56,6 +56,11 @@ export function useAuth() {
         return { valid: false };
       }
 
+      // OPTIMISATION: Si on a déjà ces infos en Redux, on considère la session valide pour accélérer la redirection
+      if (token && user) {
+        return { valid: true, userId: user.id };
+      }
+
       const result = await validateTokenAction(storedToken);
       
       if (!result.valid) {

@@ -60,7 +60,7 @@ export async function registerAction(data: unknown) {
     syncContactToBrevo(email, firstName, lastName, phone).catch(e => handleActionWarning("Échec synchro Brevo (Background)", { userId: user.id, error: e }));
     sendVerificationEmail(email, verificationToken).catch(e => handleActionWarning("Échec envoi mail vérification (Background)", { userId: user.id, error: e }));
 
-    await handleActionSuccess(`Inscription réussie: ${email}`, { userId: user.id, actionName: "registerAction" });
+    handleActionSuccess(`Inscription réussie: ${email}`, { userId: user.id, actionName: "registerAction" });
 
     return { 
       success: true, 
@@ -126,7 +126,7 @@ export async function loginAction(formData: { email: string; password: string })
     const serialized = JSON.stringify(response);
     console.log(`[loginAction] Returning serialized response for ${email}`);
 
-    await handleActionSuccess(`Connexion réussie: ${email}`, { userId: user.id, actionName: "loginAction" });
+    handleActionSuccess(`Connexion réussie: ${email}`, { userId: user.id, actionName: "loginAction" });
 
     return { rawData: serialized };
 

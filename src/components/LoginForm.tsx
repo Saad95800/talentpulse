@@ -8,6 +8,8 @@ import { useDispatch } from 'react-redux';
 import { setUser } from '@/store/userSlice';
 import { loginAction } from '@/actions/auth.action';
 import { Mail, Loader2, ArrowRight, Lock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email invalide" }),
@@ -23,8 +25,14 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
   const dispatch = useDispatch();
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Prefetch dashboard to make redirection faster
+  useEffect(() => {
+    router.prefetch('/dashboard');
+  }, [router]);
 
   const {
     register,
