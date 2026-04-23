@@ -16,14 +16,20 @@ const steps = [
 export default function MatchingLoader() {
   const { loading, loadingStep, batchCurrent, batchTotal } = useSelector((state: RootState) => state.matching);
   const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const [internalProgress, setInternalProgress] = useState(0);
+
+  // Calculer la progression globale basée sur le batch et l'étape interne
+  const batchBase = batchTotal > 0 ? ((batchCurrent - 1) / batchTotal) * 100 : 0;
+  const stepWeight = batchTotal > 0 ? 100 / batchTotal : 100;
+  const currentStepProgress = (currentStep / steps.length) * stepWeight;
+  const totalProgress = Math.min(Math.round(batchBase + currentStepProgress + (internalProgress * stepWeight / 100)), 99);
 
   // Réinitialisation du simulateur à chaque changement de CV (batch)
   useEffect(() => {
     if (loadingStep) {
       queueMicrotask(() => {
         setCurrentStep(0);
-        setProgress(0);
+        setInternalProgress(0);
       });
     }
   }, [loadingStep]);
@@ -32,7 +38,7 @@ export default function MatchingLoader() {
     if (!loading) {
       queueMicrotask(() => {
         setCurrentStep(0);
-        setProgress(0);
+        setInternalProgress(0);
       });
       return;
     }
@@ -49,7 +55,7 @@ export default function MatchingLoader() {
     }, 2800);
 
     const progressInterval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 1, 95));
+      setInternalProgress(prev => Math.min(prev + 1, 95));
     }, 170);
 
     return () => {
@@ -126,22 +132,54 @@ export default function MatchingLoader() {
         </p>
       </div>
 
-      {/* Barre de progression */}
-      <div className="mt-10 w-full max-w-xs">
-        <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted mb-2">
-          <span>Progression</span>
-          <span style={{ color: 'var(--color-primary, #2563EB)' }}>{progress}%</span>
+      {/* Barre de progression globale */}
+      <div className="mt-10 w-full max-w-sm px-6">
+        <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] mb-3">
+          <span className="text-slate-400">Progression {batchTotal > 1 ? 'Totale' : 'Analyse'}</span>
+          <span className="text-primary">{totalProgress}%</span>
         </div>
-        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-          <div
-            className="h-full rounded-full transition-all duration-200"
-            style={{
-              width: `${progress}%`,
-              background: 'linear-gradient(to right, #2563EB, #818cf8)',
-              backgroundColor: 'var(--color-primary, #2563EB)'
-            }}
+        
+        {/* Rail de la barre */}
+        <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden p-[2px] border border-slate-200/50">
+          {/* Background Glow */}
+          <div 
+            className="absolute inset-y-0 left-0 bg-primary/20 blur-md transition-all duration-500 ease-out"
+            style={{ width: `${totalProgress}%` }}
           />
+          
+          {/* Barre de remplissage principale */}
+          <div
+            className="relative h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+            style={{
+              width: `${totalProgress}%`,
+              background: 'linear-gradient(90deg, #2563EB 0%, #6366F1 50%, #818CF8 100%)',
+            }}
+          >
+            {/* Effet de brillance passant */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full animate-shine" />
+          </div>
         </div>
+
+        {/* Détails du batch */}
+        {batchTotal > 1 && (
+          <div className="mt-4 flex justify-between items-center px-1">
+             <div className="flex gap-1">
+                {[...Array(batchTotal)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i + 1 < batchCurrent ? 'w-4 bg-emerald-500' : 
+                      i + 1 === batchCurrent ? 'w-6 bg-primary' : 
+                      'w-2 bg-slate-200'
+                    }`}
+                  />
+                ))}
+             </div>
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+               Séquence {batchCurrent} / {batchTotal}
+             </span>
+          </div>
+        )}
       </div>
 
       {/* Étapes en dots */}
@@ -166,6 +204,13 @@ export default function MatchingLoader() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(4px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shine {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(100%); }
+        }
+        .animate-shine {
+          animation: shine 2s infinite linear;
         }
       `}</style>
     </div>
