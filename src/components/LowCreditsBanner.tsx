@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { Zap, ArrowRight, X, Star } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function LowCreditsBanner() {
@@ -10,7 +10,7 @@ export default function LowCreditsBanner() {
   const [isVisible, setIsVisible] = useState(true);
   const [mounted, setMounted] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true);
   }, []);
 
