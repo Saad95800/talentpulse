@@ -25,10 +25,9 @@ describe('TalentPulse Matching Flow', () => {
     // 3. Lancement du matching
     cy.contains('button', 'Générer le Matching').should('not.be.disabled').click();
 
-    // 4. Vérification du loader global (via Portail)
-    // On cherche l'élement de chargement avec un timeout plus élevé
-    cy.get('div.fixed.inset-0.z-\\[9999\\]', { timeout: 10000 }).should('be.visible');
-    cy.contains('Analyse en cours').should('be.visible');
+    // 4. Vérification de l'interface de chargement (MultiMatchResultView)
+    cy.contains('Analyse en cours', { timeout: 15000 }).should('be.visible');
+    cy.contains('L\'IA parcourt le document activement', { timeout: 15000 }).should('be.visible');
 
     // 5. Vérification du résultat final
     // L'analyse IA peut prendre du temps (Gemini + Claude)
@@ -59,15 +58,16 @@ describe('TalentPulse Matching Flow', () => {
     // 3. Lancer le batch
     cy.contains('button', /Matcher les 4 profils/i).click();
 
-    // 4. Vérifier la progression séquentielle dans le loader
-    // On attend que le premier soit fini pour voir le second
-    cy.contains('Analyse du candidat 1/4', { timeout: 10000 }).should('be.visible');
-    cy.contains('Analyse du candidat 2/4', { timeout: 30000 }).should('be.visible');
+    // 4. Vérifier la progression dans MultiMatchResultView
+    cy.contains('Analyse en cours...', { timeout: 15000 }).should('be.visible');
+    cy.contains('En cours', { timeout: 15000 }).should('be.visible');
     
-    // 5. Vérifier que les résultats s'affichent
-    cy.get('[data-testid="multi-match-results"]', { timeout: 60000 }).should('be.visible');
-    // On vérifie qu'on a bien nos 4 cartes
-    cy.get('div.bg-white.rounded-3xl.shadow-xl').should('have.length.at.least', 4);
+    // 5. Vérifier que les résultats s'affichent progressivement
+    // On attend que le premier soit fini (Score de matching visible sur une card)
+    cy.contains('%', { timeout: 60000 }).should('be.visible');
+    
+    // On vérifie qu'on a bien nos 4 cartes de résultats
+    cy.get('div.group.relative.bg-white.p-6.rounded-\\[2rem\\]', { timeout: 30000 }).should('have.length.at.least', 4);
   });
 
   it('devrait matcher via saisie manuelle (Copier-Coller)', () => {

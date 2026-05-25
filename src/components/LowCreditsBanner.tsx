@@ -8,9 +8,14 @@ import Link from "next/link";
 export default function LowCreditsBanner() {
   const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  // Pas d'affichage si : pas connecté, admin, ou reste des crédits
-  if (!user || user.role === 'ADMIN' || user.credits > 0 || !isVisible) {
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Pas d'affichage si : pas côté client, pas connecté, admin, ou reste des crédits
+  if (!mounted || !user || user.role === 'ADMIN' || user.credits > 0 || !isVisible) {
     return null;
   }
 

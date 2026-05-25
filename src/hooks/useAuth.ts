@@ -34,17 +34,24 @@ export function useAuth() {
 
     // Resturation de session au chargement
     if (storedToken && !token) {
-      try {
-        if (storedUser) {
+      if (storedUser) {
+        try {
           const userData = JSON.parse(storedUser);
-          currentUserId = userData.id;
-          dispatch(setUser({ ...userData, token: storedToken }));
-        } else {
+          if (userData && typeof userData === 'object' && userData.id) {
+            currentUserId = userData.id;
+            dispatch(setUser({ ...userData, token: storedToken }));
+          } else {
+            console.warn("[useAuth] Données utilisateur invalides dans le stockage local");
+            localStorage.removeItem('tm_user');
+            dispatch(setToken(storedToken));
+          }
+        } catch (e) {
+          console.error("[useAuth] Erreur de parsing des données utilisateur:", e);
+          localStorage.removeItem('tm_user');
           dispatch(setToken(storedToken));
         }
-      } catch (e) {
-        console.error("[Auth] Erreur lors de la récupération de la session locale:", e);
-        localStorage.removeItem('tm_user');
+      } else {
+        dispatch(setToken(storedToken));
       }
     }
 

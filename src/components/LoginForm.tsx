@@ -47,14 +47,30 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
     setServerError(null);
     
     try {
-      let result = await loginAction(data);
+      const result = await loginAction(data);
       
-      if (result && 'rawData' in result) {
-        result = JSON.parse((result as any).rawData);
-      }
+      if (result.success) {
+        let parsedResult = result;
+        if ((result as any).rawData) {
+          try {
+            parsedResult = JSON.parse((result as any).rawData);
+          } catch (e) {
+            console.error("Erreur de parsing de rawData", e);
+            setServerError("Réponse du serveur corrompue.");
+            setIsLoading(false);
+            return;
+          }
+        }
 
-      if (result.success && 'token' in result) {
-        const { token, user } = (result as any);
+        const { token, user } = (parsedResult as any);
+        
+        if (!user || !token) {
+          console.error("Réponse login incomplète:", { user, token });
+          setServerError("Session invalide reçue du serveur.");
+          setIsLoading(false);
+          return;
+        }
+
         // Stockage du token et de l'utilisateur
         localStorage.setItem('tm_token', token);
         localStorage.setItem('tm_user', JSON.stringify(user));

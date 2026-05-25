@@ -54,11 +54,14 @@ export async function handleActionError(
   console.error(`❌ ${fullMessage}`, error);
 
   // 4. Standardized Response for Server Actions
+  const userFriendlyMessage = process.env.NODE_ENV === "development" 
+    ? `[${actionName || "Server"}] ${message}: ${errorMessage}`
+    : "Une erreur est survenue.";
+
   return {
     success: false as const,
-    error: process.env.NODE_ENV === "development" 
-      ? `[${actionName || "Server"}] ${message}: ${errorMessage}`
-      : "Une erreur est survenue."
+    error: userFriendlyMessage,
+    actionName
   };
 }
 

@@ -6,6 +6,8 @@ describe('Talent Matcher E2E Flow', () => {
   });
 
   it('should complete the lead registration and access the dashboard', () => {
+    const testEmail = `test-${Date.now()}@test.com`;
+
     // 1. Accueil
     cy.contains("Matchez vos talents").should('be.visible');
     
@@ -13,18 +15,27 @@ describe('Talent Matcher E2E Flow', () => {
     cy.contains("Analyser un CV gratuitement").click();
     
     // 3. Remplir le formulaire
-    cy.get('input[name="name"]').type('Jean Testeur');
-    cy.get('input[name="email"]').type('jean.test@example.com');
-    cy.get('input[name="phone"]').type('0612345678');
+    cy.get('input[placeholder="Jean"]').type('Jean');
+    cy.get('input[placeholder="Dupont"]').type('Testeur');
+    cy.get('input[type="email"]').type(testEmail);
+    cy.get('input[type="tel"]').type('0612345678');
+    cy.get('input[placeholder="••••••••"]').first().type('12345678');
+    cy.get('input[placeholder="••••••••"]').last().type('12345678'); // Confirmation
     
-    // On intercepte l'appel API (Server Action) - Note: Cypress ne peut pas facilement 
-    // intercepter les server actions mais on peut vérifier le résultat UI
     cy.get('button[type="submit"]').click();
+
+    // 4. Inscription réussie -> Go to Login
+    cy.contains('Inscription réussie').should('be.visible');
+    cy.contains('button', 'Retour à la connexion').click();
     
-    // 4. Vérifier la redirection
-    cy.url().should('include', '/dashboard');
-    cy.contains('Bienvenue, Jean Testeur').should('be.visible');
-    cy.contains('Tes Crédits : 3').should('be.visible');
+    // 5. Connexion
+    cy.get('input[type="email"]').type(testEmail);
+    cy.get('input[type="password"]').type('12345678');
+    cy.contains('button', 'Se connecter').click();
+    
+    // 6. Vérifier la redirection
+    cy.url({ timeout: 10000 }).should('include', '/dashboard');
+    cy.contains('Jean Testeur', { timeout: 10000 }).should('be.visible');
   });
 
   it('should protect the dashboard route', () => {

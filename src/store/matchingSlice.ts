@@ -30,6 +30,7 @@ export const matchingSlice = createSlice({
   initialState,
   reducers: {
     setLoading: (state, action: PayloadAction<boolean>) => {
+      if (!action) return;
       state.loading = action.payload;
       if (!action.payload) {
         state.loadingStep = "";
@@ -39,9 +40,11 @@ export const matchingSlice = createSlice({
       }
     },
     setLoadingStep: (state, action: PayloadAction<string>) => {
+      if (!action) return;
       state.loadingStep = action.payload;
     },
     setBatchProgress: (state, action: PayloadAction<{ current: number; total: number; items?: { id: string; status: string; candidateName?: string }[] }>) => {
+      if (!action || !action.payload) return;
       state.batchCurrent = action.payload.current;
       state.batchTotal = action.payload.total;
       if (action.payload.items) {
@@ -49,6 +52,7 @@ export const matchingSlice = createSlice({
       }
     },
     setResult: (state, action: PayloadAction<MatchResult>) => {
+      if (!action || !action.payload) return;
       state.currentResult = action.payload;
       state.results = [action.payload];
       state.loading = false;
@@ -58,6 +62,7 @@ export const matchingSlice = createSlice({
       state.error = null;
     },
     setMultiResults: (state, action: PayloadAction<MatchResult[]>) => {
+      if (!action || !action.payload) return;
       state.results = action.payload;
       state.currentResult = action.payload.length === 1 ? action.payload[0] : null;
       state.loading = false;
@@ -67,6 +72,7 @@ export const matchingSlice = createSlice({
       state.error = null;
     },
     setError: (state, action: PayloadAction<string>) => {
+      if (!action) return;
       state.error = action.payload;
       // On ne coupe le chargement que si on a un VRAI message d'erreur
       // Si on reset l'erreur (""), on laisse le chargement tranquille

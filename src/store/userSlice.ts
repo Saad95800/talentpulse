@@ -33,20 +33,30 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<User & { token?: string }>) => {
+      if (!action || !action.payload) {
+        console.error("[userSlice] setUser called with missing action or payload");
+        return;
+      }
       const { token, ...userData } = action.payload;
-      state.user = userData;
+      state.user = userData as User;
+      state.isLoggedIn = true;
       if (token) {
         state.token = token;
-        state.isLoggedIn = true;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('tm_token', token);
+          localStorage.setItem('tm_user', JSON.stringify(userData));
+        }
       }
       state.isVerified = true;
     },
     updateCredits: (state, action: PayloadAction<number>) => {
+      if (!action || action.payload === undefined) return;
       if (state.user) {
         state.user.credits = action.payload;
       }
     },
     setToken: (state, action: PayloadAction<string>) => {
+      if (!action || action.payload === undefined) return;
       state.token = action.payload;
       state.isLoggedIn = true;
     },

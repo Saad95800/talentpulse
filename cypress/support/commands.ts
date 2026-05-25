@@ -11,9 +11,9 @@ Cypress.Commands.add('login', (email = 'contact@reactivedigital.fr', password = 
   // On visite la page d'accueil
   cy.visit('/');
   
-  // Attente de l'hydratation Next.js (cruciale en headless)
+  // Attente de l'hydratation Next.js
   cy.get('nav').should('be.visible');
-  cy.wait(4000);
+  cy.wait(2000);
 
   // Tentative de connexion
   cy.get('nav').contains('button', 'Connexion').click({ force: true });
@@ -35,17 +35,30 @@ Cypress.Commands.add('login', (email = 'contact@reactivedigital.fr', password = 
       cy.contains('button', 'Créer un compte gratuitement').click();
       
       // Remplir le formulaire d'inscription
-      cy.get('input[placeholder="Votre Nom complet"]').type('Test Admin', { force: true });
+      cy.get('input[placeholder="Jean"]').type('Test', { force: true });
+      cy.get('input[placeholder="Dupont"]').type('Admin', { force: true });
+      
       // Email et Password sont peut-être déjà là ou à remplir
-      cy.get('input[placeholder="votre@email.com"]').clear().type(email);
-      cy.get('input[placeholder="••••••••"]').clear().type(password);
-      cy.get('input[placeholder="Numéro de téléphone"]').type('0102030405');
+      cy.get('input[type="email"]').last().clear().type(email);
+      cy.get('input[type="password"]').first().clear().type(password);
+      cy.get('input[placeholder="••••••••"]').last().clear().type(password); // Confirm password
+      
+      cy.get('input[type="tel"]').type('0102030405');
       
       cy.contains('button', 'Créer mon compte').click();
+      
+      // Attendre le succès et revenir au login
+      cy.contains('Inscription réussie').should('be.visible');
+      cy.contains('button', 'Retour à la connexion').click();
+      
+      // Re-tenter le login
+      cy.get('input[type="email"]').should('be.visible').type(email);
+      cy.get('input[type="password"]').should('be.visible').type(password);
+      cy.contains('button', 'Se connecter').click();
     }
   });
 
-  // Une fois connecté (via login ou register), on doit arriver sur le dashboard
+  // Une fois connecté, on doit arriver sur le dashboard
   cy.url({ timeout: 20000 }).should('include', '/dashboard');
   cy.get('body').should('contain', 'Dashboard');
 });
